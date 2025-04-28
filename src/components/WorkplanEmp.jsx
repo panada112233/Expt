@@ -87,7 +87,7 @@ const WorkplanEmp = () => {
     return (
         <div className="flex flex-col w-full">
             <div className="w-full max-w-6xl mx-auto bg-white shadow-xl rounded-xl p-6">
-                <h2 className="text-2xl font-bold mb-6 text-center text-pink-600 font-FontNoto">
+                <h2 className="text-2xl font-bold mb-6 text-center text-blue-600 font-FontNoto">
                     🐾 ตารางแผนการปฏิบัติงาน 🐾
                 </h2>
 
@@ -105,7 +105,7 @@ const WorkplanEmp = () => {
                 </div>
 
                 {Object.entries(grouped).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([date, records], index) => (
-                    <div key={date} className="relative bg-pink-50 rounded-2xl border border-pink-200 shadow mb-8 p-4">
+                    <div key={date} className="relative bg-blue-50 rounded-2xl border border-blue-200 shadow mb-8 p-4 animate-fade-in">
                         {/* ไอคอนน่ารัก */}
                         <img
                             src={getIconForDate(date)}
@@ -113,33 +113,36 @@ const WorkplanEmp = () => {
                             className="w-12 h-12 absolute -top-6 left-4 rounded-full border-4 border-white shadow-lg bg-pink-100"
                         />
                         <div className="flex justify-between items-center mb-4 pt-4">
-                            <h3 className="font-semibold text-lg text-pink-700 font-FontNoto">
+                            <h3 className="font-semibold text-lg text-blue-700 font-FontNoto">
                                 📅 วันที่ {formatDate(date)}
                             </h3>
                         </div>
 
-                        <div className="overflow-x-auto">
-                            <table className="table text-sm text-center border border-gray-300 w-full table-fixed">
-                                <thead className="bg-pink-100 text-pink-800 font-FontNoto">
-                                    <tr className="text-black">
-                                        <th className="w-[180px] font-FontNoto">ชื่อพนักงาน</th>
-                                        <th className="w-[300px] font-FontNoto">
+                        <div className="overflow-x-auto rounded-2xl shadow-lg border border-gray-300 bg-white animate-fade-in">
+                            <table className="table text-sm text-center w-full table-fixed">
+                                <thead className="bg-blue-100 text-blue-800 font-FontNoto">
+                                    <tr>
+                                        <th className="w-[180px] py-3 font-bold border-b border-gray-300 font-FontNoto text-black">ชื่อพนักงาน</th>
+                                        <th className="w-[300px] py-3 font-bold border-b border-gray-300 font-FontNoto text-black">
                                             {(() => {
                                                 const d = new Date(date);
                                                 return d.getDay() === 1 ? "เมื่อวันศุกร์" : "เมื่อวาน";
                                             })()}
                                         </th>
-                                        <th className="w-[300px] font-FontNoto">วันนี้</th>
+                                        <th className="w-[300px] py-3 font-bold border-b border-gray-300 font-FontNoto text-black">วันนี้</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white font-FontNoto">
                                     {records.map((rec, idx) => (
-                                        <tr key={idx}>
-                                            <td className="text-left px-2 font-FontNoto">{getFullName(rec.userID)}</td>
-                                            <td className="bg-blue-50 text-left px-2 whitespace-pre-wrap break-words overflow-hidden font-FontNoto">
+                                        <tr
+                                            key={idx}
+                                            className="hover:bg-gray-50 transition-colors duration-300 font-FontNoto"
+                                        >
+                                            <td className="text-left px-3 py-2 border-b border-gray-200 font-FontNoto">{getFullName(rec.userID)}</td>
+                                            <td className="text-left px-3 py-2 border-b border-gray-200 whitespace-pre-wrap break-words font-FontNoto">
                                                 {rec.morningTask || "-"}
                                             </td>
-                                            <td className="bg-green-50 text-left px-2 whitespace-pre-wrap break-words overflow-hidden font-FontNoto">
+                                            <td className="text-left px-3 py-2 border-b border-gray-200 whitespace-pre-wrap break-words font-FontNoto">
                                                 {rec.eveningTask || "-"}
                                             </td>
                                         </tr>
@@ -147,6 +150,7 @@ const WorkplanEmp = () => {
                                 </tbody>
                             </table>
                         </div>
+
                     </div>
                 ))}
             </div>

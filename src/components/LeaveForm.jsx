@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Link } from 'react-router-dom';
 import { pdfMake, font } from "../libs/pdfmake";
 import axios from "axios";
-import { string } from "three/tsl";
-import { AlwaysCompare } from "three";
 
 const LeaveForm = () => {
 
@@ -70,14 +67,57 @@ const LeaveForm = () => {
 
     useEffect(() => {
         if (userId) {
+            fetchProfileData(); // ดึงข้อมูลโปรไฟล์มาเติม
             fetchLeaveType().then(() => {
-                fetchSavedForms(); // ✅ โหลดข้อมูลใหม่ทุกครั้งที่เปลี่ยนหน้า
+                fetchSavedForms();
             });
             fetchRoles();
         }
     }, [userId]);
 
+    const fetchProfileData = async () => {
+        try {
+            const profileResponse = await fetch(`https://localhost:7039/api/Users/Profile/${userId}`);
+            const rolesResponse = await fetch(`https://localhost:7039/api/Document/GetRoles`);
 
+            if (profileResponse.ok && rolesResponse.ok) {
+                const profileData = await profileResponse.json();
+                const rolesData = await rolesResponse.json(); // โหลดรายชื่อแผนกทั้งหมด
+
+                // หาว่า roleName (จาก profile) ตรงกับ rolesid ไหน
+                const matchingRole = rolesData.find(r => r.rolesname.includes(roleMapping(profileData.role)));
+
+                setFormData(prevData => ({
+                    ...prevData,
+                    fullname: `${profileData.firstName} ${profileData.lastName}`,
+                    workingstart: profileData.jDate ? profileData.jDate.split("T")[0] : "",
+                    rolesid: matchingRole ? matchingRole.rolesid : "", // ถ้าเจอก็ set rolesid ถ้าไม่เจอให้ว่าง
+                }));
+            } else {
+                console.warn("ไม่พบข้อมูลโปรไฟล์หรือแผนก");
+            }
+        } catch (error) {
+            console.error("เกิดข้อผิดพลาด:", error);
+        }
+    };
+
+    // ฟังก์ชันแปลง role short name -> ชื่อเต็มภาษาไทย
+    const roleMapping = (role) => {
+        switch (role) {
+            case "Hr":
+                return "ทรัพยากรบุคคล";
+            case "GM":
+                return "ผู้จัดการทั่วไป";
+            case "Dev":
+                return "นักพัฒนาระบบ";
+            case "BA":
+                return "นักวิเคราะห์ธุรกิจ";
+            case "Employee":
+                return "พนักงาน";
+            default:
+                return "";
+        }
+    };
 
     const fetchLeaveType = async () => {
 
@@ -442,20 +482,19 @@ const LeaveForm = () => {
                 const errorText = await response.text();
                 console.error("❌ Server error:", errorText);
                 setmessageModalState({
-                    title: "⚠️ กรุณากดดูฟอร์มก่อนส่ง",
+                    title: "⚠️ กรุณากดดูใบลาก่อนส่ง",
                 });
             }
         } catch (error) {
             console.error("❌ Error:", error);
             setmessageModalState({
-                title: "⚠️ กรุณากดดูฟอร์มก่อนส่ง",
+                title: "⚠️ กรุณากดดูใบลาก่อนส่ง",
                 textdetail: "❌ ไม่สามารถส่งฟอร์มได้ กรุณาลองใหม่",
             });
         }
 
         setNotificationModalOpen(true);
     };
-
 
     const handleDeleteForm = async () => {
 
@@ -1361,28 +1400,31 @@ const LeaveForm = () => {
                             </tbody>
                         </table>
                     </div>
-                    <div className="flex justify-center gap-4">
+                    <div className="flex justify-center gap-4 my-4">
                         <button
                             type="button"
-                            className="btn btn-outline btn-sm font-FontNoto"
+                            className="px-4 py-2 bg-pink-100 hover:bg-pink-200 text-pink-800 font-bold rounded-2xl shadow-md transition-all duration-300 font-FontNoto flex items-center gap-2"
                             onClick={() => resetFormData()}
                         >
-                            ฟอร์มใหม่
+                            🧹 ฟอร์มใหม่
                         </button>
                     </div>
-                    <div className="flex gap-4">
+
+                    <div className="flex gap-4 my-4">
                         <button
                             type="button"
-                            className="btn btn-active w-1/2 font-FontNoto"
+                            className="w-1/2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold rounded-2xl shadow-md transition-all duration-300 font-FontNoto flex items-center justify-center gap-2"
                             onClick={handleGeneratePDF}
                         >
-                            สร้าง PDF
+                            📄 สร้าง PDF
                         </button>
-                        <button className="btn btn-warning w-1/2 font-FontNoto"
+
+                        <button
                             type="button"
+                            className="w-1/2 px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-bold rounded-2xl shadow-md transition-all duration-300 font-FontNoto flex items-center justify-center gap-2"
                             onClick={handleSaveForm}
                         >
-                            บันทึกฟอร์ม
+                            💾 บันทึกฟอร์ม
                         </button>
                     </div>
                 </form>
@@ -1408,26 +1450,42 @@ const LeaveForm = () => {
                                                 {leavetpyeState.find(item => item.leaveTypeid === form.leaveTypeId)?.leaveTypeTh || "ไม่ระบุ"} {form.reason} ตั้งแต่วันที่ {new Date(form.startdate).toLocaleDateString("th-TH")} ถึงวันที่ {new Date(form.enddate).toLocaleDateString("th-TH")}
                                             </td>
                                             <td className="p-2">
-                                                <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
-                                                    <button onClick={() => setFormViewData(form)} className="btn btn-sm btn-outline btn-success">
+                                                <div className="flex flex-col sm:flex-row justify-center items-center gap-4 my-4">
+                                                    <button
+                                                        onClick={() => setFormViewData(form)}
+                                                        type="button"
+                                                        className="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-800 font-bold rounded-2xl shadow-md transition-all duration-300 font-FontNoto flex items-center gap-2"
+                                                    >
                                                         ดู
                                                     </button>
+
                                                     <button
-                                                        className="btn btn-sm btn-outline btn-error font-FontNoto"
+                                                        type="button"
+                                                        className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-800 font-bold rounded-2xl shadow-md transition-all duration-300 font-FontNoto flex items-center gap-2"
                                                         onClick={() => {
                                                             setItemToDelete(form.documentId);
-                                                            setisopendeletediglog(true)
-                                                        }} >
+                                                            setisopendeletediglog(true);
+                                                        }}
+                                                    >
                                                         ลบ
                                                     </button>
                                                     <button
-                                                        className="btn btn-sm btn-outline btn-primary font-FontNoto"
                                                         type="button"
-                                                        onClick={() => sendFrom(formData)} // ✅ เรียก sendFrom() พร้อมส่งข้อมูลฟอร์ม
+                                                        className="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold rounded-2xl shadow-md transition-all duration-300 font-FontNoto flex items-center gap-2"
+                                                        onClick={() => {
+                                                            setmessageModalState({
+                                                                title: "📌 ยืนยันการส่งใบลา",
+                                                                textdetail: "คุณแน่ใจหรือไม่ว่าต้องการส่งใบลานี้ไปยังหัวหน้า?",
+                                                                confirmAction: () => sendFrom(formData),  // ✅ ใส่ function ส่งฟอร์มไว้
+                                                            });
+                                                            setNotificationModalOpen(true);
+                                                        }}
                                                     >
-                                                        กดส่งฟอร์มไปยังหัวหน้า
+                                                        ส่งใบลา
                                                     </button>
+
                                                 </div>
+
                                             </td>
                                         </tr>
                                     );
@@ -1435,47 +1493,82 @@ const LeaveForm = () => {
                             </tbody>
                         </table>
                     </div>
+
                     {isNotificationModalOpen && (
-                        <dialog open className="modal">
-                            <div className="modal-box">
-                                <h3 className="font-bold text-lg font-FontNoto">{messageModalState.title}</h3>
-                                <p className="py-4 font-FontNoto">{messageModalState.textdetail}</p>
-                                <div className="modal-action">
-                                    <button
-                                        className="btn btn-outline btn-success font-FontNoto"
-                                        onClick={() => setNotificationModalOpen(false)}
-                                    >
-                                        ตกลง
-                                    </button>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                            <div className="bg-white w-11/12 max-w-md rounded-2xl shadow-lg flex flex-col max-h-[90vh] overflow-hidden">
+
+                                {/* เนื้อหา */}
+                                <div className="overflow-y-auto flex-1 p-6">
+                                    <h3 className="font-bold text-lg font-FontNoto">{messageModalState.title}</h3>
+                                    <p className="py-4 font-FontNoto">{messageModalState.textdetail}</p>
+                                </div>
+
+                                {/* ปุ่ม */}
+                                <div className="flex justify-end gap-4 p-4 ">
+                                    {messageModalState.confirmAction ? (
+                                        <>
+                                            <button
+                                                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black font-bold rounded-2xl font-FontNoto"
+                                                onClick={() => setNotificationModalOpen(false)}
+                                            >
+                                                ยกเลิก
+                                            </button>
+                                            <button
+                                                className="px-4 py-2 bg-green-500 hover:bg-green-400 text-white font-bold rounded-2xl font-FontNoto"
+                                                onClick={() => {
+                                                    messageModalState.confirmAction();
+                                                    setNotificationModalOpen(false);
+                                                }}
+                                            >
+                                                ยืนยัน
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <button
+                                            className="px-4 py-2 bg-green-500 hover:bg-green-400 text-white font-bold rounded-2xl font-FontNoto"
+                                            onClick={() => setNotificationModalOpen(false)}
+                                        >
+                                            ตกลง
+                                        </button>
+                                    )}
                                 </div>
                             </div>
-                        </dialog>
+                        </div>
                     )}
+
                     {isopendeletediglog && (
-                        <dialog open id="delete_modal" className="modal">
-                            <div className="modal-box">
-                                <h3 className="font-bold text-lg font-FontNoto">ยืนยันการลบ</h3>
-                                <p className="py-4 font-FontNoto">คุณต้องการลบข้อมูลนี้หรือไม่?</p>
-                                <div className="modal-action">
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                            <div className="bg-white w-11/12 max-w-md rounded-2xl shadow-lg flex flex-col max-h-[90vh] overflow-hidden">
+
+                                {/* เนื้อหา */}
+                                <div className="overflow-y-auto flex-1 p-6">
+                                    <h3 className="font-bold text-lg font-FontNoto">🗑️ ยืนยันการลบ</h3>
+                                    <p className="py-4 font-FontNoto">คุณต้องการลบข้อมูลนี้หรือไม่?</p>
+                                </div>
+
+                                {/* ปุ่ม */}
+                                <div className="flex justify-end gap-4 p-4">
                                     <button
-                                        className="btn btn-outline btn-warning font-FontNoto"
-                                        onClick={() => document.getElementById("delete_modal").close()}
+                                        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black font-bold rounded-2xl font-FontNoto"
+                                        onClick={() => setisopendeletediglog(false)}
                                     >
                                         ยกเลิก
                                     </button>
                                     <button
-                                        className=" btn btn-outline btn-error"
+                                        className="px-4 py-2 bg-red-400 hover:bg-red-500 text-white font-bold rounded-2xl font-FontNoto"
                                         onClick={() => {
-
                                             handleDeleteForm();
+                                            setisopendeletediglog(false);
                                         }}
                                     >
-                                        ลบ
+                                        ลบข้อมูล
                                     </button>
                                 </div>
                             </div>
-                        </dialog>
+                        </div>
                     )}
+
                 </div>
             </div>
         </div>

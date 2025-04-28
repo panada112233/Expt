@@ -259,6 +259,16 @@ const EmpBase = () => {
               </summary>
 
               <ul className="mt-2 ml-2 space-y-1" style={{ fontSize: '14px' }}>
+              <li>
+                  <Link
+                    to="/EmpHome/Worktime"
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
+                  >
+                    การเข้า-ออกงาน
+                  </Link>
+                </li>
+
                 <li>
                   <Link
                     to="/EmpHome/Profile"
@@ -268,16 +278,7 @@ const EmpBase = () => {
                     โปรไฟล์ของฉัน
                   </Link>
                 </li>
-                <li>
-                  <Link
-                    to="/EmpHome/Worktime"
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
-                  >
-                    ประวัติการเข้า-ออกงาน
-                  </Link>
-                </li>
-
+                
                 <li>
                   <Link
                     to="/EmpHome/My_experience"

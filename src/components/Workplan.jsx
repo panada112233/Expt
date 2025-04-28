@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 const Workplan = () => {
     const today = new Date();
@@ -223,10 +225,14 @@ const Workplan = () => {
                 console.error('เกิดข้อผิดพลาดในการโหลดข้อมูล:', error);
             }
         };
+        // เริ่มการตั้งค่า AOS
+        AOS.init({
+            duration: 1500,  // เวลาในการทำให้การซูมช้าๆ
+            easing: 'ease-in-out',  // ให้การซูมเรียบขึ้น
+        });
 
         loadUserDataAndTodayData();
     }, []);
-
 
     const getDaysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
     const firstDayOfMonth = new Date(year, month, 1).getDay();
@@ -532,7 +538,12 @@ const Workplan = () => {
 
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 animate-fade-in">
-                    <div className="bg-white p-6 rounded-2xl shadow-2xl w-96 relative transition-transform duration-300 ease-in-out transform scale-100">
+                    <div
+                        className="bg-white p-6 rounded-2xl shadow-2xl w-96 relative transition-transform duration-300 ease-in-out transform scale-100"
+                        data-aos="zoom-in"
+                        data-aos-duration="500" // ปรับระยะเวลาการซูม
+                        data-aos-easing="ease-in-out" // ใช้การเคลื่อนที่แบบ smooth
+                    >
                         {/* 🎀 รูปน่ารัก */}
                         <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="cute" className="w-12 h-12 absolute -top-6 left-4 rounded-full border-4 border-white shadow-lg bg-pink-100" />
 

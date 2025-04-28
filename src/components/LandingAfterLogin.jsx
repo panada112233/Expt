@@ -3,6 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import imgPath from '../assets/clock.png';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
+
 
 const LandingAfterLogin = () => {
     const navigate = useNavigate();
@@ -20,11 +23,21 @@ const LandingAfterLogin = () => {
     const userID = sessionStorage.getItem('userId');
 
     useEffect(() => {
+        // ⏰ ตั้งเวลาอัปเดตนาฬิกา
         const interval = setInterval(() => {
             setCurrentTime(new Date());
         }, 1000);
+
+        // ✨ เรียก AOS.init() ตรงนี้ด้วย
+        AOS.init({
+            duration: 1000, // ความเร็ว animation
+            once: true,     // เล่นแค่ครั้งเดียว
+        });
+
+        // 🧹 เคลียร์ interval ตอน component ถูกทำลาย (unmount)
         return () => clearInterval(interval);
     }, []);
+
 
     const fetchData = async (userId) => {
         try {
@@ -219,7 +232,10 @@ const LandingAfterLogin = () => {
 
                 <div className="flex flex-wrap justify-center gap-6 sm:gap-10 bg-white p-4 sm:p-8 rounded-xl shadow-xl w-[80%] max-w-md sm:max-w-lg lg:max-w-2xl mx-auto">
 
+                    {/* กล่องที่ 1: เวลาเข้า-ออกงาน */}
                     <div
+                        data-aos="zoom-in"            // ใส่ AOS ตรงนี้
+                        data-aos-duration="1200"      // ความช้า (ms) 1200 = 1.2 วิ
                         onClick={() => setModalOpen(true)}
                         className="bg-blue-300 hover:bg-blue-400 cursor-pointer text-black p-6 rounded-xl w-64 flex flex-col items-center shadow-lg transition-all duration-300"
                     >
@@ -232,7 +248,10 @@ const LandingAfterLogin = () => {
                         </div>
                     </div>
 
+                    {/* กล่องที่ 2: Profile */}
                     <div
+                        data-aos="zoom-in"            // ใส่ AOS ตรงนี้
+                        data-aos-duration="1200"      // ความช้า (ms) 1200 = 1.2 วิ
                         onClick={() => navigate('/EmpHome/Workplan')}
                         className="bg-pink-300 hover:bg-pink-400 cursor-pointer text-black p-6 rounded-xl w-64 flex flex-col items-center shadow-lg transition-all duration-300"
                     >
@@ -241,11 +260,12 @@ const LandingAfterLogin = () => {
                             alt="profile"
                             className="w-20 h-20 rounded-full object-cover shadow-lg border-2 border-white"
                         />
-                        <p className="font-bold text-md text-center font-FontNoto mt-3">{userName}</p> {/* ✅ เพิ่ม mt-3 ตรงนี้ */}
+                        <p className="font-bold text-md text-center font-FontNoto mt-3">{userName}</p>
                         <p className="text-sm text-center mt-2 font-FontNoto font-bold">เข้าสู่ระบบ EXPT</p>
                     </div>
 
                 </div>
+
             </div>
 
             {modalOpen && (
@@ -308,7 +328,7 @@ const LandingAfterLogin = () => {
                                                 >
                                                     <option value="" disabled>-- เลือกช่วงเวลา --</option>
                                                     <option className="font-FontNoto" value="เต็มวัน">เต็มวัน</option>
-                                                    <option className="font-FontNoto"value="ครึ่งวันเช้า">ครึ่งวันเช้า</option>
+                                                    <option className="font-FontNoto" value="ครึ่งวันเช้า">ครึ่งวันเช้า</option>
                                                     <option className="font-FontNoto" value="ครึ่งวันบ่าย">ครึ่งวันบ่าย</option>
                                                 </select>
                                             </div>

@@ -7,8 +7,10 @@ import { Link } from "react-router-dom";
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 const Login = ({ setIsLoggedIn }) => {
-    const [identifier, setIdentifier] = useState('');
+    const [identifier, setIdentifier] = useState(() => localStorage.getItem('savedEmail') || '');
     const [password, setPassword] = useState('');
+    const [rememberMe, setRememberMe] = useState(!!localStorage.getItem('savedEmail'));
+
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -39,7 +41,11 @@ const Login = ({ setIsLoggedIn }) => {
                     setError('ไม่พบข้อมูล role ของพนักงาน');
                     return;
                 }
-
+                if (rememberMe) {
+                    localStorage.setItem('savedEmail', identifier); // ✅ เก็บแค่ email
+                } else {
+                    localStorage.removeItem('savedEmail');           // ✅ ถ้าไม่ติ๊ก ลบ email เก่า
+                }
                 // ✅ บันทึกข้อมูลผู้ใช้
                 localStorage.setItem('userinfo', JSON.stringify(res));
                 localStorage.setItem('userID', res.userid); // ✅ บันทึก userID ไว้ใช้งานหน้าอื่น เช่น Chat
@@ -118,6 +124,18 @@ const Login = ({ setIsLoggedIn }) => {
                                 {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                             </button>
                         </div>
+                    </div>
+                    <div className="flex items-center mb-4 space-x-2">
+                        <input
+                            type="checkbox"
+                            id="rememberMe"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                            className="checkbox checkbox-primary"
+                        />
+                        <label htmlFor="rememberMe" className="text-sm font-FontNoto text-gray-700 cursor-pointer">
+                            จำอีเมลของฉัน
+                        </label>
                     </div>
 
                     {error && <p className="text-red-500 text-sm text-center font-FontNoto">{error}</p>}

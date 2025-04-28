@@ -537,12 +537,11 @@ function Document() {
       alert('กรุณาอัปโหลดไฟล์ที่ถูกต้อง เช่น PDF หรือ Word');
     }
   };
- 
+
   return (
     <div className="">
+      <h2 className="text-2xl font-bold text-black font-FontNoto">จัดการเอกสารพนักงาน</h2>
       <div className="max-w-screen-lg mx-auto bg-white rounded-lg p-6 shadow-md">
-        <h2 className="text-2xl font-bold text-black font-FontNoto">จัดการเอกสารพนักงาน</h2>
-
         {/* Modal ใส่รหัสผ่าน */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -708,35 +707,48 @@ function Document() {
               />
             </div>
           </div>
-          <button
-            className="btn btn-warning mt-4 w-full font-FontNoto"
-            type="submit"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'กำลังอัปโหลด...' : 'อัปโหลดเอกสาร'}
-          </button>
+          <div className="relative mt-4 w-full">
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/337/337946.png"
+              alt="document cute"
+              className="w-8 h-8 absolute -top-3 -left-3 rotate-[-10deg]"
+            />
+            <button
+              className="btn btn-outline btn-primary w-full font-FontNoto relative"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'กำลังอัปโหลด...' : 'อัปโหลดเอกสาร'}
+            </button>
+          </div>
         </form>
 
         <div className="bg-base-100 p-4 rounded-lg shadow mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
 
             {/* Tabs */}
-            <div className="flex flex-col sm:flex-row flex-grow font-FontNoto text-lg gap-2 sm:gap-4">
+            <div className="flex flex-col sm:flex-row w-full font-FontNoto text-base gap-2 sm:gap-2">
               <button
-                className={`tab px-4 py-3 sm:py-6 w-full sm:w-auto rounded-lg transition-all ${activeTab === 'leave' ? 'bg-gray-100 text-black font-bold' : 'text-gray-600'
+                className={`w-full sm:w-1/2 px-4 py-2 rounded-lg transition-all ${activeTab === 'leave'
+                  ? 'bg-[#87CEFA] text-white font-bold shadow' // เปลี่ยนเป็นสีที่อ่อนกว่า
+                  : 'bg-[#F2F9FC] text-[#6B7A8F] hover:bg-[#B0D6F1] hover:text-white' // ใช้สีพื้นหลังอ่อนลง
                   }`}
                 onClick={() => setActiveTab('leave')}
               >
                 เอกสารใบลา
               </button>
+
               <button
-                className={`tab px-4 py-3 sm:py-6 w-full sm:w-auto rounded-lg transition-all ${activeTab === 'uploaded' ? 'bg-gray-100 text-black font-bold' : 'text-gray-600'
+                className={`w-full sm:w-1/2 px-4 py-2 rounded-lg transition-all ${activeTab === 'uploaded'
+                  ? 'bg-[#87CEFA] text-white font-bold shadow' // เปลี่ยนเป็นสีที่อ่อนกว่า
+                  : 'bg-[#F2F9FC] text-[#6B7A8F] hover:bg-[#B0D6F1] hover:text-white' // ใช้สีพื้นหลังอ่อนลง
                   }`}
                 onClick={() => setActiveTab('uploaded')}
               >
                 เอกสารอัปโหลด
               </button>
             </div>
+
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <input
                 type="text"
@@ -745,7 +757,7 @@ function Document() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className="btn btn-info font-FontNoto" onClick={handleSearch}>
+              <button className="btn btn-outline btn-success font-FontNoto" onClick={handleSearch}>
                 ค้นหา
               </button>
             </div>

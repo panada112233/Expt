@@ -1,5 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
+
 
 const ChatPage = ({ currentUserId, popupMode = false }) => {
     const [chatMode, setChatMode] = useState('private');
@@ -12,6 +15,7 @@ const ChatPage = ({ currentUserId, popupMode = false }) => {
     const [groups, setGroups] = useState([]);
     const [selectedGroup, setSelectedGroup] = useState(null);
     const [groupMessages, setGroupMessages] = useState([]);
+    const messagesContainerRef = useRef(null); // ✅ เพิ่มตัวนี้
 
     const [text, setText] = useState('');
 
@@ -21,6 +25,7 @@ const ChatPage = ({ currentUserId, popupMode = false }) => {
             'Content-Type': 'application/json'
         }
     });
+
     useEffect(() => {
         console.log("[ChatPage] currentUserId:", currentUserId);
         if (!currentUserId) {
@@ -28,7 +33,29 @@ const ChatPage = ({ currentUserId, popupMode = false }) => {
         } else {
             // 📥 โหลดรายชื่อผู้ใช้ทั้งหมด
             api.get(`/Chat/Users?currentUserId=${currentUserId}`)
-                .then(res => setUsers(res.data))
+                .then(async res => {
+                    const usersWithLastMessage = await Promise.all(res.data.map(async user => {
+                        try {
+                            const messageRes = await api.get(`/Chat?user1=${currentUserId}&user2=${user.userID}`);
+                            const lastMessage = messageRes.data.length > 0 ? messageRes.data[messageRes.data.length - 1] : null;
+                            return {
+                                ...user,
+                                lastMessageTime: lastMessage ? new Date(lastMessage.timestamp) : new Date(0)
+                            };
+                        } catch (err) {
+                            console.error("โหลดข้อความผู้ใช้ล้มเหลว", err);
+                            return {
+                                ...user,
+                                lastMessageTime: new Date(0)
+                            };
+                        }
+                    }));
+
+                    // 🔥 Sort users ตามเวลาข้อความล่าสุด
+                    usersWithLastMessage.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+
+                    setUsers(usersWithLastMessage);
+                })
                 .catch(err => console.error("โหลดรายชื่อผู้ใช้ล้มเหลว", err));
 
             // 📥 โหลดกลุ่มชื่อ The ex และข้อความ
@@ -61,12 +88,22 @@ const ChatPage = ({ currentUserId, popupMode = false }) => {
 
     // 📥 โหลดข้อความส่วนตัวเมื่อเลือก user (เฉพาะโหมด private)
     useEffect(() => {
+        // โหลดข้อความส่วนตัวเมื่อเลือก user (เฉพาะโหมด private)
         if (chatMode === 'private' && selectedUser && currentUserId) {
             api.get(`/Chat?user1=${currentUserId}&user2=${selectedUser.userID}`)
                 .then(res => setMessages(res.data))
                 .catch(err => console.error("โหลดข้อความส่วนตัวล้มเหลว", err));
         }
-    }, [chatMode, selectedUser, currentUserId]);
+
+        // เริ่มต้น AOS
+        AOS.init();
+
+        // เลื่อนข้อความไปที่ด้านล่างเมื่อมีการเปลี่ยนแปลงใน messages หรือ groupMessages
+        if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+    }, [chatMode, selectedUser, currentUserId, messages, groupMessages]);
+
 
     const getSenderName = (id) => {
         const user = users.find(u => u.userID === id);
@@ -82,6 +119,7 @@ const ChatPage = ({ currentUserId, popupMode = false }) => {
         setMessageToDelete({ id, type: 'private' });
         setShowDeleteModal(true);
     };
+
 
 
     // 📨 Send private message
@@ -103,13 +141,24 @@ const ChatPage = ({ currentUserId, popupMode = false }) => {
             const res = await api.post("/Chat", newMessage);
             setMessages(prev => [...prev, res.data]);
             setText('');
+
+            // ✅ เพิ่มตรงนี้: อัปเดตเวลาแชทของ user แล้วเรียงใหม่
+            setUsers(prevUsers => {
+                const updatedUsers = prevUsers.map(user => {
+                    if (user.userID === selectedUser.userID) {
+                        return { ...user, lastMessageTime: new Date() };
+                    }
+                    return user;
+                });
+                return updatedUsers.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+            });
+
         } catch (err) {
             console.error("ส่งข้อความส่วนตัวล้มเหลว", err);
             alert("เกิดข้อผิดพลาดในการส่งข้อความ");
         }
     };
 
-    // 📨 Send group message
     const sendGroupMessage = async () => {
         if (!text.trim()) return;
 
@@ -226,58 +275,85 @@ const ChatPage = ({ currentUserId, popupMode = false }) => {
                         )}
                     </div>
                     <div
-                        className={`
-    flex-1
-    border p-4 rounded-2xl
-    bg-gradient-to-br from-white via-cyan-50 to-white
-    overflow-y-auto shadow-inner backdrop-blur-md space-y-3
-
-    /* จำกัดความสูง ไม่ให้เกิน 50% ของหน้าจอมือถือ */
-    max-h-[40vh]
-    /* บนเดสก์ท็อป อนุญาตให้สูงได้ถึง 70% */
-    md:max-h-[45vh]
-  `}
+                        ref={messagesContainerRef}  // ✅ ผูก ref ตรงนี้
+                        className="
+        flex-1
+        border p-4 rounded-2xl
+        bg-gradient-to-br from-white via-cyan-50 to-white
+        overflow-y-auto shadow-inner backdrop-blur-md space-y-3
+        max-h-[40vh] md:max-h-[45vh]
+    "
                     >
-                        {(chatMode === 'private' ? messages : groupMessages).map((m, i) => (
-                            <div key={i} className={`mb-1 ${parseInt(m.senderID) === parseInt(currentUserId) ? 'text-right' : 'text-left'}`}>
-                                <div className="relative inline-block">
 
-                                    {/* แสดงชื่อผู้ส่ง ถ้าเป็นแชทกลุ่ม และไม่ใช่ข้อความของตัวเอง */}
-                                    {chatMode === 'group' && parseInt(m.senderID) !== parseInt(currentUserId) && (
-                                        <div className="text-xs text-gray-600 font-FontNoto mb-0.5">
-                                            {getSenderName(m.senderID)}
+                        {(() => {
+                            let lastDate = null;
+                            return (chatMode === 'private' ? messages : groupMessages).map((m, i) => {
+                                const messageDate = new Date(m.timestamp).toDateString(); // แปลงเป็น "รูปแบบวัน"
+                                const isNewDate = messageDate !== lastDate;
+                                lastDate = messageDate;
+
+                                return (
+                                    <React.Fragment key={i}>
+                                        {/* ถ้าเป็นวันใหม่ ➔ แทรกแถบวันที่ */}
+                                        {isNewDate && (
+                                            <div className="text-center text-xs text-gray-500 my-3 font-FontNoto">
+                                                🗓️ {new Date(m.timestamp).toLocaleDateString('th-TH', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                })}
+                                            </div>
+                                        )}
+
+                                        {/* แชทแต่ละข้อความ */}
+                                        <div className={`mb-1 ${parseInt(m.senderID) === parseInt(currentUserId) ? 'text-right' : 'text-left'}`}>
+                                            <div className="relative inline-block">
+
+                                                {/* แสดงชื่อผู้ส่ง (เฉพาะ group และไม่ใช่ตัวเอง) */}
+                                                {chatMode === 'group' && parseInt(m.senderID) !== parseInt(currentUserId) && (
+                                                    <div className="text-xs text-gray-600 font-FontNoto mb-0.5">
+                                                        {getSenderName(m.senderID)}
+                                                    </div>
+                                                )}
+
+                                                {/* กล่องข้อความ */}
+                                                <span className={`inline-block px-3 py-2 rounded-2xl shadow-md max-w-xs font-FontNoto text-white bg-gradient-to-br
+                                ${parseInt(m.senderID) === parseInt(currentUserId)
+                                                        ? 'from-blue-400 to-blue-600'
+                                                        : 'from-blue-700 to-blue-900'} text-left`}>
+                                                    {m.content}
+                                                </span>
+
+                                                {/* ปุ่มลบ (เฉพาะข้อความตัวเอง) */}
+                                                {parseInt(m.senderID) === parseInt(currentUserId) && (
+                                                    <button
+                                                        onClick={() => {
+                                                            chatMode === 'private'
+                                                                ? askDeletePrivateMessage(m.messageID)
+                                                                : askDeleteGroupMessage(m.messageID)
+                                                        }}
+                                                        className="absolute -top-2 -right-2 text-xs bg-red-500 text-white rounded-full w-5 h-5 hover:scale-110"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
-                                    )}
+                                    </React.Fragment>
+                                );
+                            });
+                        })()}
 
-                                    {/* กล่องข้อความ */}
-                                    <span className={`inline-block px-3 py-2 rounded-2xl shadow-md max-w-xs font-FontNoto text-white bg-gradient-to-br
-          ${parseInt(m.senderID) === parseInt(currentUserId)
-                                            ? 'from-blue-400 to-blue-600'
-                                            : 'from-blue-700 to-blue-900'} text-left`}>
-                                        {m.content}
-                                    </span>
-
-                                    {/* ปุ่มลบ (เฉพาะข้อความตัวเองเท่านั้น) */}
-                                    {parseInt(m.senderID) === parseInt(currentUserId) && (
-                                        <button
-                                            onClick={() => {
-                                                chatMode === 'private'
-                                                    ? askDeletePrivateMessage(m.messageID)
-                                                    : askDeleteGroupMessage(m.messageID)
-                                            }}
-                                            className="absolute -top-2 -right-2 text-xs bg-red-500 text-white rounded-full w-5 h-5 hover:scale-110"
-                                        >
-                                            ✕
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
                     </div>
 
                     {showDeleteModal && (
                         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 animate-fade-in">
-                            <div className="bg-white p-6 rounded-2xl shadow-2xl w-80 relative transition-transform duration-300 ease-in-out transform scale-100">
+                            <div
+                                className="bg-white p-6 rounded-2xl shadow-2xl w-96 relative transition-transform duration-300 ease-in-out transform scale-100"
+                                data-aos="zoom-in"
+                                data-aos-duration="500" // ปรับระยะเวลาการซูม
+                                data-aos-easing="ease-in-out" // ใช้การเคลื่อนที่แบบ smooth
+                            >
                                 {/* 🎀 ไอคอนน่ารัก */}
                                 <img src="https://cdn-icons-png.flaticon.com/512/1214/1214428.png" alt="delete" className="w-12 h-12 absolute -top-6 left-4 rounded-full border-4 border-white shadow-lg bg-red-100" />
 

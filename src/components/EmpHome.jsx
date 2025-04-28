@@ -278,6 +278,7 @@ const EmpHome = () => {
 
   return (
     <div className="">
+      <h2 className="text-2xl font-bold text-black font-FontNoto">จำนวนเอกสารของฉัน</h2>
       {/* ตัวเลือกเดือนและปี */}
       <div className="flex items-center justify-end space-x-4 mb-4">
         <div className="flex items-center gap-2">

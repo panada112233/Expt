@@ -164,10 +164,10 @@ function MyEducation() {
           คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลนี้?
         </p>
         <p className="font-FontNoto">
-          <strong>สถาบัน:</strong> {educationToDelete.institute}
+          <strong className="font-FontNoto">สถาบัน:</strong> {educationToDelete.institute}
         </p>
         <p className="font-FontNoto">
-          <strong>ระดับ:</strong> {levelLabels[educationToDelete.level]}
+          <strong className="font-FontNoto">ระดับ:</strong> {levelLabels[educationToDelete.level]}
         </p>
       </>
     );
@@ -285,7 +285,7 @@ function MyEducation() {
 
   return (
     <div className="">
-     
+
 
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
@@ -396,9 +396,20 @@ function MyEducation() {
             </div>
 
           </div>
-          <button type="submit" className="btn btn-warning w-full font-FontNoto">
-            {isEditing ? "บันทึกการแก้ไข" : "เพิ่มการศึกษา"}
-          </button>
+          <div className="relative mt-4 w-full">
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/3377/3377467.png"
+              alt="cute icon"
+              className="w-8 h-8 absolute -top-3 -left-3 rotate-[-10deg]"
+            />
+            <button
+              type="submit"
+              className="btn btn-outline btn-primary w-full font-FontNoto relative"
+            >
+              {isEditing ? "บันทึกการแก้ไข" : "เพิ่มการศึกษา"}
+            </button>
+          </div>
+
         </form>
 
         <div className="mt-6">

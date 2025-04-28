@@ -107,7 +107,7 @@ function MyExperience() {
           ...newExperience
         });
 
-      }      
+      }
       setNewExperience({
         companyName: "",
         jobTitle: "",
@@ -154,10 +154,10 @@ function MyExperience() {
           คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลนี้?
         </p>
         <p className="font-FontNoto">
-          <strong>บริษัท:</strong> {experiences[index].companyName}
+          <strong className="font-FontNoto">บริษัท:</strong> {experiences[index].companyName}
         </p>
         <p className="font-FontNoto">
-          <strong>ตำแหน่ง:</strong> {experiences[index].jobTitle}
+          <strong className="font-FontNoto">ตำแหน่ง:</strong> {experiences[index].jobTitle}
         </p>
       </>
     );
@@ -266,20 +266,20 @@ function MyExperience() {
 
   return (
     <div className="">
-      
+
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg w-96">
-            <p className="text-center">{modalMessage}</p>
+            <p className="text-center font-FontNoto">{modalMessage}</p>
             <div className="flex justify-center mt-4">
               <button
-                className="btn btn-outline btn-primary mx-2"
+                className="btn btn-outline btn-primary mx-2 font-FontNoto"
                 onClick={modalConfirmAction}
               >
                 ยืนยัน
               </button>
               <button
-                className="btn btn-outline btn-error mx-2"
+                className="btn btn-outline btn-error mx-2 font-FontNoto"
                 onClick={closeModal}
               >
                 ยกเลิก
@@ -376,9 +376,19 @@ function MyExperience() {
               {errors.endDate && <span className="text-red-500 text-sm font-FontNoto">{errors.endDate}</span>}
             </div>
           </div>
-          <button type="submit" className="btn btn-warning w-full font-FontNoto">
-            {isEditing ? "บันทึกการแก้ไข" : "เพิ่มประสบการณ์"}
-          </button>
+          <div className="relative mt-4 w-full">
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/3377/3377466.png"
+              alt="cute icon"
+              className="w-8 h-8 absolute -top-3 -left-3 rotate-[-10deg]"
+            />
+            <button
+              type="submit"
+              className="btn btn-outline btn-primary w-full font-FontNoto relative"
+            >
+              {isEditing ? "บันทึกการแก้ไข" : "เพิ่มประสบการณ์"}
+            </button>
+          </div>
         </form>
 
         <div className="mt-6">

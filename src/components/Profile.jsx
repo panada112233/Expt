@@ -297,7 +297,7 @@ function Profile() {
   return (
     <div className=" ">
 
-      <h2 className="text-2xl font-bold text-black font-FontNoto">โปรไฟล์</h2>
+      <h2 className="text-2xl font-bold text-black font-FontNoto">โปรไฟล์ของฉัน</h2>
       <div className="max-w-3xl mx-auto rounded-lg shadow-md relative">
         {/* แสดงสถานะการโหลดข้อมูล */}
         {loading ? (
@@ -517,7 +517,7 @@ function Profile() {
                 <div className="flex w-full justify-end gap-4">
                   <button
                     type="submit"
-                    className="btn btn-warning font-FontNoto"
+                    className="btn btn-outline btn-success font-FontNoto"
                     style={{ flexBasis: "20%", flexShrink: 0 }}
                   >
                     ยืนยัน
