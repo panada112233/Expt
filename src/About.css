@@ -1,0 +1,65 @@
+.about-container {
+  background-image: url("./assets/About.gif"); /* เพิ่มภาพพื้นหลัง */
+  background-size: cover; /* ให้ภาพพื้นหลังขยายเต็มพื้นที่ */
+  background-position: center; /* ตั้งให้ภาพอยู่ตรงกลาง */
+  /*background-attachment: fixed; /* ทำให้ภาพพื้นหลังไม่เลื่อนตามการเลื่อนหน้า */
+  height: 100vh; /* ให้พื้นหลังเต็มหน้าจอ */
+  display: flex;
+  justify-content: center; /* จัดตำแหน่งเนื้อหาอยู่ตรงกลางในแนวนอน */
+  align-items: center; /* จัดตำแหน่งเนื้อหาอยู่ตรงกลางในแนวตั้ง */
+  transition: background-position 0.1s ease-out;
+  color: #ffffff; /* สีข้อความขาว */
+}
+
+.about-overlay {
+  background-color: #2e2e2e; /* สีเทาเข้ม */
+  left: 0; /* เปลี่ยนให้ชิดซ้าย */
+  border-radius: 15px; /* ขอบมน */
+  padding: 25px; /* เพิ่มช่องว่างภายใน */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);/* เพิ่มเงา */
+  max-width: 800px; /* กำหนดความกว้างสูงสุด */
+  text-align: left; /* ข้อความชิดซ้าย */
+  box-shadow: 0 4px 20px rgba(31, 120, 223, 0.5); /* เพิ่มเงาให้กล่องข้อความ */
+  margin-left: 20px; /* เพิ่มระยะห่างจากซ้าย */
+  border: 2px solid #ffa500; /* ขอบสีส้ม */
+  position: absolute;
+  top: 50%;
+  left: 0; /* เปลี่ยนให้ชิดซ้าย */
+  transform: translateY(-50%); /* กึ่งกลางในแนวตั้ง */
+}
+
+.about-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #ffa500; /* สีส้ม */
+  margin-bottom: 20px;
+  text-transform: uppercase; /* ตัวใหญ่ทั้งหมด */
+}
+
+.about-description {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #e0e0e0; /* สีเทาอ่อน */
+  text-align: left; /* จัดข้อความให้อยู่ชิดซ้าย */
+  margin-bottom: 20px; /* เพิ่มช่องว่างระหว่างย่อหน้า */
+}
+
+.about-features {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ffa500; /* สีส้ม */
+  margin-top: 20px;
+}
+
+.about-divider {
+  margin: 20px 0;
+  border: none;
+  border-top: 2px dashed #ffa500; /* เส้นขีดส้ม */
+}
+
+.about-features-list li {
+  color: #ffffff; /* ข้อความขาว */
+  margin: 10px 0;
+  font-size: 1rem;
+}
+

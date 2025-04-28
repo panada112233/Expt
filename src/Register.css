@@ -1,0 +1,67 @@
+.register-container {
+  background-image: url("./assets/R.gif"); /* เพิ่มภาพพื้นหลัง */
+  background-size: cover; /* ให้ภาพพื้นหลังขยายเต็มพื้นที่ */
+  background-position: center; /* ตั้งให้ภาพอยู่ตรงกลาง */
+  height: 100vh; /* ให้พื้นหลังเต็มหน้าจอ */
+  display: flex;
+  justify-content: flex-start; /* ชิดซ้าย */
+  align-items: center; /* จัดตำแหน่งในแนวตั้งตรงกลาง */
+  padding-left: 20px; /* เพิ่มระยะห่างจากซ้าย */
+}
+
+.card {
+  background-color: #2b2b2b; /* สีพื้นหลังของการ์ดเป็นสีดำแบบอ่อน */
+  border-radius: 15px; /* ขอบมน */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); /* เพิ่มเงาเข้ม */
+  padding: 30px; /* เพิ่มระยะห่างภายใน */
+  max-width: 900px; /* ขยายความกว้าง */
+  width: 60%; /* ทำให้ขยายได้ตามความกว้างของหน้าจอ */
+  border: 2px solid #ff7300; /* เพิ่มขอบสีส้ม */
+}
+
+/* ฟอร์มทั้งหมด */
+.form-group {
+  margin-bottom: 15px; /* ระยะห่างระหว่างช่องฟอร์ม */
+}
+
+label {
+  color: white; /* เปลี่ยนสีตัวหนังสือใน label เป็นสีขาว */
+  /* font-weight: bold;  */
+  margin-bottom: 5px; /* ระยะห่างด้านล่าง */
+  display: block;
+}
+
+.text-danger {
+  color: #FF8800; /* สีแดงส้มสำหรับข้อความแจ้งเตือน */
+  font-weight: bold;
+  
+}
+
+.header-title {
+  border-bottom: 2px dashed orange; /* เส้นประสีส้ม */
+  font-weight: bold; /* ตัวหนา */
+  font-size: 20px; /* ขนาดตัวหนังสือ */
+}
+
+.input, .input-bordered {
+  color: #000; /* ตัวหนังสือเป็นสีดำ */
+  background-color: #ffffff; /* พื้นหลังเป็นสีขาว */
+  border: 2px solid #ffa500; /* ขอบสีส้ม */
+}
+
+.input:focus, .input-bordered:focus {
+  border-color: #ffa500; /* ขอบสีส้มเมื่อโฟกัส */
+  outline: none; /* ลบขอบของเบราเซอร์ */
+  background-color: #fff5e6; /* เปลี่ยนพื้นหลังเมื่อโฟกัส */
+}
+
+.btn-warning {
+  background-color: #FF8800; /* ปรับสีพื้นหลังของปุ่มเป็น #FF8800 */
+  border-color: #FF8800; /* ปรับสีขอบของปุ่ม */
+}
+
+.btn-warning:hover {
+  background-color: #e57700; /* ปรับสีเมื่อ hover (ทำให้เข้มขึ้นเล็กน้อย) */
+  border-color: #e57700;
+}
+
