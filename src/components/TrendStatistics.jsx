@@ -243,57 +243,52 @@ const TrendStatistics = () => {
 
     return (
         <div className="flex flex-col min-h-screen">
-
-            {/* Main Content */}
-            <div className="flex min-h-screen bg-base-200">
-
-                {/* Content */}
-                <div className="flex-1 p-3 bg-white shadow-lg rounded-lg ml-1">
-                  
-                    <div className="flex justify-between items-center mb-3">
-                        <h2 className="text-2xl font-bold text-black font-FontNoto">สถิติแนวโน้มไฟล์เอกสาร</h2>
-                        <label htmlFor="yearSelect" className="label flex justify-between">
-
-                            <select
-                                id="yearSelect"
-                                value={selectedYear}
-                                onChange={handleYearChange}
-                                className="select select-bordered font-FontNoto text-black w-48"
-                            >
-                                {getUniqueYears().map(year => (
-                                    <option key={year} value={year}>{year}</option>
-                                ))}
-                            </select>
-                        </label>
-                    </div>
-                    {/* ข้อมูลประเภทเอกสาร */}
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
-                        {Object.keys(categoryCounts).map((category) => (
-                            <div key={category} className="bg-white border border-black p-4 rounded-lg shadow-md flex flex-col items-center">
-                                <h3 className="text-lg font-bold font-FontNoto mb-2">{category}</h3>
-                                <div className="flex items-center space-x-2">
-                                    <img src={iconMapping[category]} alt={category} className="w-7 h-7" />
-                                    <p className="text-3xl font-FontNoto">{categoryCounts[category] || 0}</p>
-                                </div>
-                            </div>
+            <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+                <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+                    สถิติแนวโน้มไฟล์เอกสาร
+                </h1>
+                <p className="text-xs sm:text-sm mt-1 font-FontNoto">กราฟตรวจสอบจำนวนไฟล์เอกสารในแต่ละปี</p>
+            </div>
+            <div className="flex items-center justify-end space-x-4 mb-4">
+                <label htmlFor="yearSelect" className="label flex justify-between">
+                    <select
+                        id="yearSelect"
+                        value={selectedYear}
+                        onChange={handleYearChange}
+                        className="select select-bordered font-FontNoto text-black w-48"
+                    >
+                        {getUniqueYears().map(year => (
+                            <option key={year} value={year}>{year}</option>
                         ))}
-                    </div>
-                    {/* Chart Section */}
-                    <div className="w-full mt-6 md:mt-10 flex justify-center">
-                        <div className="bg-base-100 shadow-lg p-4 rounded-lg w-full max-w-screen-md min-h-[300px]">
-                            <h3 className="text-lg font-bold text-black mb-4 font-FontNoto text-center">
-                                แนวโน้มการเพิ่มจำนวนไฟล์เอกสาร
-                            </h3>
-                            <div className="relative w-full h-[300px]">
-                                <Bar className="font-FontNoto"
-                                    data={createDocumentsChartData()}
-                                    options={{
-                                        ...trendsChartOptions,
-                                        maintainAspectRatio: false,
-                                    }}
-                                />
-                            </div>
+                    </select>
+                </label>
+            </div>
+            {/* ข้อมูลประเภทเอกสาร */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
+                {Object.keys(categoryCounts).map((category) => (
+                    <div key={category} className="bg-white border border-black p-4 rounded-lg shadow-md flex flex-col items-center">
+                        <h3 className="text-lg font-bold font-FontNoto mb-2">{category}</h3>
+                        <div className="flex items-center space-x-2">
+                            <img src={iconMapping[category]} alt={category} className="w-7 h-7" />
+                            <p className="text-3xl font-FontNoto">{categoryCounts[category] || 0}</p>
                         </div>
+                    </div>
+                ))}
+            </div>
+            {/* Chart Section */}
+            <div className="w-full mt-6 md:mt-10 flex justify-center">
+                <div className="bg-base-100 shadow-lg p-4 rounded-lg w-full max-w-screen-md min-h-[300px]">
+                    <h3 className="text-lg font-bold text-black mb-4 font-FontNoto text-center">
+                        แนวโน้มการเพิ่มจำนวนไฟล์เอกสาร
+                    </h3>
+                    <div className="relative w-full h-[300px]">
+                        <Bar className="font-FontNoto"
+                            data={createDocumentsChartData()}
+                            options={{
+                                ...trendsChartOptions,
+                                maintainAspectRatio: false,
+                            }}
+                        />
                     </div>
                 </div>
             </div>

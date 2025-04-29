@@ -46,12 +46,15 @@ const Alldocuments = () => {
 
     return (
         <div className="flex flex-col min-h-screen">
+            <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+                <h2 className="text-2xl font-bold text-white mb-4 font-FontNoto">
+                    ข้อมูลของ คุณ {user.firstName} {user.lastName}
+                </h2>
+                <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบข้อมูลประสบการณ์ทำงาน และ ข้อมูลการศึกษา</p>
+            </div>
             <div className="">
-                <div className="w-full md:w-[90%] lg:w-[75%] mx-auto p-4 sm:p-6 bg-white shadow-lg rounded-lg mb-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-bold text-black mb-4 font-FontNoto">
-                            ข้อมูลของ คุณ {user.firstName} {user.lastName}
-                        </h2>
+                <div className="w-full md:w-[90%] lg:w-[75%] mx-auto p-4 sm:p-6 bg-transparent rounded-lg mb-6">
+                    <div className="flex items-center justify-end space-x-4 mb-4">
                         <Link to="/EmpHome/Allemployee" className="btn btn-outline btn-error font-FontNoto mb-4">
                             กลับไปยังพนักงานทั้งหมด
                         </Link>
@@ -61,16 +64,16 @@ const Alldocuments = () => {
                     ) : (
                         <>
                             <div className="overflow-x-auto w-full max-w-full">
-                                <div className="">
+                            
                                     <h3 className="text-xl font-bold mb-2 font-FontNoto">ข้อมูลการศึกษา</h3>
-                                    <table className="table-auto w-full border-collapse border border-gray-300 mb-6">
+                                    <table className="table-auto w-full border-collapse border border-blue-400 mb-6 rounded-lg">
                                         <thead>
-                                            <tr className="bg-gray-100">
-                                                <th className="border px-4 py-2 font-FontNoto">ระดับการศึกษา</th>
+                                            <tr className="bg-blue-200 text-blue-900">
+                                                <th className="border px-4 py-2 font-FontNoto rounded-tl-lg">ระดับการศึกษา</th>
                                                 <th className="border px-4 py-2 font-FontNoto">สถาบัน</th>
                                                 <th className="border px-4 py-2 font-FontNoto">สาขาวิชา</th>
                                                 <th className="border px-4 py-2 font-FontNoto">ปีที่ศึกษา</th>
-                                                <th className="border px-4 py-2 font-FontNoto">GPA</th>
+                                                <th className="border px-4 py-2 font-FontNoto rounded-tl-lg">GPA</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -85,19 +88,18 @@ const Alldocuments = () => {
                                             )) : <tr><td className="border px-4 py-2 text-center font-FontNoto" colSpan="5">ไม่มีข้อมูลการศึกษา</td></tr>}
                                         </tbody>
                                     </table>
-                                </div>
                             </div>
                             <div className="overflow-x-auto w-full max-w-full">
                                 <div className="">
                                     <h3 className="text-xl font-bold mb-2 font-FontNoto">ประสบการณ์ทำงาน</h3>
-                                    <table className="table-auto w-full border-collapse border border-gray-300">
+                                    <table className="table-auto w-full border-collapse border border-blue-400 mb-6 rounded-lg">
                                         <thead>
-                                            <tr className="bg-gray-100">
-                                                <th className="border px-4 py-2 font-FontNoto">บริษัท</th>
+                                            <tr className="bg-blue-200 text-blue-900">
+                                                <th className="border px-4 py-2 font-FontNoto rounded-tl-lg">บริษัท</th>
                                                 <th className="border px-4 py-2 font-FontNoto">ตำแหน่ง</th>
                                                 <th className="border px-4 py-2 font-FontNoto">เงินเดือน</th>
                                                 <th className="border px-4 py-2 font-FontNoto">ปีเริ่มต้น</th>
-                                                <th className="border px-4 py-2 font-FontNoto">ปีสิ้นสุด</th>
+                                                <th className="border px-4 py-2 font-FontNoto rounded-tl-lg">ปีสิ้นสุด</th>
                                             </tr>
                                         </thead>
                                         <tbody>

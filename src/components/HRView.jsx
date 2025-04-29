@@ -609,9 +609,14 @@ const HRView = () => {
         });
     }, []);
 
-
     return (
-        <div className="p-4 sm:p-6">
+        <div className="flex flex-col w-full">
+            <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+                <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+                    การเซ็นอนุมัติใบลาพนักงาน
+                </h1>
+                <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบเอกสารใบลางานของพนักงาน</p>
+            </div>
             {/* ฟอร์มที่หัวหน้าอนุมัติ */}
             <section>
                 <h2 className="text-xl font-bold mt-8 font-FontNoto">ฟอร์มที่หัวหน้าอนุมัติ</h2>
@@ -708,63 +713,63 @@ const HRView = () => {
                 <h2 className="text-lg font-bold mb-2 font-FontNoto">ฟอร์มที่ HR อนุมัติแล้ว</h2>
                 {hrApprovedForms.length > 0 ? (
                     <div className="overflow-x-auto">
-                    <table className="table table-zebra w-full">
-                        <thead>
-                            <tr className="text-black bg-blue-100">
-                                <th>#</th>
-                                <th className="font-FontNoto text-center">ชื่อพนักงาน</th>
-                                {/* <th className="font-FontNoto text-center">วันที่อนุมัติ</th> */}
-                                <th className="font-FontNoto text-center">ลายเซ็นการอนุมัติ</th>
-                                <th className="font-FontNoto text-center">ความคิดเห็น</th>
-                                <th className="font-FontNoto text-center">วันที่อนุมัติ</th>
-                                <th className="font-FontNoto text-center">ลายเซ็น HR</th>
-                                <th className="font-FontNoto text-center">สถานะ</th>
-                                <th className="font-FontNoto text-center">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {[...hrApprovedForms].sort((a, b) => (sentForms[a.documentId] ? 1 : -1)).map((form, index) => (
-                                <tr key={`${form.id}-${index}`}>  {/* ใช้ combination ของ `form.id` และ `index` เพื่อให้ key เป็นเอกลักษณ์ */}
-                                    <td className="font-FontNoto text-center">{index + 1}</td>
-                                    <td className="font-FontNoto text-center">{form.fullname}</td>
-                                    {/* <td className="font-FontNoto text-center">{formatDate(form.approvedDate)}</td> */}
-                                    <td className="font-FontNoto text-center">{form.managerName}</td>
-                                    <td className="font-FontNoto text-center">{form.managerComment}</td>
-                                    <td className="font-FontNoto text-center">{formatDate(form?.hrApprovedDate)}</td>
-                                    <td className="font-FontNoto text-center">{form.hrSignature}</td>
-
-                                    <td className="font-FontNoto text-center" style={{ color: sentForms[form.documentId] ? 'green' : 'red' }}>
-                                        {sentForms[form.documentId] ? "✅ ส่งแล้ว" : "❌ ยังไม่ส่ง"}
-                                    </td>
-
-                                    <td className="font-FontNoto text-center flex space-x-2">
-                                        <button
-                                            className="btn btn-sm btn-outline btn-info font-FontNoto"
-                                            onClick={() => handleOpenModal(form)}
-                                        >
-                                            ดูไฟล์
-                                        </button>
-                                        {!sentForms[form.documentId] && (
-                                            <button
-                                                className="btn btn-sm btn-outline btn-primary font-FontNoto text-center"
-                                                onClick={() => handleSendToEmployee(form)}
-                                            >
-                                                ส่งให้พนักงาน
-                                            </button>
-                                        )}
-                                        {!sentForms[form.documentId] && (
-                                            <button
-                                                className="btn btn-sm btn-outline btn-warning font-FontNoto text-center"
-                                                onClick={() => setSelectedFormForEdit(form)}
-                                            >
-                                                แก้ไข
-                                            </button>
-                                        )}
-                                    </td>
+                        <table className="table table-zebra w-full">
+                            <thead>
+                                <tr className="text-black bg-blue-100">
+                                    <th>#</th>
+                                    <th className="font-FontNoto text-center">ชื่อพนักงาน</th>
+                                    {/* <th className="font-FontNoto text-center">วันที่อนุมัติ</th> */}
+                                    <th className="font-FontNoto text-center">ลายเซ็นการอนุมัติ</th>
+                                    <th className="font-FontNoto text-center">ความคิดเห็น</th>
+                                    <th className="font-FontNoto text-center">วันที่อนุมัติ</th>
+                                    <th className="font-FontNoto text-center">ลายเซ็น HR</th>
+                                    <th className="font-FontNoto text-center">สถานะ</th>
+                                    <th className="font-FontNoto text-center">จัดการ</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {[...hrApprovedForms].sort((a, b) => (sentForms[a.documentId] ? 1 : -1)).map((form, index) => (
+                                    <tr key={`${form.id}-${index}`}>  {/* ใช้ combination ของ `form.id` และ `index` เพื่อให้ key เป็นเอกลักษณ์ */}
+                                        <td className="font-FontNoto text-center">{index + 1}</td>
+                                        <td className="font-FontNoto text-center">{form.fullname}</td>
+                                        {/* <td className="font-FontNoto text-center">{formatDate(form.approvedDate)}</td> */}
+                                        <td className="font-FontNoto text-center">{form.managerName}</td>
+                                        <td className="font-FontNoto text-center">{form.managerComment}</td>
+                                        <td className="font-FontNoto text-center">{formatDate(form?.hrApprovedDate)}</td>
+                                        <td className="font-FontNoto text-center">{form.hrSignature}</td>
+
+                                        <td className="font-FontNoto text-center" style={{ color: sentForms[form.documentId] ? 'green' : 'red' }}>
+                                            {sentForms[form.documentId] ? "✅ ส่งแล้ว" : "❌ ยังไม่ส่ง"}
+                                        </td>
+
+                                        <td className="font-FontNoto text-center flex space-x-2">
+                                            <button
+                                                className="btn btn-sm btn-outline btn-info font-FontNoto"
+                                                onClick={() => handleOpenModal(form)}
+                                            >
+                                                ดูไฟล์
+                                            </button>
+                                            {!sentForms[form.documentId] && (
+                                                <button
+                                                    className="btn btn-sm btn-outline btn-primary font-FontNoto text-center"
+                                                    onClick={() => handleSendToEmployee(form)}
+                                                >
+                                                    ส่งให้พนักงาน
+                                                </button>
+                                            )}
+                                            {!sentForms[form.documentId] && (
+                                                <button
+                                                    className="btn btn-sm btn-outline btn-warning font-FontNoto text-center"
+                                                    onClick={() => setSelectedFormForEdit(form)}
+                                                >
+                                                    แก้ไข
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 ) : (
                     <p className="font-FontNoto text-center">ยังไม่มีฟอร์มที่ HR เซ็นชื่ออนุมัติ</p>

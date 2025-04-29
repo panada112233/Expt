@@ -86,11 +86,14 @@ const WorkplanEmp = () => {
 
     return (
         <div className="flex flex-col w-full">
-            <div className="w-full max-w-6xl mx-auto bg-white shadow-xl rounded-xl p-6">
-                <h2 className="text-2xl font-bold mb-6 text-center text-blue-600 font-FontNoto">
-                    🐾 ตารางแผนการปฏิบัติงาน 🐾
-                </h2>
-
+            <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+                <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+                ตารางแผนการปฏิบัติงาน
+                </h1>
+                <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบแผนการปฏิบัติงานของเพื่อนร่วมงาน</p>
+            </div>
+            <div className="w-full max-w-6xl mx-auto bg-transparent rounded-xl p-6">
+              
                 <div className="flex items-center justify-end space-x-4 mb-6">
                     <select className="select select-bordered w-40 font-FontNoto" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
                         {thaiMonths.map((m, idx) => (

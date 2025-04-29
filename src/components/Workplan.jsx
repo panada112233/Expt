@@ -380,18 +380,16 @@ const Workplan = () => {
         nextDay++;
     }
     weeks.push(currentWeek);
-
-
     return (
         <div className="flex flex-col w-full">
             <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
                 <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
-                    ระบบบันทึกเข้า-ออกงาน{" "}
+                    ปฎิทินการทำงาน{" "}
                     <span className="font-normal font-FontNoto text-base sm:text-lg">
                         {roleText ? `(${roleText})` : ""}
                     </span>
                 </h1>
-                <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบเวลาเข้า-ออกงาน และกิจกรรมที่เกี่ยวข้อง</p>
+                <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบแผนการทำงาน และกิจกรรมที่เกี่ยวข้อง</p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 mt-4 mb-6 animate-fade-in ">
@@ -436,7 +434,7 @@ const Workplan = () => {
 
             </div>
 
-            <div className="w-full max-w-6xl mx-auto bg-white shadow-xl rounded-xl p-6 items-center justify-center">
+            <div className="w-full max-w-6xl mx-auto bg-transparent rounded-xl p-6 items-center justify-center">
 
                 <h2 className="text-2xl font-bold mb-2 font-FontNoto text-blue-800 text-center">🐾 ปฏิทินการทำงานของคุณ {userName} 🐾</h2>
 

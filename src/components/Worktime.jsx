@@ -7,7 +7,7 @@ const Worktime = () => {
     const [monthFilter, setMonthFilter] = useState(new Date().getMonth() + 1);
     const [yearFilter, setYearFilter] = useState(new Date().getFullYear());
     const [userId, setUserId] = useState(null);
- 
+
     const thaiMonths = [
         "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
         "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
@@ -107,8 +107,6 @@ const Worktime = () => {
         return { hours, minutes };
     };
 
-
-
     const formatDate = (dateStr) => {
         const date = new Date(dateStr);
         return date.toLocaleDateString('th-TH', {
@@ -127,13 +125,17 @@ const Worktime = () => {
             return matchMonth && matchYear && matchUser;
         })
         .sort((a, b) => new Date(b.date) - new Date(a.date)); // 🔁 เรียงจากใหม่ไปเก่า
- 
-    return (
-        <div className="flex flex-col gap-6 items-center p-6 w-full">
-            <div className="w-full bg-white shadow-xl rounded-xl p-6">
-                <h2 className="text-2xl font-bold mb-2 font-FontNoto">บันทึกเวลาเข้า-ออกงาน</h2>
-                <p className="text-xl font-FontNoto">คุณ {userName}</p>
 
+    return (
+        <div className=" ">
+            <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+                <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+                    บันทึกเวลาเข้า-ออกงาน
+                </h1>
+                <p className="text-xl font-FontNoto">คุณ {userName}</p>
+            </div>
+            <h2 className="text-2xl font-bold mb-2 font-FontNoto"></h2>
+            <div className="w-full bg-transparent rounded-xl p-3">
                 {/* ตัวกรองเดือนและปี */}
                 <div className="flex items-center justify-end space-x-4 mb-4">
                     <select className="select select-bordered w-40 text-black font-FontNoto" value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)}>
@@ -149,7 +151,7 @@ const Worktime = () => {
                         ))}
                     </select>
                 </div>
-                
+
                 {/* สรุปเวลาสายทั้งเดือน */}
                 <div className="mb-4 text-lg font-FontNoto text-red-700 font-semibold">
                     {(() => {
@@ -159,76 +161,103 @@ const Worktime = () => {
                         }
                         return `เดือนนี้คุณมาสายไปทั้งหมด ${hours > 0 ? `${hours} ชั่วโมง` : ''} ${minutes > 0 ? `${minutes} นาที` : ''}`;
                     })()}
-                </div>
+                </div> <img
+                    src="https://cdn-icons-png.flaticon.com/512/616/616408.png"
+                    alt="cute paw"
+                    className="absolute -top-6 -left-6 w-16 h-16 object-contain animate-float-slow opacity-80"
+                />
+
+                {/* 🐾 รูปสัตว์น่ารักมุมขวา */}
+                <img
+                    src="https://cdn-icons-png.flaticon.com/512/616/616430.png"
+                    alt="cute paw right"
+                    className="absolute -top-6 -right-6 w-16 h-16 object-contain animate-float-slow opacity-80"
+                />
 
                 {/* ตารางเวลา */}
-                <div className="overflow-x-auto">
-                    <table className="table table-zebra">
-                        <thead className="bg-base-200 text-center">
-                            <tr>
-                                <th className="font-FontNoto">วันที่</th>
-                                <th className="font-FontNoto">สถานที่</th>
-                                <th className="font-FontNoto">พิกัด</th>
-                                <th className="font-FontNoto">สาย</th>
-                                <th className="font-FontNoto">Check-in</th>
-                                <th className="font-FontNoto">Check-out</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-center">
-                            {filteredWorktimes.length > 0 ? (
-                                filteredWorktimes.map((item, index) => (
-                                    <tr key={index}>
-                                        <td className="font-FontNoto">{formatDate(item.date)}</td>
-                                        <td className="font-FontNoto">{item.location}</td>
-                                        <td className="font-FontNoto">
-                                            {item.photoPath && item.photoPath.includes('Lat') ? (
-                                                <a
-                                                    href={`https://maps.google.com/?q=${item.photoPath.split('|')[0].replace('Lat: ', '').replace(', Lng: ', ',')}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-blue-600 underline text-sm"
-                                                >
-                                                    {item.photoPath.trim()}
-                                                </a>
-                                            ) : (
-                                                item.photoPath || '-'
-                                            )}
-                                        </td>
+                <div className="overflow-x-auto bg-blue-50 p-4 rounded-xl shadow-lg relative">
 
-                                        <td
-                                            className={`font-FontNoto ${(() => {
-                                                const isLeave = item.location?.includes('ลา');
-                                                const isWeekend = [0, 6].includes(new Date(item.date).getDay());
-                                                const isLate = calculateRawLateMinutes(item.checkIn, item.date) > 0;
+                    {/* 🐾 รูปสัตว์น่ารักมุมซ้าย */}
 
-                                                return !isLeave && !isWeekend && isLate ? 'text-red-600' : 'text-black';
-                                            })()
-                                                }`}
-                                        >
-                                            {(() => {
-                                                const date = new Date(item.date);
-                                                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                                                const isLeave = item.location?.includes('ลา');
-                                                if (isLeave) return 'ลา';
-                                                if (!item.checkIn && isWeekend) return '-';
-                                                return calculateLateMinutes(item.checkIn, item.date);
-                                            })()}
-                                        </td>
-
-                                        <td className="font-FontNoto">{item.checkIn || '-'}</td>
-                                        <td className="font-FontNoto">{item.checkOut || '-'}</td>
-                                    </tr>
-                                ))
-                            ) : (
+                    <div className="overflow-x-auto">
+                        <table className="table w-full text-center">
+                            <thead className="bg-blue-200 text-blue-900 text-sm">
                                 <tr>
-                                    <td colSpan="6" className="text-center text-gray-400 font-FontNoto">ไม่พบข้อมูล</td>
+                                    <th className="py-3 font-FontNoto">วันที่</th>
+                                    <th className="py-3 font-FontNoto">สถานที่</th>
+                                    <th className="py-3 font-FontNoto">พิกัด</th>
+                                    <th className="py-3 font-FontNoto">สาย</th>
+                                    <th className="py-3 font-FontNoto">Check-in</th>
+                                    <th className="py-3 font-FontNoto">Check-out</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+
+                            <tbody className="bg-white">
+                                {filteredWorktimes.length > 0 ? (
+                                    filteredWorktimes.map((item, index) => (
+                                        <tr
+                                            key={index}
+                                            className="border-b hover:bg-blue-100 transition duration-300 rounded-lg overflow-hidden font-FontNoto"
+                                        >
+                                            <td className="py-2 font-FontNoto">{formatDate(item.date)}</td>
+                                            <td
+                                                className={`py-2 font-FontNoto ${item.location?.includes('ลา') ? 'text-green-600' : 'text-black'
+                                                    }`}
+                                            >
+                                                {item.location}
+                                            </td>
+
+                                            <td className="font-FontNoto">
+                                                {item.photoPath && item.photoPath.includes('Lat') ? (
+                                                    <a
+                                                        href={`https://maps.google.com/?q=${item.photoPath.split('|')[0].replace('Lat: ', '').replace(', Lng: ', ',')}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-600 underline text-sm"
+                                                    >
+                                                        {item.photoPath.trim()}
+                                                    </a>
+                                                ) : (
+                                                    item.photoPath || '-'
+                                                )}
+                                            </td>
+                                            <td
+                                                className={`py-2 font-FontNoto ${(() => {
+                                                    const date = new Date(item.date);
+                                                    const isLeave = item.location?.includes('ลา');
+                                                    const isWeekend = [0, 6].includes(date.getDay());
+                                                    const isLate = calculateRawLateMinutes(item.checkIn, item.date) > 0;
+
+                                                    if (isLeave) return 'text-green-600 ';                  // สีเขียวเวลาเป็นลา
+                                                    if (!isWeekend && isLate) return 'text-red-600';        // สีแดงเมื่อมาสาย
+                                                    return 'text-black';                                             // ปกติสีดำ
+                                                })()
+                                                    }`}
+                                            >
+                                                {(() => {
+                                                    const date = new Date(item.date);
+                                                    const isWeekend = [0, 6].includes(date.getDay());
+                                                    const isLeave = item.location?.includes('ลา');
+                                                    if (isLeave) return 'ลา';
+                                                    if (!item.checkIn && isWeekend) return '-';
+                                                    return calculateLateMinutes(item.checkIn, item.date);
+                                                })()}
+                                            </td>
+
+                                            <td className="py-2 font-FontNoto">{item.checkIn || '-'}</td>
+                                            <td className="py-2 font-FontNoto">{item.checkOut || '-'}</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="6" className="py-6 text-gray-400 font-FontNoto">ไม่พบข้อมูล</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-               
-               
+
             </div>
         </div>
     );

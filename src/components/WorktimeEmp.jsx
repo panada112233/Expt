@@ -112,11 +112,41 @@ const WorktimeEmp = () => {
         .filter(u => u.totalLateMinutes === 0 && u.hasData);
 
     return (
-        <div className="flex-1 p-3 bg-white shadow-lg rounded-lg ml-1">
+        <div className="flex flex-col w-full">
+            <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+                <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+                    รายการเข้า-ออกงานพนักงาน
+                </h1>
+                <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบข้อมูลการเข้า-ออกงาน และกิจกรรมที่เกี่ยวข้อง</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 font-FontNoto p-3">
 
-            {/* หัวเรื่อง */}
-            <h2 className="text-2xl font-bold mb-4 font-FontNoto">รายการเข้า-ออกงานพนักงาน</h2>
+                {/* การ์ด คนที่มาสายมากที่สุด */}
+                <div className="bg-red-50 border border-red-400 rounded-xl p-4 shadow-md w-full sm:w-80 flex flex-col relative overflow-hidden">
+                    <img
+                        src="https://cdn-icons-png.flaticon.com/512/3917/3917754.png"
+                        alt="Most Late"
+                        className="w-10 h-10 absolute -top-3 -right-3 rotate-[10deg]"
+                    />
+                    <h3 className="text-md font-bold text-red-800 mb-3 text-center font-FontNoto ">🥇 คนที่มาสายมากที่สุด</h3>
+                    <p className="text-sm text-gray-800 font-FontNoto text-left">
+                        {mostLate ? `${mostLate.fullName} (${mostLate.totalLateMinutes} นาที)` : "-"}
+                    </p>
+                </div>
 
+                {/* การ์ด พนักงานที่ไม่มาสายเลย */}
+                <div className="bg-green-50 border border-green-400 rounded-xl p-4 shadow-md w-full sm:w-80 flex flex-col relative overflow-hidden">
+                    <img
+                        src="https://cdn-icons-png.flaticon.com/512/190/190411.png"
+                        alt="Never Late"
+                        className="w-10 h-10 absolute -top-3 -right-3 rotate-[10deg]"
+                    />
+                    <h3 className="text-md font-bold text-green-800 mb-3 text-center font-FontNoto ">✅ พนักงานที่ไม่มาสายเลย</h3>
+                    <p className="text-sm text-gray-800 font-FontNoto text-left ">
+                        {neverLate.length > 0 ? neverLate.map(u => u.fullName).join(", ") : "-"}
+                    </p>
+                </div>
+            </div>
             {/* ตัวกรองเดือน/ปี */}
             <div className="flex items-center justify-end space-x-4 mb-4">
                 <select className="select select-bordered w-40 text-black font-FontNoto" value={month} onChange={(e) => setMonth(e.target.value)}>
@@ -129,20 +159,6 @@ const WorktimeEmp = () => {
                         <option className="font-FontNoto" key={y} value={y}>{y}</option>
                     ))}
                 </select>
-            </div>
-
-            {/* 🔶 สรุป */}
-            <div className="bg-base-100 p-4 rounded-lg mb-6 font-FontNoto">
-                <p className="mb-2 text-lg font-FontNoto">
-                    <strong className="font-FontNoto">🥇 คนที่มาสายมากที่สุด:</strong>{" "}
-                    {mostLate ? `${mostLate.fullName} (${mostLate.totalLateMinutes} นาที)` : "-"}
-                </p>
-                <p className="text-lg font-FontNoto">
-                    <strong className="font-FontNoto">✅ พนักงานที่ไม่มาสายเลย:</strong>{" "}
-                    {neverLate.length > 0
-                        ? neverLate.map(u => u.fullName).join(", ")
-                        : "-"}
-                </p>
             </div>
 
             {/* ตารางข้อมูลรายวัน */}

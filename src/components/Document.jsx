@@ -540,8 +540,14 @@ function Document() {
 
   return (
     <div className="">
-      <h2 className="text-2xl font-bold text-black font-FontNoto">จัดการเอกสารพนักงาน</h2>
-      <div className="max-w-screen-lg mx-auto bg-white rounded-lg p-6 shadow-md">
+      <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+        <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+          จัดการเอกสารพนักงาน
+        </h1>
+        <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบเอกสารใบลา และเอกสารอัปโหลด</p>
+      </div>
+      <h2 className="text-2xl font-bold text-black font-FontNoto"></h2>
+      <div className="max-w-screen-lg mx-auto bg-transparent rounded-lg p-3">
         {/* Modal ใส่รหัสผ่าน */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">

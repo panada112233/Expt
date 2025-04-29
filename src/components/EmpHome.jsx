@@ -278,7 +278,13 @@ const EmpHome = () => {
 
   return (
     <div className="">
-      <h2 className="text-2xl font-bold text-black font-FontNoto">จำนวนเอกสารของฉัน</h2>
+      <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+        <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+        จำนวนเอกสารของฉัน
+        </h1>
+        <p className="text-xs sm:text-sm mt-1 font-FontNoto">กราฟแสดงข้อมูลเอกสาร ใบลาและเอกสารอัปโหลด</p>
+      </div>
+
       {/* ตัวเลือกเดือนและปี */}
       <div className="flex items-center justify-end space-x-4 mb-4">
         <div className="flex items-center gap-2">

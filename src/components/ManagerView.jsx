@@ -373,7 +373,6 @@ const ManagerView = () => {
         }
     };
 
-
     // ฟังก์ชันแก้ไขฟอร์ม
     const editApprovedForm = (form) => {
         setSelectedFormForEdit({ ...form }); // ตั้งค่าฟอร์มที่ต้องการแก้ไข
@@ -381,7 +380,6 @@ const ManagerView = () => {
     // ฟังก์ชันบันทึกการแก้ไข
     const saveEditedForm = async () => {
         console.log(selectedFormForEdit)
-
 
         if (!selectedFormForEdit) return;
 
@@ -430,7 +428,13 @@ const ManagerView = () => {
     };
 
     return (
-        <div className="p-4 sm:p-6">
+        <div className="flex flex-col w-full">
+            <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+                <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+                    การเซ็นอนุมัติใบลาพนักงาน
+                </h1>
+                <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบเอกสารใบลางานของพนักงาน</p>
+            </div>
             <h1 className="text-xl font-bold mb-4 font-FontNoto">ฟอร์มจากพนักงาน</h1>
             {/* ฟอร์มที่รอดำเนินการ */}
             {pendingForms.length > 0 ? (
@@ -650,7 +654,6 @@ const ManagerView = () => {
                                         <td className="font-FontNoto text-center" style={{ color: form.status === "pending_hr" ? 'green' : 'red' }}>
                                             {form.status === "pending_hr" ? "✅ ส่งถึงแล้ว" : "❌ ยังไม่ส่ง"}
                                         </td>
-
 
                                         {/* ✅ ปุ่มจัดการ */}
                                         <td className="flex flex-row gap-2 items-center text-center">

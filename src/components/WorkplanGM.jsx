@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
@@ -49,6 +48,7 @@ const WorkplanGM = () => {
             day: '2-digit', month: '2-digit', year: 'numeric'
         });
     };
+
     const exportToExcel = (records, date) => {
         const data = records.map(rec => ({
             "ชื่อพนักงาน": getFullName(rec.userID),
@@ -63,6 +63,37 @@ const WorkplanGM = () => {
         const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
         const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
         saveAs(blob, `แผนการทำงาน_${formatDate(date)}.xlsx`);
+    };
+
+    const exportToExcelMonthly = () => {
+        const filteredPlans = plans.filter(p => {
+            const d = new Date(p.date);
+            return d.getMonth() + 1 === parseInt(month) && d.getFullYear() === parseInt(year);
+        });
+
+        const groupedByDate = filteredPlans.reduce((acc, plan) => {
+            const key = plan.date;
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(plan);
+            return acc;
+        }, {});
+
+        const data = Object.entries(groupedByDate).flatMap(([date, records]) => {
+            return records.map(rec => ({
+                "ชื่อพนักงาน": getFullName(rec.userID),
+                "วันที่": formatDate(date),
+                [yesterdayLabel]: rec.morningTask || "-",
+                "วันนี้": rec.eveningTask || "-"
+            }));
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Workplan");
+
+        const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+        const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+        saveAs(blob, `แผนการทำงาน_${thaiMonths[month - 1]}_${year + 543}.xlsx`);
     };
 
     // กรองข้อมูลตามเดือน/ปี
@@ -80,11 +111,14 @@ const WorkplanGM = () => {
     }, {});
 
     return (
-        <div className="flex-1 p-3 bg-white shadow-lg rounded-lg ml-1">
-            
+        <div className="flex flex-col w-full">
+            <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+                <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+                    ตารางแผนการปฏิบัติงานพนักงาน
+                </h1>
+                <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบแผนการปฎิบัติงานของพนักงาน</p>
+            </div>
             <div className="p-3">
-                <h2 className="text-2xl font-bold mb-4 font-FontNoto">ตารางแผนการปฏิบัติงานพนักงาน</h2>
-
                 {/* ตัวกรองเดือน/ปี */}
                 <div className="flex items-center justify-end space-x-4 mb-4">
                     <select className="select select-bordered w-40 font-FontNoto" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
@@ -99,6 +133,16 @@ const WorkplanGM = () => {
                     </select>
                 </div>
 
+                {/* ปุ่มส่งออกรายเดือน */}
+                <div className="flex justify-end mb-4">
+                    <button
+                        onClick={exportToExcelMonthly}
+                        className="btn btn-sm btn-primary font-FontNoto"
+                    >
+                        ส่งออก Excel รายเดือน
+                    </button>
+                </div>
+
                 {/* ตารางรายวัน */}
                 {Object.entries(grouped).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([date, records]) => (
                     <div key={date} className="bg-white rounded-xl shadow border border-gray-200 p-4 mb-6">
@@ -106,41 +150,37 @@ const WorkplanGM = () => {
                             <h3 className="font-semibold font-FontNoto">📅 วันที่ {formatDate(date)}</h3>
                             <button
                                 onClick={() => exportToExcel(records, date)}
-                                className="btn btn-sm btn-success font-FontNoto"
+                                className="btn btn-sm btn-success !text-white font-FontNoto"
                             >
-                                📥 ส่งออก Excel
+                                ส่งออก Excel
                             </button>
                         </div>
                         <div className="overflow-x-hidden w-full">
-                            <table className="table text-sm text-center border border-gray-300 w-full table-fixed">
-                                <thead className="bg-blue-100 font-FontNoto text-black">
-                                    <tr className="text-black">
-                                        <th className="w-[180px] whitespace-nowrap font-FontNoto ">ชื่อพนักงาน</th>
-                                        <th className="w-[300px] whitespace-nowrap font-FontNoto">
+                            <table className="table text-sm text-center border border-gray-200 w-full table-auto shadow-md rounded-lg">
+                                <thead className="bg-blue-100 text-black font-FontNoto">
+                                    <tr>
+                                        <th className="w-[180px] whitespace-nowrap font-FontNoto text-left pl-4 py-3 text-black">ชื่อพนักงาน</th>
+                                        <th className="w-[300px] whitespace-nowrap font-FontNoto text-left pl-4 py-3 text-black">
                                             {(() => {
                                                 const d = new Date(date); // date ของแถวนี้
                                                 return d.getDay() === 1 ? "เมื่อวันศุกร์" : "เมื่อวาน";
                                             })()}
                                         </th>
-                                        <th className="w-[300px] whitespace-nowrap font-FontNoto">วันนี้</th>
+                                        <th className="w-[300px] whitespace-nowrap font-FontNoto text-left pl-4 py-3 text-black">วันนี้</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white text-center font-FontNoto">
                                     {records.map((rec, idx) => (
-                                        <tr key={idx}>
-                                            <td className="text-left px-2 font-FontNoto">{getFullName(rec.userID)}</td>
-                                            <td className="bg-blue-50 text-left px-2 whitespace-pre-wrap break-words overflow-hidden font-FontNoto">
-                                                {rec.morningTask || "-"}
-                                            </td>
-                                            <td className="bg-green-50 text-left px-2 whitespace-pre-wrap break-words overflow-hidden font-FontNoto">
-                                                {rec.eveningTask || "-"}
-                                            </td>
+                                        <tr key={idx} className="hover:bg-gray-100 transition-all duration-200">
+                                            <td className="text-left px-4 py-3 font-FontNoto">{getFullName(rec.userID)}</td>
+                                            <td className="text-left px-4 py-3 font-FontNoto text-gray-700">{rec.morningTask || "-"}</td>
+                                            <td className="text-left px-4 py-3 font-FontNoto text-gray-700">{rec.eveningTask || "-"}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
 
+                        </div>
                     </div>
                 ))}
             </div>

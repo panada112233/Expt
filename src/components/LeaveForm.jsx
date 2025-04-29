@@ -742,7 +742,7 @@ const LeaveForm = () => {
 
     return (
         <div className="">
-            <div className="max-w-screen-lg mx-auto bg-white rounded-lg p-4 sm:p-6 shadow-md overflow-x-auto">
+            <div className="max-w-screen-lg mx-auto bg-transparent rounded-lg p-4 sm:p-6  overflow-x-auto">
                 <h2 className="text-2xl  font-bold text-center font-FontNoto">แบบฟอร์มใบลา</h2>
                 <form className="space-y-4">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-2">

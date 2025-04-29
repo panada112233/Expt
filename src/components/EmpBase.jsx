@@ -9,6 +9,9 @@ const EmpBase = () => {
   const [role, setRole] = useState(null); // state สำหรับ role
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   // ✅ ใช้ useState แทนการดึงทันที
   const [currentUserId, setCurrentUserId] = useState("");
   const [userID, setUserID] = useState("");
@@ -32,6 +35,15 @@ const EmpBase = () => {
     }
   }, []);
 
+  const openModal = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setSelectedImage(null);
+    setIsModalOpen(false);
+  };
 
   const fetchRole = async () => {
     try {
@@ -169,13 +181,33 @@ const EmpBase = () => {
           {/* User Name Display */}
           <div className="text-center mt-4 break-words">
             <div className="avatar mb-4 flex justify-center">
-              <div className="ring-4 ring-offset-2 ring-gradient-to-r from-cyan-700 via-blue-800 to-purple-900 w-24 h-24 rounded-full">
+              <div
+                className="ring-4 ring-offset-2 ring-gradient-to-r from-cyan-700 via-blue-800 to-purple-900 w-24 h-24 rounded-full cursor-pointer overflow-hidden"
+                onClick={() => openModal(currentProfileImage)}
+              >
                 <img
                   src={currentProfileImage}
                   alt="โปรไฟล์พนักงาน"
                   className="object-cover w-full h-full rounded-full"
                 />
               </div>
+              {isModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+                  <div className="relative bg-white rounded-2xl overflow-hidden shadow-2xl max-w-2xl w-full">
+                    <button
+                      className="absolute top-2 right-3 text-gray-600 hover:text-red-500 text-3xl font-bold"
+                      onClick={closeModal}
+                    >
+                      ×
+                    </button>
+                    <img
+                      src={selectedImage}
+                      alt="โปรไฟล์ขยาย"
+                      className="w-full h-auto rounded-2xl object-contain"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
             <h4 className="text-xl text-black font-FontNoto">{userName}</h4>
           </div>
@@ -259,7 +291,7 @@ const EmpBase = () => {
               </summary>
 
               <ul className="mt-2 ml-2 space-y-1" style={{ fontSize: '14px' }}>
-              <li>
+                <li>
                   <Link
                     to="/EmpHome/Worktime"
                     onClick={() => setIsSidebarOpen(false)}
@@ -278,7 +310,7 @@ const EmpBase = () => {
                     โปรไฟล์ของฉัน
                   </Link>
                 </li>
-                
+
                 <li>
                   <Link
                     to="/EmpHome/My_experience"
@@ -426,7 +458,7 @@ const EmpBase = () => {
           />
         )}
         {/* Main Content */}
-        <div className="md:ml-[17vw] mt-[64px] p-4 w-full min-h-[calc(100vh-64px)] overflow-auto bg-gradient-to-br from-cyan-100 via-blue-100 to-purple-100">
+        <div className="md:ml-[17vw] mt-[64px] p-4 w-full min-h-[calc(100vh-64px)] overflow-auto bg-gradient-to-br">
           <div className="w-full max-w-screen-xl mx-auto rounded-2xl shadow-xl p-6 bg-white backdrop-blur-md min-h-full">
             <Outlet />
           </div>

@@ -296,9 +296,13 @@ function Profile() {
 
   return (
     <div className=" ">
-
-      <h2 className="text-2xl font-bold text-black font-FontNoto">โปรไฟล์ของฉัน</h2>
-      <div className="max-w-3xl mx-auto rounded-lg shadow-md relative">
+      <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+        <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+          โปรไฟล์ของฉัน
+        </h1>
+        <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบข้อมูลส่วนตัว และกิจกรรมที่เกี่ยวข้อง</p>
+      </div>
+      <div className="max-w-3xl mx-auto rounded-lg relative">
         {/* แสดงสถานะการโหลดข้อมูล */}
         {loading ? (
           <div className="text-center py-6">กำลังโหลดข้อมูล...</div>
@@ -307,7 +311,7 @@ function Profile() {
         ) : (
           <>
             {/* ฟอร์มแสดงข้อมูล */}
-            <div className="p-6">
+            <div className="w-full bg-transparent rounded-xl p-3">
               {messages.length > 0 &&
                 messages.map((message, index) => (
                   <div key={index} className={`alert alert-${message.tags} mb-4 ${message.className || ""}`}>

@@ -258,65 +258,65 @@ const LeaveStatistics = () => {
   const years = Array.from({ length: 11 }, (_, i) => 2024 + i); // ปี 2024 ถึง 2034
 
   return (
-
-    <div className="flex flex-col md:flex-row min-h-screen bg-base-200">
-      <div className="flex-1 p-3 bg-white shadow-lg rounded-lg ml-1">
-
-        <div className="p-3">
-          <h2 className="text-2xl font-bold text-black font-FontNoto">สถิติการลาพนักงาน</h2>
-          <div className="flex items-center justify-end space-x-4 mb-4">
-            <select
-              id="monthSelect"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-              className="select select-bordered w-40 text-black font-FontNoto"
-            >
-              {months.map((month, index) => (
-                <option className="font-FontNoto" key={index} value={index}>{month}</option>
-              ))}
-            </select>
-            <select
-              id="yearSelect"
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="select select-bordered w-40 text-black font-FontNoto"
-            >
-              {years.map((year) => (
-                <option className="font-FontNoto" key={year} value={year}>{year}</option>
-              ))}
-            </select>
-          </div>
-          {/* ข้อมูลประเภทเอกสาร */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
-            {Object.keys(categoryCounts).map((category) => (
-              <div key={category} className="bg-white border border-black p-4 rounded-lg shadow-md flex flex-col items-center">
-                <div className="flex flex-col items-center justify-center">
-                  <h3 className="text-lg font-bold font-FontNoto mb-2">{category}</h3>
-                  <div className="flex items-center space-x-2">
-                    <img src={iconMapping[category]} alt={category} className="w-7 h-7" />
-                    <p className="text-3xl font-FontNoto">{categoryCounts[category] || 0}</p>
-                  </div>
+    <div className="flex flex-col w-full">
+      <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+        <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+          สถิติการลาพนักงาน
+        </h1>
+        <p className="text-xs sm:text-sm mt-1 font-FontNoto">กราฟตรวจสอบข้อมูลการลาของพนักงาน</p>
+      </div>
+      <div className="p-3">
+        <div className="flex items-center justify-end space-x-4 mb-4">
+          <select
+            id="monthSelect"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+            className="select select-bordered w-40 text-black font-FontNoto"
+          >
+            {months.map((month, index) => (
+              <option className="font-FontNoto" key={index} value={index}>{month}</option>
+            ))}
+          </select>
+          <select
+            id="yearSelect"
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            className="select select-bordered w-40 text-black font-FontNoto"
+          >
+            {years.map((year) => (
+              <option className="font-FontNoto" key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
+        {/* ข้อมูลประเภทเอกสาร */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
+          {Object.keys(categoryCounts).map((category) => (
+            <div key={category} className="bg-white border border-black p-4 rounded-lg shadow-md flex flex-col items-center">
+              <div className="flex flex-col items-center justify-center">
+                <h3 className="text-lg font-bold font-FontNoto mb-2">{category}</h3>
+                <div className="flex items-center space-x-2">
+                  <img src={iconMapping[category]} alt={category} className="w-7 h-7" />
+                  <p className="text-3xl font-FontNoto">{categoryCounts[category] || 0}</p>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
+        </div>
 
-          <div className="w-full mt-6 md:mt-10 flex justify-center px-2">
-            <div className="bg-base-100 shadow-lg p-4 rounded-lg w-full max-w-screen-md min-h-[250px]">
-              <h3 className="text-lg font-bold text-black mb-4 font-FontNoto text-center">
-                สถิติการลาของพนักงาน
-              </h3>
-              <div className="relative w-full overflow-x-auto">
-                <div className="min-w-[600px] h-[350px] sm:h-[400px]">
-                  <Bar className="font-FontNoto" data={createChartData()} options={chartOptions} />
-                </div>
+        <div className="w-full mt-6 md:mt-10 flex justify-center px-2">
+          <div className="bg-base-100 shadow-lg p-4 rounded-lg w-full max-w-screen-md min-h-[250px]">
+            <h3 className="text-lg font-bold text-black mb-4 font-FontNoto text-center">
+              สถิติการลาของพนักงาน
+            </h3>
+            <div className="relative w-full overflow-x-auto">
+              <div className="min-w-[600px] h-[350px] sm:h-[400px]">
+                <Bar className="font-FontNoto" data={createChartData()} options={chartOptions} />
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-
   );
 };
 

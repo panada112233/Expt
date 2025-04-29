@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from 'react-router-dom';
 import { pdfMake, font } from "../libs/pdfmake";
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 function MyEducation() {
   const [educations, setEducations] = useState([]);
@@ -48,6 +50,11 @@ function MyEducation() {
   // ดึงข้อมูลการศึกษา
   useEffect(() => {
     fetchEducations();
+
+    AOS.init({
+      duration: 1500,
+      easing: 'ease-in-out',
+    });
   }, [userID]);
 
   // เพิ่มหรือแก้ไขข้อมูลการศึกษา
@@ -285,30 +292,64 @@ function MyEducation() {
 
   return (
     <div className="">
-
+      <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+        <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+          การศึกษา
+        </h1>
+        <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบข้อมูลการศึกษา</p>
+      </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <p className="text-center">{modalMessage}</p>
-            <div className="flex justify-center mt-4">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 animate-fade-in">
+          <div
+            className="bg-white p-6 rounded-2xl shadow-2xl w-96 relative transition-transform duration-300 ease-in-out transform scale-100"
+            data-aos="zoom-in"
+            data-aos-duration="500"
+            data-aos-easing="ease-in-out"
+          >
+            {/* 🎀 รูปการ์ตูน */}
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/3712/3712092.png" // สามารถเปลี่ยนลิงก์รูปได้ตามใจ
+              alt="cute alert"
+              className="w-12 h-12 absolute -top-6 left-4 rounded-full border-4 border-white shadow-lg bg-pink-100"
+            />
+
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-pink-600 font-FontNoto">
+                ⚡ แจ้งเตือน
+              </h3>
+              <button
+                onClick={handleCloseModal}
+                className="text-red-500 text-lg font-bold hover:scale-110 transition"
+              >
+                ❌
+              </button>
+            </div>
+
+            <div className="mb-4 text-gray-700 font-FontNoto">
+              {modalMessage}
+            </div>
+
+            <div className="flex justify-end gap-2">
               {modalConfirmAction && (
                 <button
-                  className="btn btn-outline btn-primary mx-2 font-FontNoto"
+                  className="btn btn-outline btn-error font-FontNoto"
                   onClick={modalConfirmAction}
                 >
                   ยืนยัน
                 </button>
               )}
-              <button className="btn btn-outline btn-error mx-2 font-FontNoto" onClick={handleCloseModal}>
+              {/* <button
+                className="btn btn-outline btn-error font-FontNoto"
+                onClick={handleCloseModal}
+              >
                 ยกเลิก
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
       )}
-      <h2 className="text-2xl font-bold text-black font-FontNoto">การศึกษา</h2>
-      <div className="max-w-4xl mx-auto  shadow-lg rounded-lg p-6 relative">
+      <div className="max-w-4xl mx-auto  rounded-lg p-6 relative">
         <form onSubmit={handleAddOrEditEducation} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-control">
@@ -448,18 +489,20 @@ function MyEducation() {
                       <td className="table-header font-FontNoto text-center">{edu.year}</td>
                       <td className="table-header font-FontNoto text-center">{edu.gpa}</td>
                       <td className="font-FontNoto text-center">
-                        <button
-                          className="btn btn-xs btn-warning mr-2 font-FontNoto"
-                          onClick={() => handleEditEducation(index)}
-                        >
-                          แก้ไข
-                        </button>
-                        <button
-                          className="btn btn-xs btn-error font-FontNoto"
-                          onClick={() => handleDeleteEducation(index)}
-                        >
-                          ลบ
-                        </button>
+                        <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
+                          <button
+                            className="btn btn-xs btn-warning mr-2 font-FontNoto"
+                            onClick={() => handleEditEducation(index)}
+                          >
+                            แก้ไข
+                          </button>
+                          <button
+                            className="btn btn-xs btn-error font-FontNoto"
+                            onClick={() => handleDeleteEducation(index)}
+                          >
+                            ลบ
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
