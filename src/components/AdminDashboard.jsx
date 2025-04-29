@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 import { NavLink } from 'react-router-dom';
 import axios from "axios";
 import { Bar } from "react-chartjs-2";
-import logo from "../assets/1.png";
-import { Icon } from "@iconify/react"; // ใช้ Icons8
 import { GetUser } from '../function/apiservice'
 import {
   Chart as ChartJS,
@@ -35,6 +33,7 @@ const AdminDashboard = () => {
   const [employeeData, setEmployeeData] = useState([]);
   const [filesData, setFilesData] = useState([]);
   const [categoryCounts, setCategoryCounts] = useState({});
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [profilePic, setProfilePic] = useState(""); // รูปโปรไฟล์
@@ -412,24 +411,30 @@ const AdminDashboard = () => {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Navbar */}
-      <div className="navbar bg-amber-400 shadow-lg flex flex-wrap justify-between items-center px-4 py-2">
-        <div className="flex items-center mb-2 md:mb-0">
-          <div className="flex items-center bg-white rounded-lg px-2 py-1 max-w-full border-2 border-white">
-            <img src={logo} className="h-8 w-auto mr-2" alt="Logo" />
-            <span className="font-bold text-black">THE</span>&nbsp;
-            <span className="font-bold text-[#FF8800]">EXPERTISE</span>&nbsp;
-            <span className="font-bold text-black">CO, LTD.</span>
+      <div className="navbar bg-gradient-to-r from-cyan-950 via-blue-900 to-purple-950 shadow-lg flex flex-wrap justify-between items-center px-4 py-2">
+        <div className="flex items-center">
+          <div>
+            <span className="font-bold text-white">THE</span>&nbsp;
+            <span className="font-bold text-white">EXPERTISE</span>&nbsp;
+            <span className="font-bold text-white">CO, LTD.</span>
           </div>
         </div>
-        <div className="text-center text-xl font-bold text-black bg-amber-400 p-2 rounded-md font-FontNoto w-full md:w-auto">
-          ระบบจัดเก็บเอกสารพนักงาน
+        <div className="md:hidden flex justify-start px-4 py-2">
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="text-white text-2xl font-FontNoto focus:outline-none"
+          >
+            ☰
+          </button>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex flex-col md:flex-row min-h-screen bg-base-200">
         {/* Sidebar */}
-        <div className="w-full md:w-1/5 bg-white shadow-lg p-6 rounded-none md:rounded-lg">
+        <div className={`fixed md:static top-0 left-0 bg-white w-[70%] md:w-1/5 h-full md:h-auto z-40 shadow-lg p-6 rounded-none md:rounded-lg transform transition-transform duration-300 ease-in-out 
+  ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
+
           <div className="">
             <div className="font-FontNoto">
               {uploadMessage && <div>{uploadMessage}</div>}
@@ -440,7 +445,7 @@ const AdminDashboard = () => {
                 <img
                   src={`${profilePic}?t=${new Date().getTime()}`}
                   alt="Admin Profile"
-                  className="rounded-full border-4 border-yellow-500 object-cover w-32 h-32"
+                  className="rounded-full border-4 border-cyan-700 object-cover w-32 h-32"
                   onError={(e) => {
                     console.error("❌ โหลดรูปโปรไฟล์ไม่สำเร็จ:", e.target.src);
                     e.target.onerror = null; // ป้องกัน Loop Error
@@ -451,11 +456,11 @@ const AdminDashboard = () => {
               ) : (
                 <p className="text-red-500 font-FontNoto"></p> // ✅ แสดงข้อความถ้าไม่มีรูป
               )}
-
               <p className="text-lg text-black font-FontNoto mt-4">
                 {adminName || "กำลังโหลด..."}
               </p>
             </div>
+
             <div className="mt-4">
               {!isEditingName ? (
                 <div className="flex justify-center items-center w-full flex-wrap gap-2">
@@ -489,6 +494,7 @@ const AdminDashboard = () => {
                 </div>
               )}
             </div>
+
             <div className="flex justify-center items-center space-x-2">
               <div className="flex items-center space-x-1 p-0.25 border border-gray-200 rounded-md w-48">
                 <label
@@ -525,6 +531,13 @@ const AdminDashboard = () => {
             <li><Link to="/AdminLogout" className="hover:bg-error hover:text-white font-FontNoto font-bold">ออกจากระบบ</Link></li>
           </ul>
         </div>
+
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-30"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
         {/* Content */}
         <div className="flex-1 p-4 md:p-10 bg-white shadow-lg rounded-none md:rounded-lg">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">

@@ -22,6 +22,7 @@ function CreateEducation() {
     const [adminName, setAdminName] = useState(""); // ชื่อจริงของแอดมิน
     const [selectedFile, setSelectedFile] = useState(null); // ไฟล์ที่เลือก
     const [uploadMessage, setUploadMessage] = useState("");
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isEditingName, setIsEditingName] = useState(false);
     const navigate = useNavigate();
 
@@ -47,7 +48,7 @@ function CreateEducation() {
         Master: "ปริญญาโท",
         Doctorate: "ปริญญาเอก",
     };
- 
+
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -201,8 +202,6 @@ function CreateEducation() {
         var userinfolocalStorage = localStorage.getItem('userinfo')
         const objUser = JSON.parse(userinfolocalStorage)
         console.log(objUser.userid)
-
-
         const formData = new FormData();
         formData.append("profilePictures", selectedFile); // ส่งเฉพาะรูปภาพ
         formData.append("id", objUser.userid);
@@ -244,16 +243,27 @@ function CreateEducation() {
     return (
         <div className="flex flex-col min-h-screen">
             {/* Navbar */}
-            <div className="navbar bg-amber-400 shadow-lg flex flex-wrap justify-between items-center px-4 py-2">
-                <div className="flex-1">
-                    <div className="text-center text-xl font-bold text-black bg-amber-400 p-2 rounded-md font-FontNoto w-full md:w-auto">
-                        ระบบจัดเก็บเอกสารพนักงาน
+            <div className="navbar bg-gradient-to-r from-cyan-950 via-blue-900 to-purple-950 shadow-lg flex flex-wrap justify-between items-center px-4 py-2">
+                <div className="flex items-center">
+                    <div>
+                        <span className="font-bold text-white">THE</span>&nbsp;
+                        <span className="font-bold text-white">EXPERTISE</span>&nbsp;
+                        <span className="font-bold text-white">CO, LTD.</span>
                     </div>
+                </div>
+                <div className="md:hidden flex justify-start px-4 py-2">
+                    <button
+                        onClick={() => setIsSidebarOpen(true)}
+                        className="text-white text-2xl font-FontNoto focus:outline-none"
+                    >
+                        ☰
+                    </button>
                 </div>
             </div>
             <div className="flex flex-col md:flex-row min-h-screen bg-base-200">
                 {/* Sidebar */}
-                <div className="w-full md:w-1/5 bg-white shadow-lg p-6 rounded-none md:rounded-lg">
+                <div className={`fixed md:static top-0 left-0 bg-white w-[70%] md:w-1/5 h-full md:h-auto z-40 shadow-lg p-6 rounded-none md:rounded-lg transform transition-transform duration-300 ease-in-out 
+  ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
                     <div className="">
                         <div className="font-FontNoto">
                             {uploadMessage && <div>{uploadMessage}</div>}
@@ -264,7 +274,7 @@ function CreateEducation() {
                                 <img
                                     src={`${profilePic}?t=${new Date().getTime()}`} // ✅ ป้องกันการแคช
                                     alt="Admin Profile"
-                                    className="rounded-full border-4 border-yellow-500 object-cover w-32 h-32"
+                                    className="rounded-full border-4 border-cyan-700 object-cover w-32 h-32"
                                     onError={(e) => { e.target.src = "https://localhost:7039/uploads/admin/default-profile.jpg"; }} // ✅ ถ้าโหลดรูปไม่ได้ ให้ใช้รูป default
                                 />
                             ) : (
@@ -344,6 +354,12 @@ function CreateEducation() {
                         <li><Link to="/AdminLogout" className="hover:bg-error hover:text-white font-FontNoto font-bold">ออกจากระบบ</Link></li>
                     </ul>
                 </div>
+                {isSidebarOpen && (
+                    <div
+                        className="fixed inset-0 bg-black bg-opacity-50 z-30"
+                        onClick={() => setIsSidebarOpen(false)}
+                    />
+                )}
                 {isModalOpen && (
                     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                         <div className="bg-white rounded-lg shadow-lg p-6 w-1/3">

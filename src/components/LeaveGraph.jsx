@@ -26,6 +26,7 @@ const LeaveGraph = () => {
   const [profilePic, setProfilePic] = useState(""); // รูปโปรไฟล์
   const [adminName, setAdminName] = useState(""); // ชื่อจริงของแอดมิน
   const [selectedFile, setSelectedFile] = useState(null); // ไฟล์ที่เลือก
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false); // เพิ่มตัวแปร isEditingName
   const [uploadMessage, setUploadMessage] = useState("");
   const [categoryCounts, setCategoryCounts] = useState({});
@@ -385,24 +386,29 @@ const LeaveGraph = () => {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Navbar */}
-      <div className="navbar bg-amber-400 shadow-lg flex flex-wrap justify-between items-center px-4 py-2">
-        <div className="flex items-center mb-2 md:mb-0">
-          <div className="flex items-center bg-white rounded-lg px-2 py-1 max-w-full border-2 border-white">
-            <img src={logo} className="h-8 w-auto mr-2" alt="Logo" />
-            <span className="font-bold text-black">THE</span>&nbsp;
-            <span className="font-bold text-[#FF8800]">EXPERTISE</span>&nbsp;
-            <span className="font-bold text-black">CO, LTD.</span>
+      <div className="navbar bg-gradient-to-r from-cyan-950 via-blue-900 to-purple-950 shadow-lg flex flex-wrap justify-between items-center px-4 py-2">
+        <div className="flex items-center">
+          <div>
+            <span className="font-bold text-white">THE</span>&nbsp;
+            <span className="font-bold text-white">EXPERTISE</span>&nbsp;
+            <span className="font-bold text-white">CO, LTD.</span>
           </div>
         </div>
-        <div className="text-center text-xl font-bold text-black bg-amber-400 p-2 rounded-md font-FontNoto w-full md:w-auto">
-          ระบบจัดเก็บเอกสารพนักงาน
+        <div className="md:hidden flex justify-start px-4 py-2">
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="text-white text-2xl font-FontNoto focus:outline-none"
+          >
+            ☰
+          </button>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex flex-col md:flex-row min-h-screen bg-base-200">
         {/* Sidebar */}
-        <div className="w-full md:w-1/5 bg-white shadow-lg p-6 rounded-none md:rounded-lg">
+        <div className={`fixed md:static top-0 left-0 bg-white w-[70%] md:w-1/5 h-full md:h-auto z-40 shadow-lg p-6 rounded-none md:rounded-lg transform transition-transform duration-300 ease-in-out 
+  ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
           <div className="">
             <div className="font-FontNoto">
               {uploadMessage && <div>{uploadMessage}</div>}
@@ -413,7 +419,7 @@ const LeaveGraph = () => {
                 <img
                   src={`${profilePic}?t=${new Date().getTime()}`} // ✅ ป้องกันการแคช
                   alt="Admin Profile"
-                  className="rounded-full border-4 border-yellow-500 object-cover w-32 h-32"
+                  className="rounded-full border-4 border-cyan-700 object-cover w-32 h-32"
                   onError={(e) => { e.target.src = "https://localhost:7039/uploads/admin/default-profile.jpg"; }} // ✅ ถ้าโหลดรูปไม่ได้ ให้ใช้รูป default
                 />
               ) : (
@@ -485,7 +491,7 @@ const LeaveGraph = () => {
               </button>
             </div>
           </div>
- 
+
           <ul className="menu bg-base-100 text-black rounded-box w-full text-lg">
             <li><Link to="/AdminDashboard" className="hover:bg-green-100 hover:text-black font-FontNoto font-bold">Dashboard</Link></li>
             <li><NavLink to="/LeaveGraph" className={({ isActive }) => isActive ? "hover:bg-gray-300 hover:text-black font-FontNoto font-bold bg-gray-200" : "hover:bg-yellow-100 hover:text-black font-FontNoto font-bold"}>สถิติการลาพนักงาน</NavLink></li>
@@ -493,6 +499,12 @@ const LeaveGraph = () => {
             <li><Link to="/AdminLogout" className="hover:bg-error hover:text-white font-FontNoto font-bold">ออกจากระบบ</Link></li>
           </ul>
         </div>
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-30"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
         {/* Content */}
         <div className="flex-1 p-4 md:p-10 bg-white shadow-lg rounded-none md:rounded-lg">
           <h2 className="text-2xl font-bold text-black font-FontNoto">สถิติการลาพนักงาน</h2>
