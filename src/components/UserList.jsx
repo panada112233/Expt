@@ -295,6 +295,8 @@ const UserList = () => {
 
           <ul className="menu bg-base-100 text-black rounded-box w-full text-lg">
             <li><Link to="/AdminDashboard" className="hover:bg-green-100 hover:text-black font-FontNoto font-bold">Dashboard</Link></li>
+            <li><Link to="/Admintime" className="hover:bg-green-100 font-FontNoto font-bold">รายการเข้า-ออกงาน</Link></li>
+            <li><Link to="/Adminplan" className="hover:bg-green-100 font-FontNoto font-bold">การปฎิบัติงานพนักงาน</Link></li>
             <li><Link to="/LeaveGraph" className="hover:bg-green-100 font-FontNoto font-bold">สถิติการลาพนักงาน</Link></li>
             <li><NavLink to="/UserList" className={({ isActive }) => isActive ? "hover:bg-gray-300 hover:text-black font-FontNoto font-bold bg-gray-200" : "hover:bg-yellow-100 hover:text-black font-FontNoto font-bold"}>ข้อมูลพนักงาน</NavLink></li>
             <li><Link to="/AdminLogout" className="hover:bg-error hover:text-white font-FontNoto font-bold">ออกจากระบบ</Link></li>
@@ -309,7 +311,13 @@ const UserList = () => {
         )}
         {/* Content */}
         <div className="flex-1 p-4 md:p-10 bg-white shadow-lg rounded-none md:rounded-lg">
-          <h2 className="text-2xl font-bold text-black font-FontNoto">จัดการข้อมูลพนักงาน</h2>
+          <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+            <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+              จัดการข้อมูลพนักงาน
+            </h1>
+            <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบข้อมูลพนักงาน และกิจกรรมที่เกี่ยวข้อง</p>
+          </div>
+
           {/* Search Form */}
           <div className="flex justify-start md:justify-end gap-2 mt-4 overflow-x-auto whitespace-nowrap px-1">
             <input
@@ -342,7 +350,7 @@ const UserList = () => {
               {/* Responsive Table */}
               <div className="overflow-x-auto">
                 <table className="table table-zebra w-full border-collapse border border-gray-300">
-                  <thead>
+                  <thead className="text-center">
                     <tr className="bg-gray-100">
 
                       <th className="border px-4 py-2 font-FontNoto">ชื่อ</th>

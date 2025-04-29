@@ -1,42 +1,60 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
+import { NavLink } from 'react-router-dom';
 import { GetUser } from '../function/apiservice';
 
 
-function CreateWorkExperience() {
-    const [newExperience, setNewExperience] = useState({
-        companyName: "",
-        jobTitle: "",
-        startDate: "",
-        endDate: "",
-        salary: "",
-    });
-
-    const [users, setUsers] = useState([]);
-    const [selectedUserID, setSelectedUserID] = useState("");
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [errors, setErrors] = useState({});
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+const Admintime = () => {
     const [profilePic, setProfilePic] = useState(""); // รูปโปรไฟล์
     const [adminName, setAdminName] = useState(""); // ชื่อจริงของแอดมิน
     const [selectedFile, setSelectedFile] = useState(null); // ไฟล์ที่เลือก
     const [uploadMessage, setUploadMessage] = useState("");
     const [isEditingName, setIsEditingName] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const navigate = useNavigate();
+    const [worktimes, setWorktimes] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [month, setMonth] = useState(new Date().getMonth() + 1);
+    const [year, setYear] = useState(new Date().getFullYear());
 
     useEffect(() => {
-        const fetchUsers = async () => {
+        const fetchAll = async () => {
             try {
-                const response = await axios.get("https://localhost:7039/api/Admin/users");
-                setUsers(response.data);
-            } catch (error) {
-                console.error("เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้งาน:", error);
+                const [wtRes, userRes] = await Promise.all([
+                    axios.get("https://localhost:7039/api/Worktime"),
+                    axios.get("https://localhost:7039/api/Users")
+                ]);
+                setWorktimes(wtRes.data);
+                setUsers(userRes.data);
+            } catch (err) {
+                console.error("โหลดข้อมูลเข้า-ออกงานล้มเหลว:", err);
             }
         };
-        fetchUsers();
+        fetchAll();
     }, []);
+
+    useEffect(() => {
+        axios
+            .get("https://localhost:7039/api/Admin/Users")
+            .then((response) => {
+                if (Array.isArray(response.data)) {
+                    setUsers(response.data);
+                    setFilteredUsers(response.data); // ตั้งค่า filteredUsers
+                } else {
+                    console.error("Data is not an array:", response.data);
+                    setUsers([]);
+                    setFilteredUsers([]);
+                }
+                setLoading(false);
+            })
+            .catch((error) => {
+                console.error("Error loading user data:", error);
+                setError("ไม่สามารถโหลดข้อมูลผู้ใช้งานได้");
+                setLoading(false);
+            });
+    }, []);
+
     useEffect(() => {
         const fetchAdminInfo = async () => {
             try {
@@ -47,6 +65,7 @@ function CreateWorkExperience() {
                         ? `https://localhost:7039${response.profilePictureUrl}`
                         : "https://localhost:7039/uploads/admin/default-profile.jpg"
                 );
+
             } catch (error) {
                 console.error("Error fetching admin data:", error);
                 setAdminName("ไม่สามารถดึงข้อมูลได้");
@@ -56,6 +75,29 @@ function CreateWorkExperience() {
         fetchAdminInfo();
     }, []);
 
+    const getFullName = (userId) => {
+        const user = users.find(u => u.userID === userId);
+        return user ? `${user.firstName} ${user.lastName}` : "ไม่ทราบชื่อ";
+    };
+
+    const formatDate = (dateStr) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString("th-TH", {
+            day: '2-digit', month: '2-digit', year: 'numeric'
+        });
+    };
+
+    const filteredWorktimes = worktimes.filter(w => {
+        const d = new Date(w.date);
+        return d.getMonth() + 1 === parseInt(month) && d.getFullYear() === parseInt(year);
+    });
+
+    const grouped = filteredWorktimes.reduce((acc, w) => {
+        const key = w.date;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(w);
+        return acc;
+    }, {});
 
     const handleProfilePicChange = (event) => {
         const file = event.target.files[0]; // เลือกไฟล์แรกจากไฟล์ที่เลือก
@@ -154,90 +196,6 @@ function CreateWorkExperience() {
             );
         }
     };
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-
-        // ตรวจสอบปีเริ่มต้นและปีสิ้นสุดให้กรอกเฉพาะตัวเลข 4 หลัก
-        if ((name === "startDate" || name === "endDate") && !/^\d{0,4}$/.test(value)) {
-            return; // หยุดการอัปเดต state ถ้าค่าไม่ใช่ตัวเลข 4 หลัก
-        }
-
-        // ตรวจสอบเงินเดือนว่าห้ามติดลบ
-        if (name === "salary" && value < 0) {
-            return; // หยุดการอัปเดต state ถ้าเงินเดือนเป็นค่าติดลบ
-        }
-
-        setNewExperience({ ...newExperience, [name]: value });
-    };
-
-    const handleUserChange = (e) => {
-        setSelectedUserID(e.target.value);
-    };
-
-    const handleCloseModal = () => {
-        setIsModalOpen(false); // ปิด Modal
-        console.log(selectedUserID)
-        if (selectedUserID != null && selectedUserID !== "") {
-            navigate(`/users/${selectedUserID}`);
-        }
-        //  // เด้งไปหน้า /users/:UserID
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        const newErrors = {};
-
-        // ตรวจสอบ startDate และ endDate ว่ามีความยาวครบ 4 หลัก
-        if (newExperience.startDate.length !== 4 || isNaN(newExperience.startDate)) {
-            newErrors.startDate = "กรุณากรอกปีที่เริ่มต้นให้ครบ 4 หลัก";
-        }
-
-        if (newExperience.endDate && (newExperience.endDate.length !== 4 || isNaN(newExperience.endDate))) {
-            newErrors.endDate = "กรุณากรอกปีที่สิ้นสุดให้ครบ 4 หลัก";
-        }
-
-        // ตรวจสอบว่า salary ไม่ติดลบ
-        const salary = parseFloat(newExperience.salary);
-        if (salary < 0 || isNaN(salary)) {
-            newErrors.salary = "เงินเดือนไม่สามารถเป็นค่าติดลบได้";
-        }
-
-        // หากมีข้อผิดพลาดให้แสดงข้อความและหยุดการดำเนินการ
-        if (Object.keys(newErrors).length > 0) {
-            setErrors(newErrors);
-            return;
-        }
-
-        setErrors({}); // ล้างข้อผิดพลาดเมื่อไม่มีปัญหา
-        console.log(selectedUserID)
-        try {
-            const response = await axios.post("https://localhost:7039/api/Admin/WorkExperiences", {
-                userID: parseInt(selectedUserID),
-                companyName: newExperience.companyName,
-                jobTitle: newExperience.jobTitle,
-                startDate: newExperience.startDate,
-                endDate: newExperience.endDate || null, // อนุญาตให้ endDate เป็น null
-                salary: salary,
-            });
-
-            console.log("เพิ่มข้อมูลประสบการณ์ทำงานสำเร็จ", response.data);
-
-            setNewExperience({
-                companyName: "",
-                jobTitle: "",
-                startDate: "",
-                endDate: "",
-                salary: "",
-            });
-
-            setIsModalOpen(true); // เปิด Modal
-        } catch (error) {
-            console.error("เกิดข้อผิดพลาดในการเพิ่มข้อมูล:", error);
-        }
-    };
-
     return (
         <div className="flex flex-col min-h-screen">
             {/* Navbar */}
@@ -249,6 +207,7 @@ function CreateWorkExperience() {
                         <span className="font-bold text-white">CO, LTD.</span>
                     </div>
                 </div>
+                {/* ปุ่มเปิด sidebar เฉพาะบนมือถือ */}
                 <div className="md:hidden flex justify-start px-4 py-2">
                     <button
                         onClick={() => setIsSidebarOpen(true)}
@@ -258,10 +217,12 @@ function CreateWorkExperience() {
                     </button>
                 </div>
             </div>
+
             <div className="flex flex-col md:flex-row min-h-screen bg-base-200">
                 {/* Sidebar */}
                 <div className={`fixed md:static top-0 left-0 bg-white w-[70%] md:w-1/5 h-full md:h-auto z-40 shadow-lg p-6 rounded-none md:rounded-lg transform transition-transform duration-300 ease-in-out 
   ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
+
                     <div className="">
                         <div className="font-FontNoto">
                             {uploadMessage && <div>{uploadMessage}</div>}
@@ -286,7 +247,6 @@ function CreateWorkExperience() {
                         <div className="mt-4">
                             {!isEditingName ? (
                                 <div className="flex justify-center items-center w-full flex-wrap gap-2">
-
                                     <button
                                         onClick={() => setIsEditingName(true)}
                                         className="ml-2 text-sm text-blue-500 hover:underline font-FontNoto"
@@ -348,159 +308,86 @@ function CreateWorkExperience() {
 
                     <ul className="menu bg-base-100 text-black rounded-box w-full text-lg">
                         <li><Link to="/AdminDashboard" className="hover:bg-green-100 hover:text-black font-FontNoto font-bold">Dashboard</Link></li>
-                        <li><Link to="/Admintime" className="hover:bg-green-100 font-FontNoto font-bold">รายการเข้า-ออกงาน</Link></li>
+                        <li><NavLink to="/Admintime" className={({ isActive }) => isActive ? "hover:bg-gray-300 hover:text-black font-FontNoto font-bold bg-gray-200" : "hover:bg-yellow-100 hover:text-black font-FontNoto font-bold"}>รายการเข้า-ออกงาน</NavLink></li>
                         <li><Link to="/Adminplan" className="hover:bg-green-100 font-FontNoto font-bold">การปฎิบัติงานพนักงาน</Link></li>
                         <li><Link to="/LeaveGraph" className="hover:bg-green-100 font-FontNoto font-bold">สถิติการลาพนักงาน</Link></li>
-                        <li><Link to="/UserList" className="hover:bg-green-100 hover:text-black font-FontNoto font-bold">ข้อมูลพนักงาน</Link></li>
+                        <li><Link to="/UserList" className="hover:bg-green-100 font-FontNoto font-bold">ข้อมูลพนักงาน</Link></li>
                         <li><Link to="/AdminLogout" className="hover:bg-error hover:text-white font-FontNoto font-bold">ออกจากระบบ</Link></li>
                     </ul>
                 </div>
+
                 {isSidebarOpen && (
                     <div
                         className="fixed inset-0 bg-black bg-opacity-50 z-30"
                         onClick={() => setIsSidebarOpen(false)}
                     />
                 )}
-                {isModalOpen && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                        <div className="bg-white rounded-lg shadow-lg p-6 w-1/3">
-                            <h2 className="text-xl font-bold mb-4 font-FontNoto">เพิ่มข้อมูลสำเร็จ</h2>
-                            <p className="font-FontNoto">ข้อมูลประสบการณ์ทำงานถูกบันทึกเรียบร้อยแล้ว</p>
-                            <div className="mt-4 flex justify-center">
-                                <button
-                                    className="btn btn-primary font-FontNoto"
-                                    onClick={() => handleCloseModal(false)} // ปิด Modal
-                                >
-                                    ตกลง
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {/* Main Content */}
+                {/* Content */}
                 <div className="flex-1 p-4 md:p-10 bg-white shadow-lg rounded-none md:rounded-lg">
                     <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
                         <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
-                            เพิ่มประสบการณ์ทำงาน
+                            บันทึกรายการเข้า-ออกงานพนักงาน
                         </h1>
-                        <p className="text-xs sm:text-sm mt-1 font-FontNoto">เพิ่มประสบการณ์ทำงานให้พนักงาน</p>
+                        <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบข้อมูลการเข้า-ออกงานของพนักงาน</p>
                     </div>
-                    <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-md p-6">
-                        <div className="flex items-center justify-end space-x-4 mb-4">
-                            <button
-                                onClick={() => history.back()}
-                                className="btn btn-outline btn-error font-FontNoto"
-                            >
-                                กลับไปยังรายการ
-                            </button>
+                    <div className="flex justify-end gap-4 mb-4">
+                        <select className="select select-bordered w-40 text-black font-FontNoto" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
+                            {["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"].map((m, idx) => (
+                                <option className="font-FontNoto" key={idx + 1} value={idx + 1}>{m}</option>
+                            ))}
+                        </select>
+                        <select className="select select-bordered w-40 text-black font-FontNoto" value={year} onChange={(e) => setYear(Number(e.target.value))}>
+                            {Array.from({ length: 11 }, (_, i) => 2024 + i).map((y) => (
+                                <option className="font-FontNoto" key={y} value={y}>{y}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {Object.entries(grouped).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([date, records]) => (
+                        <div key={date} className="bg-white rounded-xl shadow border border-gray-200 p-4 mb-6">
+                            <h3 className="font-semibold mb-2 font-FontNoto">📅 วันที่ {formatDate(date)}</h3>
+                            <div className="overflow-x-auto">
+                                <table className="table text-sm text-center border border-gray-300">
+                                    <thead className="text-center bg-blue-100 text-black font-FontNoto">
+                                        <tr>
+                                            <th>ชื่อพนักงาน</th>
+                                            <th>สถานที่</th>
+                                            <th>เข้างาน</th>
+                                            <th>ออกงาน</th>
+                                            <th>มาสาย</th>
+                                            <th>พิกัด</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {records.map((rec, idx) => (
+                                            <tr key={idx}>
+                                                <td className="font-FontNoto">{getFullName(rec.userID)}</td>
+                                                <td className={`font-FontNoto ${rec.location.includes("ลา") ? "text-red-600" : ""}`}>{rec.location}</td>
+                                                <td className="font-FontNoto">{rec.checkIn || "-"}</td>
+                                                <td className="font-FontNoto">{rec.checkOut || "-"}</td>
+                                                <td className={`font-FontNoto ${rec.lateMinutes > 0 ? "text-red-600" : ""}`}>
+                                                    {rec.lateMinutes > 0
+                                                        ? `${Math.floor(rec.lateMinutes / 60) > 0 ? `${Math.floor(rec.lateMinutes / 60)} ชม ` : ""}${rec.lateMinutes % 60} นาที`
+                                                        : "0 นาที"}
+                                                </td>
+                                                <td className="font-FontNoto text-blue-600">
+                                                    {rec.photoPath?.includes("Lat")
+                                                        ? <a href={`https://maps.google.com/?q=${rec.photoPath.replace('Lat: ', '').replace(', Lng: ', ',')}`} target="_blank" rel="noreferrer" className="underline">{rec.photoPath}</a>
+                                                        : rec.photoPath || "-"}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="form-control">
-                                <label className="label">
-                                    <span className="label-text font-FontNoto">เลือกพนักงาน</span>
-                                </label>
-                                <select
-                                    className="select select-bordered text-black bg-white focus:bg-white focus:text-black font-FontNoto"
-                                    value={selectedUserID}
-                                    onChange={handleUserChange}
-                                    required
-                                >
-                                    <option className="font-FontNoto" value="" disabled>กรุณาเลือกพนักงาน</option>
-                                    {users.map((user) => (
-                                        <option className="font-FontNoto" key={user.userID} value={user.userID}>
-                                            {user.firstName || ''} {user.lastName || ''}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                    ))}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text font-FontNoto">ชื่อบริษัท</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="companyName"
-                                        className="input input-bordered font-FontNoto"
-                                        placeholder="กรอกชื่อบริษัท"
-                                        value={newExperience.companyName}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                    {errors.companyName && <p className="text-red-500 text-sm font-FontNoto">{errors.companyName}</p>}
-                                </div>
-
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text font-FontNoto">ตำแหน่ง</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="jobTitle"
-                                        className="input input-bordered font-FontNoto"
-                                        placeholder="กรอกตำแหน่ง"
-                                        value={newExperience.jobTitle}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                    {errors.jobTitle && <p className="text-red-500 text-sm font-FontNoto">{errors.jobTitle}</p>}
-                                </div>
-
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text font-FontNoto">เงินเดือน</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="salary"
-                                        className="input input-bordered font-FontNoto"
-                                        placeholder="กรอกเงินเดือน"
-                                        value={newExperience.salary}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                    {errors.salary && <p className="text-red-500 text-sm font-FontNoto">{errors.salary}</p>}
-                                </div>
-
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text font-FontNoto">ปีที่เริ่มต้น</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="startDate"
-                                        className="input input-bordered font-FontNoto"
-                                        placeholder="กรอกปีที่เริ่มต้น (ตัวอย่าง: 2567)"
-                                        value={newExperience.startDate}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                    {errors.startDate && <p className="text-red-500 text-sm font-FontNoto">{errors.startDate}</p>}
-                                </div>
-
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text font-FontNoto">ปีที่สิ้นสุด</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="endDate"
-                                        className="input input-bordered font-FontNoto"
-                                        placeholder="กรอกปีที่สิ้นสุด (ตัวอย่าง: 2568)"
-                                        value={newExperience.endDate}
-                                        onChange={handleChange}
-                                    />
-                                    {errors.endDate && <p className="text-red-500 text-sm font-FontNoto">{errors.endDate}</p>}
-                                </div>
-                            </div>
-                            <button type="submit" className="btn btn-warning w-full font-FontNoto">เพิ่มประสบการณ์ทำงาน</button>
-                        </form>
-                    </div>
                 </div>
             </div>
         </div>
-    );
-}
 
-export default CreateWorkExperience;
+    );
+};
+
+export default Admintime;

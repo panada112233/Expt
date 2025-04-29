@@ -370,6 +370,8 @@ const UserDetails = () => {
 
           <ul className="menu bg-base-100 text-black rounded-box w-full text-lg">
             <li><Link to="/AdminDashboard" className="hover:bg-green-100 hover:text-black font-FontNoto font-bold">Dashboard</Link></li>
+            <li><Link to="/Admintime" className="hover:bg-green-100 font-FontNoto font-bold">รายการเข้า-ออกงาน</Link></li>
+            <li><Link to="/Adminplan" className="hover:bg-green-100 font-FontNoto font-bold">การปฎิบัติงานพนักงาน</Link></li>
             <li><Link to="/LeaveGraph" className="hover:bg-green-100 font-FontNoto font-bold">สถิติการลาพนักงาน</Link></li>
             <li><NavLink to="/UserList" className={({ isActive }) => isActive ? "hover:bg-gray-300 hover:text-black font-FontNoto font-bold bg-gray-200" : "hover:bg-yellow-100 hover:text-black font-FontNoto font-bold"}>ข้อมูลพนักงาน</NavLink></li>
             <li><Link to="/AdminLogout" className="hover:bg-error hover:text-white font-FontNoto font-bold">ออกจากระบบ</Link></li>
@@ -383,12 +385,17 @@ const UserDetails = () => {
         )}
         {/* Content */}
         <div className="flex-1 p-4 md:p-10 bg-white shadow-lg rounded-none md:rounded-lg">
+          <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+            <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+              รายละเอียดผู้ใช้งาน
+            </h1>
+            <p className="text-xs sm:text-sm mt-1 font-FontNoto">แสดงข้อมูลพนักงานรายบุคคล</p>
+          </div>
           <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-md p-6">
-            <h1 className="text-2xl font-bold text-center mb-4 font-FontNoto">รายละเอียดผู้ใช้งาน</h1>
             <div className="flex justify-center mb-6">
               <img
                 src={profileImageUrl || "/placeholder.jpg"}
-                className="w-32 h-32 rounded-full object-cover border-4 border-yellow-400"
+                className="w-32 h-32 rounded-full object-cover border-4 border-cyan-700"
               />
             </div>
             <div className="mt-6 flex justify-between p-2">
@@ -403,7 +410,7 @@ const UserDetails = () => {
               </button>
             </div>
             <div className="overflow-x-auto whitespace-nowrap">
-              <table className="min-w-[1100px] table-auto border-collapse border border-gray-300 text-left">
+              <table className="min-w-[1100px] w-full table-auto border-collapse border border-gray-300 text-left">
                 <thead>
                   <tr className="bg-gray-100 text-center">
                     <th className="border px-4 py-2 font-semibold font-FontNoto">ชื่อ-นามสกุล</th>

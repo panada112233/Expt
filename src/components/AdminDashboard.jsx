@@ -526,6 +526,8 @@ const AdminDashboard = () => {
 
           <ul className="menu bg-base-100 text-black rounded-box w-full text-lg">
             <li><NavLink to="/AdminDashboard" className={({ isActive }) => isActive ? "hover:bg-gray-300 hover:text-black font-FontNoto font-bold bg-gray-200" : "hover:bg-yellow-100 hover:text-black font-FontNoto font-bold"}>Dashboard</NavLink></li>
+            <li><Link to="/Admintime" className="hover:bg-green-100 font-FontNoto font-bold">รายการเข้า-ออกงาน</Link></li>
+            <li><Link to="/Adminplan" className="hover:bg-green-100 font-FontNoto font-bold">การปฎิบัติงานพนักงาน</Link></li>
             <li><Link to="/LeaveGraph" className="hover:bg-green-100 font-FontNoto font-bold">สถิติการลาพนักงาน</Link></li>
             <li><Link to="/UserList" className="hover:bg-green-100 hover:text-black font-FontNoto font-bold">ข้อมูลพนักงาน</Link></li>
             <li><Link to="/AdminLogout" className="hover:bg-error hover:text-white font-FontNoto font-bold">ออกจากระบบ</Link></li>
@@ -540,27 +542,35 @@ const AdminDashboard = () => {
         )}
         {/* Content */}
         <div className="flex-1 p-4 md:p-10 bg-white shadow-lg rounded-none md:rounded-lg">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-            <div className="flex flex-col">
-              <h2 className="text-2xl font-bold text-black font-FontNoto">แดชบอร์ด แอดมิน</h2>
-              <Link to="/AdminManagement" className="btn btn-outline font-FontNoto mt-2">
+          <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+            <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+              แดชบอร์ด แอดมิน
+            </h1>
+            <p className="text-xs sm:text-sm mt-1 font-FontNoto">กราฟตรวจสอบจำนวนเอกสารของพนักงาน</p>
+          </div>
+          <div className="flex flex-row justify-between items-center mb-6 gap-4">
+            <div>
+              <Link to="/AdminManagement" className="btn btn-outline font-FontNoto">
                 ข้อมูลแอดมิน
               </Link>
             </div>
 
-            <label htmlFor="yearSelect" className="label flex justify-between">
+            <label htmlFor="yearSelect">
               <select
                 id="yearSelect"
                 value={selectedYear}
                 onChange={handleYearChange}
                 className="select select-bordered font-FontNoto text-black w-48"
               >
-                {getUniqueYears().map(year => (
-                  <option key={year} value={year}>{year}</option>
+                {getUniqueYears().map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
                 ))}
               </select>
             </label>
           </div>
+
           {/* ข้อมูลประเภทเอกสาร */}
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
             {Object.keys(categoryCounts).map((category) => (

@@ -332,6 +332,8 @@ const EditWorkExperience = () => {
 
           <ul className="menu bg-base-100 text-black rounded-box w-full text-lg">
             <li><Link to="/AdminDashboard" className="hover:bg-green-100 hover:text-black font-FontNoto font-bold">Dashboard</Link></li>
+            <li><Link to="/Admintime" className="hover:bg-green-100 font-FontNoto font-bold">รายการเข้า-ออกงาน</Link></li>
+            <li><Link to="/Adminplan" className="hover:bg-green-100 font-FontNoto font-bold">การปฎิบัติงานพนักงาน</Link></li>
             <li><Link to="/LeaveGraph" className="hover:bg-green-100 font-FontNoto font-bold">สถิติการลาพนักงาน</Link></li>
             <li><Link to="/UserList" className="hover:bg-green-100 hover:text-black font-FontNoto font-bold">ข้อมูลพนักงาน</Link></li>
             <li><Link to="/AdminLogout" className="hover:bg-error hover:text-white font-FontNoto font-bold">ออกจากระบบ</Link></li>
@@ -345,9 +347,14 @@ const EditWorkExperience = () => {
         )}
         {/* Main Content */}
         <div className="flex-1 p-4 md:p-10 bg-white shadow-lg rounded-none md:rounded-lg">
+          <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+            <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+            แก้ไขข้อมูลประสบการณ์ทำงาน
+            </h1>
+            <p className="text-xs sm:text-sm mt-1 font-FontNoto">แก้ไขข้อมูลประสบการณ์ทำงานให้พนักงาน</p>
+          </div>
           <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-md p-6">
-            <div className="mt-6 flex justify-between ">
-              <h2 className="text-2xl font-bold text-black  font-FontNoto">แก้ไขข้อมูลประสบการณ์ทำงาน</h2>
+            <div className="flex items-center justify-end space-x-4 mb-4">
               <button
                 onClick={() => history.back()}
                 className="btn btn-outline btn-error font-FontNoto"

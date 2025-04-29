@@ -379,6 +379,8 @@ const UserEdit = () => {
 
           <ul className="menu bg-base-100 text-black rounded-box w-full text-lg">
             <li><Link to="/AdminDashboard" className="hover:bg-green-100 hover:text-black font-FontNoto font-bold">Dashboard</Link></li>
+            <li><Link to="/Admintime" className="hover:bg-green-100 font-FontNoto font-bold">รายการเข้า-ออกงาน</Link></li>
+            <li><Link to="/Adminplan" className="hover:bg-green-100 font-FontNoto font-bold">การปฎิบัติงานพนักงาน</Link></li>
             <li><Link to="/LeaveGraph" className="hover:bg-green-100 font-FontNoto font-bold">สถิติการลาพนักงาน</Link></li>
             <li><NavLink to="/UserList" className={({ isActive }) => isActive ? "hover:bg-gray-300 hover:text-black font-FontNoto font-bold bg-gray-200" : "hover:bg-yellow-100 hover:text-black font-FontNoto font-bold"}>ข้อมูลพนักงาน</NavLink></li>
             <li><Link to="/AdminLogout" className="hover:bg-error hover:text-white font-FontNoto font-bold">ออกจากระบบ</Link></li>
@@ -391,11 +393,16 @@ const UserEdit = () => {
           />
         )}
         {/* Content */}
-        <div className="flex flex-col md:flex-row h-full min-h-screen w-full bg-base-200 overflow-x-hidden">
+        <div className="flex-1 p-4 md:p-10 bg-white shadow-lg rounded-none md:rounded-lg">
+          <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+            <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+              แก้ไขข้อมูลพนักงาน
+            </h1>
+            <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบแก้ไขข้อมุลพนักงานรายบุคคล</p>
+          </div>
           <div className="flex-1 p-4 md:p-10 bg-white shadow-lg rounded-none md:rounded-lg">
             <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-4 md:p-6">
-              <div className="mt-4 md:mt-6 flex flex-col md:flex-row justify-between gap-4">
-                <h2 className="text-2xl font-bold text-black font-FontNoto">แก้ไขข้อมูลพนักงาน</h2>
+              <div className="flex items-center justify-end space-x-4 mb-4">
                 <button
                   onClick={() => navigate("/UserList")}
                   className="btn btn-outline btn-error font-FontNoto"

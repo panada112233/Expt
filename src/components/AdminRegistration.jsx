@@ -299,6 +299,8 @@ const AdminRegistration = () => {
 
           <ul className="menu bg-base-100 text-black rounded-box w-full text-lg">
             <li><NavLink to="/AdminDashboard" className={({ isActive }) => isActive ? "hover:bg-gray-300 hover:text-black font-FontNoto font-bold bg-gray-200" : "hover:bg-yellow-100 hover:text-black font-FontNoto font-bold"}>Dashboard</NavLink></li>
+            <li><Link to="/Admintime" className="hover:bg-green-100 font-FontNoto font-bold">รายการเข้า-ออกงาน</Link></li>
+            <li><Link to="/Adminplan" className="hover:bg-green-100 font-FontNoto font-bold">การปฎิบัติงานพนักงาน</Link></li>
             <li><Link to="/LeaveGraph" className="hover:bg-green-100 font-FontNoto font-bold">สถิติการลาพนักงาน</Link></li>
             <li><Link to="/UserList" className="hover:bg-green-100 hover:text-black font-FontNoto font-bold">ข้อมูลพนักงาน</Link></li>
             <li><Link to="/AdminLogout" className="hover:bg-error hover:text-white font-FontNoto font-bold">ออกจากระบบ</Link></li>
@@ -310,7 +312,13 @@ const AdminRegistration = () => {
             onClick={() => setIsSidebarOpen(false)}
           />
         )}
-        <div className="flex-1 p-4 md:p-20 bg-white shadow-lg rounded-lg ml-1">
+        <div className="flex-1 p-4 md:p-10 bg-white shadow-lg rounded-none md:rounded-lg">
+          <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+            <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+              เพิ่มแอดมิน
+            </h1>
+            <p className="text-xs sm:text-sm mt-1 font-FontNoto">สมัครสมาชิกแอดมิน</p>
+          </div>
           <div className="flex overflow-x-auto gap-2 mb-4">
             <Link to="/UserList" className="btn btn-outline btn-success font-FontNoto mt-2" style={{ marginRight: '10px' }}>
               ข้อมูลพนักงาน

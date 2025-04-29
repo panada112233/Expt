@@ -494,6 +494,8 @@ const LeaveGraph = () => {
 
           <ul className="menu bg-base-100 text-black rounded-box w-full text-lg">
             <li><Link to="/AdminDashboard" className="hover:bg-green-100 hover:text-black font-FontNoto font-bold">Dashboard</Link></li>
+            <li><Link to="/Admintime" className="hover:bg-green-100 font-FontNoto font-bold">รายการเข้า-ออกงาน</Link></li>
+            <li><Link to="/Adminplan" className="hover:bg-green-100 font-FontNoto font-bold">การปฎิบัติงานพนักงาน</Link></li>
             <li><NavLink to="/LeaveGraph" className={({ isActive }) => isActive ? "hover:bg-gray-300 hover:text-black font-FontNoto font-bold bg-gray-200" : "hover:bg-yellow-100 hover:text-black font-FontNoto font-bold"}>สถิติการลาพนักงาน</NavLink></li>
             <li><Link to="/UserList" className="hover:bg-green-100 hover:text-black font-FontNoto font-bold">ข้อมูลพนักงาน</Link></li>
             <li><Link to="/AdminLogout" className="hover:bg-error hover:text-white font-FontNoto font-bold">ออกจากระบบ</Link></li>
@@ -507,7 +509,13 @@ const LeaveGraph = () => {
         )}
         {/* Content */}
         <div className="flex-1 p-4 md:p-10 bg-white shadow-lg rounded-none md:rounded-lg">
-          <h2 className="text-2xl font-bold text-black font-FontNoto">สถิติการลาพนักงาน</h2>
+          <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+            <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+              สถิติการลาพนักงาน
+            </h1>
+            <p className="text-xs sm:text-sm mt-1 font-FontNoto">กราฟแสดงการลาของพนักงาน</p>
+          </div>
+          <h2 className="text-2xl font-bold text-black font-FontNoto"></h2>
           <div className="flex items-center justify-end space-x-4 mb-4">
             <label htmlFor="monthSelect" className="font-FontNoto text-black">เลือกเดือน:</label>
             <select
@@ -517,7 +525,7 @@ const LeaveGraph = () => {
               className="select select-bordered w-40 text-black font-FontNoto"
             >
               {months.map((month, index) => (
-                <option key={index} value={index}>{month}</option>
+                <option className="font-FontNoto" key={index} value={index}>{month}</option>
               ))}
             </select>
 
@@ -529,7 +537,7 @@ const LeaveGraph = () => {
               className="select select-bordered w-40 text-black font-FontNoto"
             >
               {years.map((year) => (
-                <option key={year} value={year}>{year}</option>
+                <option className="font-FontNoto" key={year} value={year}>{year}</option>
               ))}
             </select>
           </div>

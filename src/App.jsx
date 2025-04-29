@@ -38,6 +38,8 @@ import LeaveForm from './components/LeaveForm';
 import Allcreate from './components/Allcreate';
 
 import AdminDashboard from "./components/AdminDashboard";
+import Admintime from "./components/Admintime";
+import Adminplan from "./components/Adminplan";
 import UserList from "./components/UserList";
 import UserDetails from "./components/UserDetails";
 import UserEdit from "./components/UserEdit";
@@ -115,6 +117,8 @@ function App() {
 
             {/* Routes สำหรับการจัดการผู้ดูแลระบบ */}
             <Route path="/AdminDashboard" element={<AdminDashboard />} />
+            <Route path="/Admintime" element={<Admintime />} />
+            <Route path="/Adminplan" element={<Adminplan />} />
             <Route path="/UserList" element={<UserList />} />
             <Route path="/UserForm/create" element={<UserForm />} />
             <Route path="/UserForm/edit/:id" element={<UserForm />} />
