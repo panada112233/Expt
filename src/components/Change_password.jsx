@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import imgPath from "../assets/home.png";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 function ChangePassword() {
@@ -58,18 +57,13 @@ function ChangePassword() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-100 via-white to-blue-200 flex flex-col md:flex-row items-center justify-center px-4 py-8 font-FontNoto">
-      {/* รูปด้านซ้าย */}
-      <div className="w-full md:w-1/2 flex justify-center mb-8 md:mb-0">
-        <img
-          src={imgPath}
-          alt="Robot"
-          className="w-[900px] md:w-[1000px] animate-bounce-slow"
-        />
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-blue-100 via-white to-blue-200 px-4">
+      {/* ข้อความหัวเรื่อง */}
+      <h1 className="text-3xl md:text-4xl text-blue-700 font-FontInter p-6">
+        THE EXPERTISE CO,LTD.
+      </h1>
 
-      {/* กล่องฟอร์มด้านขวา */}
-      <div className="w-full md:w-1/3 bg-white p-6 md:p-10 rounded-2xl shadow-lg space-y-5">
+      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg space-y-6">
         <h2 className="text-2xl md:text-3xl font-bold text-center text-blue-700 font-FontNoto">
           เปลี่ยนรหัสผ่าน
         </h2>
@@ -181,7 +175,6 @@ function ChangePassword() {
           >
             {loading ? "กำลังบันทึก..." : "ยืนยัน"}
           </button>
-
         </form>
       </div>
 
@@ -195,6 +188,7 @@ function ChangePassword() {
       )}
     </div>
   );
+
 }
 
 export default ChangePassword;

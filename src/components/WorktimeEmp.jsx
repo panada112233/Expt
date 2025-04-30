@@ -46,6 +46,7 @@ const WorktimeEmp = () => {
 
     const handleEditSubmit = async () => {
         try {
+            console.log("Sending edit:", editForm);
             await axios.put(`https://localhost:7039/api/Worktime/${editingRecord.worktimeID}`, editForm);
             setEditingRecord(null);
             fetchAll();
@@ -57,7 +58,11 @@ const WorktimeEmp = () => {
 
     const handleDelete = async () => {
         try {
-            await axios.delete(`https://localhost:7039/api/Worktime/${deleteRecordID}`);
+            await axios.delete(
+                `https://localhost:7039/api/Worktime/${deleteRecordID}`,
+                { headers: { "Content-Type": "application/json" } }
+            );
+
             setDeleteRecordID(null);
             fetchAll();
         } catch (error) {
@@ -157,7 +162,7 @@ const WorktimeEmp = () => {
                     ))}
                 </select>
             </div>
- 
+
             {/* ตารางข้อมูลรายวัน */}
             {Object.entries(grouped).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([date, records]) => (
                 <div key={date} className="bg-white rounded-xl shadow border border-gray-200 p-4 mb-6">
@@ -210,8 +215,8 @@ const WorktimeEmp = () => {
                 </div>
             ))}
             {editingRecord && (
-                <dialog open className="modal">
-                    <div className="modal-box">
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-start justify-center pt-20 z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-xl w-96">
                         <h3 className="font-bold text-lg mb-4">แก้ไขเวลา</h3>
                         <div className="space-y-3">
                             <div>
@@ -232,28 +237,27 @@ const WorktimeEmp = () => {
                                     className="input input-bordered w-full"
                                     placeholder="17:30 หรือ -"
                                 />
-
                             </div>
                         </div>
-                        <div className="modal-action">
+                        <div className="flex justify-end gap-2 mt-4">
                             <button onClick={handleEditSubmit} className="btn btn-success">บันทึก</button>
                             <button onClick={() => setEditingRecord(null)} className="btn btn-ghost">ยกเลิก</button>
                         </div>
                     </div>
-                </dialog>
+                </div>
             )}
+
             {deleteRecordID && (
-                <dialog open className="modal">
-                    <div className="modal-box">
-                        <h3 className="font-bold text-lg">คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</h3>
-                        <div className="modal-action">
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-start justify-center pt-20 z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md mx-auto">
+                        <h3 className="font-bold text-lg mb-4">คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</h3>
+                        <div className="flex justify-end gap-2">
                             <button onClick={handleDelete} className="btn btn-error">ลบ</button>
                             <button onClick={() => setDeleteRecordID(null)} className="btn btn-ghost">ยกเลิก</button>
                         </div>
                     </div>
-                </dialog>
+                </div>
             )}
-
         </div>
 
     );

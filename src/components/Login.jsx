@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-import imgPath from '../assets/home.png';
 import { Link } from "react-router-dom";
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
@@ -24,8 +22,8 @@ const Login = ({ setIsLoggedIn }) => {
         const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
 
         const url = isEmail
-            ? "https://localhost:7039/api/Users/Login"   // ✅ ใช้ API ของพนักงาน
-            : "https://localhost:7039/api/Admin/login";  // ✅ ใช้ API ของแอดมิน
+            ? "https://localhost:7039/api/Users/Login"
+            : "https://localhost:7039/api/Admin/login";
 
         const data = isEmail
             ? { email: identifier, passwordHash: password }
@@ -41,15 +39,15 @@ const Login = ({ setIsLoggedIn }) => {
                     setError('ไม่พบข้อมูล role ของพนักงาน');
                     return;
                 }
-                if (rememberMe) {
-                    localStorage.setItem('savedEmail', identifier); // ✅ เก็บแค่ email
-                } else {
-                    localStorage.removeItem('savedEmail');           // ✅ ถ้าไม่ติ๊ก ลบ email เก่า
-                }
-                // ✅ บันทึกข้อมูลผู้ใช้
-                localStorage.setItem('userinfo', JSON.stringify(res));
-                localStorage.setItem('userID', res.userid); // ✅ บันทึก userID ไว้ใช้งานหน้าอื่น เช่น Chat
 
+                if (rememberMe) {
+                    localStorage.setItem('savedEmail', identifier);
+                } else {
+                    localStorage.removeItem('savedEmail');
+                }
+
+                localStorage.setItem('userinfo', JSON.stringify(res));
+                localStorage.setItem('userID', res.userid);
                 sessionStorage.setItem('userId', res.userid);
                 if (isEmail) {
                     sessionStorage.setItem('role', res.role);
@@ -60,7 +58,6 @@ const Login = ({ setIsLoggedIn }) => {
                 navigate(isEmail ? '/LandingAfterLogin' : '/AdminDashboard');
             }
         } catch (err) {
-            console.log(err)
             if (err.response && err.response.status === 401) {
                 setError('ชื่อผู้ใช้/อีเมล หรือรหัสผ่านไม่ถูกต้อง');
             } else {
@@ -71,22 +68,16 @@ const Login = ({ setIsLoggedIn }) => {
         }
     };
 
-
     return (
-        <div className="min-h-screen bg-gradient-to-r from-blue-100 via-white to-blue-200 flex flex-col md:flex-row items-center justify-center px-4 py-8">
-            {/* รูปหุ่นยนต์ */}
-            <div className="w-full md:w-1/2 flex justify-center mb-8 md:mb-0">
-                <img
-                    src={imgPath}
-                    alt="Cute Robot"
-                    className="w-[900px] md:w-[1000px] animate-bounce-slow"
-                />
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-blue-100 via-white to-blue-200 px-4">
+            {/* ข้อความด้านนอกกรอบ */}
+            <h1 className="text-3xl md:text-4xl  text-blue-700 mb-6 text-center font-FontInter">
+                THE EXPERTISE CO,LTD.
+            </h1>
 
-            </div>
-
-            {/* ฟอร์ม login */}
-            <div className="w-full md:w-1/3 bg-white p-6 md:p-10 rounded-2xl shadow-lg space-y-5">
-                <h2 className="text-2xl md:text-3xl font-bold text-center text-blue-700 font-FontNoto">เข้าสู่ระบบ</h2>
+            {/* กรอบฟอร์ม login */}
+            <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg space-y-6">
+                <h2 className="text-2xl font-bold text-center text-blue-700 font-FontNoto">เข้าสู่ระบบ</h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4 font-FontNoto">
                     <div>
@@ -125,7 +116,8 @@ const Login = ({ setIsLoggedIn }) => {
                             </button>
                         </div>
                     </div>
-                    <div className="flex items-center mb-4 space-x-2">
+
+                    <div className="flex items-center space-x-2">
                         <input
                             type="checkbox"
                             id="rememberMe"
@@ -133,12 +125,12 @@ const Login = ({ setIsLoggedIn }) => {
                             onChange={(e) => setRememberMe(e.target.checked)}
                             className="checkbox checkbox-primary"
                         />
-                        <label htmlFor="rememberMe" className="text-sm font-FontNoto text-gray-700 cursor-pointer">
+                        <label htmlFor="rememberMe" className="text-sm text-gray-700 cursor-pointer font-FontNoto">
                             จำอีเมลของฉัน
                         </label>
                     </div>
 
-                    {error && <p className="text-red-500 text-sm text-center font-FontNoto">{error}</p>}
+                    {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
                     <button
                         type="submit"
@@ -148,7 +140,7 @@ const Login = ({ setIsLoggedIn }) => {
                         {isLoading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
                     </button>
 
-                    <div className="text-center mt-4">
+                    <div className="text-center mt-2">
                         <Link to="/ForgotPassword" className="text-sm text-blue-600 hover:underline font-bold font-FontNoto">
                             ลืมรหัสผ่าน?
                         </Link>
@@ -157,8 +149,6 @@ const Login = ({ setIsLoggedIn }) => {
             </div>
         </div>
     );
-
-
 };
 
 export default Login;

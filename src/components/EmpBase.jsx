@@ -174,282 +174,335 @@ const EmpBase = () => {
       <div className="flex flex-col md:flex-row flex-1 py-2">
         {/* Sidebar */}
         <aside
-          className={`bg-white shadow-md text-black fixed top-[64px] left-0 h-[calc(100vh-64px)] w-[60vw] md:w-[17vw] p-6 z-50 transform transition-transform
-  ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+          className={`bg-white shadow-md text-black fixed top-[64px] left-0 h-[calc(100vh-64px)] w-[80vw] md:w-[16vw] p-6 z-50 transform transition-transform overflow-y-auto
+${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
         >
-          {/* Profile Image */}
-          {/* User Name Display */}
-          <div className="text-center mt-4 break-words">
-            <div className="avatar mb-4 flex justify-center">
+          <div className="text-center my-4">
+            {/* Avatar */}
+            <div className="avatar mb-4 mx-auto">
               <div
-                className="ring-4 ring-offset-2 ring-gradient-to-r from-cyan-700 via-blue-800 to-purple-900 w-24 h-24 rounded-full cursor-pointer overflow-hidden"
+                className="w-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 cursor-pointer"
                 onClick={() => openModal(currentProfileImage)}
               >
                 <img
                   src={currentProfileImage}
                   alt="โปรไฟล์พนักงาน"
-                  className="object-cover w-full h-full rounded-full"
+                  className="object-cover w-full h-full"
                 />
               </div>
-              {isModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-                  <div className="relative bg-white rounded-2xl overflow-hidden shadow-2xl max-w-2xl w-full">
-                    <button
-                      className="absolute top-2 right-3 text-gray-600 hover:text-red-500 text-3xl font-bold"
-                      onClick={closeModal}
-                    >
-                      ×
-                    </button>
-                    <img
-                      src={selectedImage}
-                      alt="โปรไฟล์ขยาย"
-                      className="w-full h-auto rounded-2xl object-contain"
-                    />
-                  </div>
-                </div>
-              )}
             </div>
-            <h4 className="text-xl text-black font-FontNoto">{userName}</h4>
+            <div className="w-full overflow-x-auto">
+              <h4 className="text-base font-bold text-black font-FontNoto whitespace-nowrap inline-block">
+                {userName}
+              </h4>
+            </div>
+
+            {/* Modal รูปภาพขยาย */}
+            {isModalOpen && (
+              <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+                <div className="relative bg-white rounded-2xl overflow-hidden shadow-2xl max-w-2xl w-full">
+                  <button
+                    className="absolute top-2 right-3 text-gray-600 hover:text-red-500 text-3xl font-bold"
+                    onClick={closeModal}
+                  >
+                    ×
+                  </button>
+                  <img
+                    src={selectedImage}
+                    alt="โปรไฟล์ขยาย"
+                    className="w-full h-auto rounded-2xl object-contain"
+                  />
+                </div>
+              </div>
+            )}
           </div>
           {/* Sidebar Links */}
-          <ul className="menu bg-white text-black rounded-box w-full text-lg space-y-2">
-            <details className="mb-2 group">
-              <summary className="cursor-pointer flex items-center justify-between px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold">
-                Dashboard
-                <svg className="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </summary>
+          <div className="overflow-x-auto"> 
+            <ul className="menu bg-white text-black rounded-box w-full min-w-[175px] text-lg space-y-2">
+              <details className="group open:bg-blue-50">
+                <summary className="cursor-pointer flex items-center justify-between px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold whitespace-nowrap">
+                  Dashboard
+                  <svg
+                    className="w-4 h-4 transition-transform group-open:rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </summary>
 
-              <ul className="mt-2 ml-2 space-y-1" style={{ fontSize: '14px' }}>
-                <li>
-                  <Link
-                    to="/EmpHome/Workplan"
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
+                <ul className="mt-2 ml-2 space-y-1 text-sm">
+                  <li>
+                    <Link
+                      to="/EmpHome/Workplan"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                    >
+                      ปฏิทินการทำงาน
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/EmpHome/WorkplanEmp"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                    >
+                      แผนงานพนักงาน
+                    </Link>
+                  </li>
+                </ul>
+              </details>
+              <details className="group open:bg-blue-50">
+                <summary className="cursor-pointer flex items-center justify-between px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold whitespace-nowrap">
+                  จัดการเอกสาร
+                  <svg
+                    className="w-4 h-4 transition-transform group-open:rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    ปฎิทินการทำงาน
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/EmpHome/WorkplanEmp"
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
-                  >
-                    แผนงานพนักงาน
-                  </Link>
-                </li>
-              </ul>
-            </details>
-            <details className="mb-2 group">
-              <summary className="cursor-pointer flex items-center justify-between px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold">
-                จัดการเอกสาร
-                <svg className="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </summary>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </summary>
 
-              <ul className="mt-2 ml-2 space-y-1" style={{ fontSize: '14px' }}>
-                <li>
-                  <Link
-                    to="/EmpHome/LeaveForm"
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
-                  >
-                    แบบฟอร์มใบลา
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/EmpHome/Document"
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
-                  >
-                    เอกสาร ใบลา-อัปโหลด
-                  </Link>
-                </li>
+                <ul className="mt-2 ml-2 space-y-1 text-sm">
+                  <li>
+                    <Link
+                      to="/EmpHome/LeaveForm"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                    >
+                      แบบฟอร์มใบลา
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/EmpHome/Document"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                    >
+                      เอกสารของฉัน
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/EmpHome"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                    >
+                      กราฟจำนวนเอกสาร
+                    </Link>
+                  </li>
+                </ul>
+              </details>
 
-                <li>
-                  <Link
-                    to="/EmpHome"
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
+              <details className="group open:bg-blue-50">
+                <summary className="cursor-pointer flex items-center justify-between px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold whitespace-nowrap">
+                  ข้อมูลส่วนตัว
+                  <svg
+                    className="w-4 h-4 transition-transform group-open:rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    กราฟจำนวนเอกสาร
-                  </Link>
-                </li>
-              </ul>
-            </details>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </summary>
 
-            <details className="mb-2 group">
-              <summary className="cursor-pointer flex items-center justify-between px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold">
-                ข้อมูลส่วนตัว
-                <svg className="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </summary>
+                <ul className="mt-2 ml-2 space-y-1 text-sm">
+                  <li>
+                    <Link
+                      to="/EmpHome/Worktime"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                    >
+                      การเข้า-ออกงาน
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/EmpHome/Profile"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                    >
+                      โปรไฟล์ของฉัน
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/EmpHome/My_experience"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                    >
+                      ประสบการณ์ทำงาน
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/EmpHome/My_education"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                    >
+                      การศึกษา
+                    </Link>
+                  </li>
+                </ul>
+              </details>
 
-              <ul className="mt-2 ml-2 space-y-1" style={{ fontSize: '14px' }}>
-                <li>
-                  <Link
-                    to="/EmpHome/Worktime"
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
-                  >
-                    การเข้า-ออกงาน
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    to="/EmpHome/Profile"
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
-                  >
-                    โปรไฟล์ของฉัน
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    to="/EmpHome/My_experience"
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
-                  >
-                    ประสบการณ์ทำงาน
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/EmpHome/My_education"
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
-                  >
-                    การศึกษา
-                  </Link>
-                </li>
-              </ul>
-            </details>
-            {role === "Hr" ? (
-              <>
-                <li>
+              {role === "Hr" ? (
+                <>
                   <Link
                     to="/EmpHome/HRView"
                     onClick={() => setIsSidebarOpen(false)}
-                    className="block w-full text-left px-4 py-2 rounded-md hover:bg-orange-400 hover:text-black font-FontNoto font-bold"
+                    className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 text-sm whitespace-nowrap overflow-hidden text-ellipsis"
                   >
                     ใบลาพนักงาน
                   </Link>
-                </li>
+                </>
+              ) : null}
+              {role === "GM" ? (
+                <>
+                  <li>
+                    <Link
+                      to="/EmpHome/ManagerView"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 text-sm whitespace-nowrap overflow-hidden text-ellipsis"
+                    >
+                      ใบลาพนักงาน
+                    </Link>
+                  </li>
+                </>
+              ) : null}
+              {role === "GM" || role === "Hr" ? (
+                <>
+                  <details className="group open:bg-blue-50">
+                    <summary className="cursor-pointer flex items-center justify-between px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold whitespace-nowrap">
+                      ข้อมูลพนักงาน
+                      <svg
+                        className="w-4 h-4 transition-transform group-open:rotate-180"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </summary>
 
-              </>
-            ) : null}
-            {role === "GM" ? (
-              <>
-                <li>
-                  <Link
-                    to="/EmpHome/ManagerView"
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="block w-full text-left px-4 py-2 rounded-md hover:bg-orange-400 hover:text-black font-FontNoto font-bold"
-                  >
-                    ใบลาพนักงาน
-                  </Link>
-                </li>
-              </>
-            ) : null}
-            {role === "GM" || role === "Hr" ? (
-              <>
-                <details className="mb-2 group">
-                  <summary className="cursor-pointer flex items-center justify-between px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold">
-                    ข้อมูลพนักงาน
-                    <svg className="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </summary>
+                    <ul className="mt-2 ml-2 space-y-1 text-sm">
+                      <li>
+                        <Link
+                          to="/EmpHome/WorktimeEmp"
+                          onClick={() => setIsSidebarOpen(false)}
+                          className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                        >
+                          รายการเข้า-ออกงาน
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/EmpHome/WorkplanGM"
+                          onClick={() => setIsSidebarOpen(false)}
+                          className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                        >
+                          แผนการทำงาน
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/EmpHome/LeaveStatistics"
+                          onClick={() => setIsSidebarOpen(false)}
+                          className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                        >
+                          สถิติการลา
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/EmpHome/TrendStatistics"
+                          onClick={() => setIsSidebarOpen(false)}
+                          className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                        >
+                          กราฟเอกสารรายปี
+                        </Link>
+                      </li>
+                    </ul>
+                  </details>
 
-                  <ul className="mt-2 ml-2 space-y-1" style={{ fontSize: '14px' }}>
-                    <li>
-                      <Link
-                        to="/EmpHome/WorktimeEmp"
-                        onClick={() => setIsSidebarOpen(false)}
-                        className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
+                  <details className="group open:bg-blue-50">
+                    <summary className="cursor-pointer flex items-center justify-between px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold whitespace-nowrap">
+                      พนักงานในระบบ
+                      <svg
+                        className="w-4 h-4 transition-transform group-open:rotate-180"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        รายการเข้า-ออกงาน
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="/EmpHome/WorkplanGM"
-                        onClick={() => setIsSidebarOpen(false)}
-                        className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
-                      >
-                        แผนการทำงาน
-                      </Link>
-                    </li>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </summary>
 
-                    <li>
-                      <Link
-                        to="/EmpHome/LeaveStatistics"
-                        onClick={() => setIsSidebarOpen(false)}
-                        className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
-                      >
-                        สถิติการลา
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="/EmpHome/TrendStatistics"
-                        onClick={() => setIsSidebarOpen(false)}
-                        className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
-                      >
-                        กราฟเอกสารรายปี
-                      </Link>
-                    </li>
-                  </ul>
-                </details>
-                <details className="mb-2 group">
-                  <summary className="cursor-pointer flex items-center justify-between px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold">
-                    พนักงานในระบบ
-                    <svg className="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </summary>
+                    <ul className="mt-2 ml-2 space-y-1 text-sm">
+                      <li>
+                        <Link
+                          to="/EmpHome/Allemployee"
+                          onClick={() => setIsSidebarOpen(false)}
+                          className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                        >
+                          พนักงานในระบบ
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/EmpHome/Allcreate"
+                          onClick={() => setIsSidebarOpen(false)}
+                          className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                        >
+                          เพิ่มพนักงานใหม่
+                        </Link>
+                      </li>
+                    </ul>
+                  </details>
 
-                  <ul className="mt-2 ml-2 space-y-1" style={{ fontSize: '14px' }}>
-                    <li>
-                      <Link
-                        to="/EmpHome/Allemployee"
-                        onClick={() => setIsSidebarOpen(false)}
-                        className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
-                      >
-                        พนักงานในระบบ
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="/EmpHome/Allcreate"
-                        onClick={() => setIsSidebarOpen(false)}
-                        className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150"
-                      >
-                        เพิ่มพนักงานใหม่
-                      </Link>
-                    </li>
-                  </ul>
-                </details>
-              </>
-            ) : null}
+                </>
+              ) : null}
 
-            <li>
-              <Link
-                to="/EmpHome/Logout"
-                onClick={() => setIsSidebarOpen(false)}
-                className="cursor-pointer block px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-red-500 font-FontNoto font-bold"
-              >
-                ออกจากระบบ
-              </Link>
-            </li>
-          </ul>
+              <li>
+                <Link
+                  to="/EmpHome/Logout"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="cursor-pointer block px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-red-500 font-FontNoto font-bold"
+                >
+                  ออกจากระบบ
+                </Link>
+              </li>
+            </ul>
+          </div>
         </aside>
         {isSidebarOpen && (
           <div

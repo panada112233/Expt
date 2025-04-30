@@ -16,6 +16,7 @@ module.exports = {
       fontFamily: {
         thSarabun: ['THSarabunNew', 'sans-serif'],
         FontNoto: ['Noto Sans Thai', 'sans-serif'],
+        FontInter: ['Inter', 'sans-serif'],
       },
       animation: {
         'float-slow': 'float 6s ease-in-out infinite',
