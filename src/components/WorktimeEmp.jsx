@@ -71,6 +71,29 @@ const WorktimeEmp = () => {
         }
     };
 
+    const calculateWorkingHours = (checkIn, checkOut, dateStr) => {
+        if (!checkIn || !checkOut) return '-';
+
+        const [inH, inM] = checkIn.split(':').map(Number);
+        const [outH, outM] = checkOut.split(':').map(Number);
+
+        const checkInDate = new Date(dateStr);
+        checkInDate.setHours(inH, inM, 0);
+
+        const checkOutDate = new Date(dateStr);
+        checkOutDate.setHours(outH, outM, 0);
+
+        const diffMs = checkOutDate - checkInDate;
+        if (diffMs <= 0) return '-';
+
+        const totalMinutes = diffMs / (1000 * 60);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = Math.round(totalMinutes % 60);
+
+        return `${hours} ชั่วโมง ${minutes} นาที`;
+    };
+
+
     const formatDate = (dateStr) => {
         const date = new Date(dateStr);
         return date.toLocaleDateString("th-TH", {
@@ -162,6 +185,20 @@ const WorktimeEmp = () => {
                     ))}
                 </select>
             </div>
+            <button
+                onClick={() => {
+                    fetch("https://localhost:7039/api/Worktime/NotifyLineNow", {
+                        method: "POST"
+                    })
+                        .then((res) => res.text())
+                        .then((msg) => alert(msg))
+                        .catch((err) => console.error(err));
+                }}
+                className="btn btn-warning"
+            >
+                ทดสอบส่งแจ้งเตือน LINE ตอนนี้
+            </button>
+
 
             {/* ตารางข้อมูลรายวัน */}
             {Object.entries(grouped).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([date, records]) => (
@@ -177,6 +214,7 @@ const WorktimeEmp = () => {
                                     <th className="font-FontNoto">ออกงาน</th>
                                     <th className="font-FontNoto">มาสาย</th>
                                     <th className="font-FontNoto">พิกัด</th>
+                                    <th className="font-FontNoto">เวลาทำงาน</th>
                                     <th className="font-FontNoto">จัดการ</th>
                                 </tr>
                             </thead>
@@ -202,6 +240,9 @@ const WorktimeEmp = () => {
                                             {rec.photoPath?.includes("Lat")
                                                 ? <a href={`https://maps.google.com/?q=${rec.photoPath.replace('Lat: ', '').replace(', Lng: ', ',')}`} target="_blank" rel="noreferrer" className="underline">{rec.photoPath}</a>
                                                 : rec.photoPath || '-'}
+                                        </td>
+                                        <td className="font-FontNoto">
+                                            {calculateWorkingHours(rec.checkIn, rec.checkOut, rec.date)}
                                         </td>
                                         <td className="font-FontNoto flex justify-center gap-2">
                                             <button onClick={() => handleEdit(rec)} className="btn btn-xs btn-warning">แก้ไข</button>

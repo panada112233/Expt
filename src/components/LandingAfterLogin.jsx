@@ -14,6 +14,8 @@ const LandingAfterLogin = () => {
     const navigate = useNavigate();
     const [currentTime, setCurrentTime] = useState(new Date());
     const [userName, setUserName] = useState('ผู้ใช้งาน');
+    const [isLineLinked, setIsLineLinked] = useState(false);
+
     const [profileImage, setProfileImage] = useState(null);
     const [todayWorktime, setTodayWorktime] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
@@ -26,6 +28,15 @@ const LandingAfterLogin = () => {
     const [leaveType, setLeaveType] = useState('');
 
     const userID = sessionStorage.getItem('userId');
+
+    const LINE_CLIENT_ID = "2007354605"; // <-- ใส่ ID ของคุณ
+    const REDIRECT_URI = encodeURIComponent("http://localhost:5173/callback");
+
+    const handleLineLogin = () => {
+        const LINE_LOGIN_URL = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=random123&scope=profile%20openid%20email`;
+        window.location.href = LINE_LOGIN_URL;
+    };
+
 
     useEffect(() => {
         // ⏰ ตั้งเวลาอัปเดตนาฬิกา
@@ -52,7 +63,7 @@ const LandingAfterLogin = () => {
             const userRes = await axios.get(`https://localhost:7039/api/Users/Getbyid/${userId}`);
             const userData = userRes.data;
             setUserName(`${userData.firstName} ${userData.lastName}`);
-
+            setIsLineLinked(typeof userData.lineUserId === "string" && userData.lineUserId.trim() !== "");
             const today = new Date().toISOString().split("T")[0];
             const worktimeRes = await axios.get("https://localhost:7039/api/Worktime");
             const userWork = worktimeRes.data.find(item =>
@@ -269,7 +280,11 @@ const LandingAfterLogin = () => {
                     <img src={imgPat} alt="clock1" className="w-8 h-8" />
                     <span>{currentTime.toLocaleTimeString('th-TH', { hour12: false })}</span>
                 </div>
-
+                {!isLineLinked && (
+                    <button onClick={handleLineLogin} className="btn btn-success mb-4 font-FontNoto">
+                        เชื่อมบัญชี LINE
+                    </button>
+                )}
                 <div className="flex flex-wrap justify-center gap-6 sm:gap-10 bg-bg-transparent  p-4 sm:p-8 rounded-xl w-[80%] max-w-md sm:max-w-lg lg:max-w-2xl mx-auto">
                     {/* กล่องที่ 1: เวลาเข้า-ออกงาน */}
                     <div

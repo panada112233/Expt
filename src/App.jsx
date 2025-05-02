@@ -1,5 +1,9 @@
-
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import {
+  HashRouter,
+  BrowserRouter,
+  Routes,
+  Route
+} from 'react-router-dom';
 
 import { useEffect, useState } from 'react';
 import LeaveGraph from './components/LeaveGraph';
@@ -8,6 +12,8 @@ import Navbars from './components/Navbars';
 import AdminRegistration from './components/AdminRegistration';
 import AdminManagement from './components/AdminManagement';
 import LandingAfterLogin from './components/LandingAfterLogin';
+import BorrowEquipmentsEmp from './components/BorrowEquipmentsEmp';
+import ManageEquipmentsAdmin from './components/ManageEquipmentsAdmin';
 
 import TrendStatistics from './components/TrendStatistics';
 import LeaveStatistics from './components/LeaveStatistics';
@@ -25,6 +31,7 @@ import Workplan from './components/Workplan';
 import WorkplanEmp from './components/WorkplanEmp';
 import WorkplanGM from './components/WorkplanGM';
 import ChatPage from './components/ChatPage';
+import CallbackPage from './components/CallbackPage';
 
 import Profile from './components/Profile';
 import ChangePassword from './components/Change_password';
@@ -51,6 +58,9 @@ import EditWorkExperience from './components/EditWorkExperience';
 import CreateEducation from './components/CreateEducation';
 import pdfmake from 'pdfmake';
 
+
+const Router = import.meta.env.DEV ? BrowserRouter : HashRouter;
+
 function App() {
   useEffect(() => {
     console.log(pdfmake)
@@ -66,12 +76,14 @@ function App() {
 
         <main className="flex-grow">
           <Routes>
+
+            <Route path="/callback" element={<CallbackPage />} />
             {/* กำหนดให้ / เป็นหน้าเข้าสู่ระบบ */}
             <Route path="/" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
 
             {/* เส้นทางใหม่สำหรับหน้า Landing หลัง Login */}
             <Route path="/LandingAfterLogin" element={<LandingAfterLogin />} />
-            
+
             {/* Routes อื่นๆ */}
             <Route path="/ForgotPassword" element={<ForgotPassword />} />
             <Route path="/ChangePassword" element={<ChangePassword />} />
@@ -109,6 +121,8 @@ function App() {
               <Route path="HRView" element={<HRView />} />
               <Route path="EmployeeView" element={<EmployeeView />} />
               <Route path="Allcreate" element={<Allcreate />} />
+              <Route path="BorrowEquipmentsEmp" element={<BorrowEquipmentsEmp />} />
+              <Route path="ManageEquipmentsAdmin" element={<ManageEquipmentsAdmin />} />
 
             </Route>
 

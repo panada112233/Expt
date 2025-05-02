@@ -174,7 +174,7 @@ const EmpBase = () => {
       <div className="flex flex-col md:flex-row flex-1 py-2">
         {/* Sidebar */}
         <aside
-          className={`bg-white shadow-md text-black fixed top-[64px] left-0 h-[calc(100vh-64px)] w-[80vw] md:w-[16vw] p-6 z-50 transform transition-transform overflow-y-auto
+          className={`bg-white shadow-md text-black fixed top-[64px] left-0 h-[calc(100vh-64px)] w-[60vw] md:w-[16vw] p-4 z-50 transform transition-transform overflow-y-auto
 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
         >
           <div className="text-center my-4">
@@ -217,10 +217,10 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
             )}
           </div>
           {/* Sidebar Links */}
-          <div className="overflow-x-auto"> 
-            <ul className="menu bg-white text-black rounded-box w-full min-w-[175px] text-lg space-y-2">
-              <details className="group open:bg-blue-50">
-                <summary className="cursor-pointer flex items-center justify-between px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold whitespace-nowrap">
+          <div className="overflow-y-auto max-h-[calc(100vh-64px)]">
+            <ul className="space-y-2 w-full text-sm font-FontNoto">
+              <details className="group open:bg-gray-50">
+                <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold shadow transition duration-200">
                   Dashboard
                   <svg
                     className="w-4 h-4 transition-transform group-open:rotate-180"
@@ -237,12 +237,12 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                   </svg>
                 </summary>
 
-                <ul className="mt-2 ml-2 space-y-1 text-sm">
+                <ul className="mt-2 ml-3 space-y-1 text-sm">
                   <li>
                     <Link
                       to="/EmpHome/Workplan"
                       onClick={() => setIsSidebarOpen(false)}
-                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
                     >
                       ปฏิทินการทำงาน
                     </Link>
@@ -251,15 +251,16 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                     <Link
                       to="/EmpHome/WorkplanEmp"
                       onClick={() => setIsSidebarOpen(false)}
-                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
                     >
                       แผนงานพนักงาน
                     </Link>
                   </li>
                 </ul>
               </details>
-              <details className="group open:bg-blue-50">
-                <summary className="cursor-pointer flex items-center justify-between px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold whitespace-nowrap">
+
+              <details className="group open:bg-gray-50">
+                <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold shadow transition duration-200">
                   จัดการเอกสาร
                   <svg
                     className="w-4 h-4 transition-transform group-open:rotate-180"
@@ -276,12 +277,12 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                   </svg>
                 </summary>
 
-                <ul className="mt-2 ml-2 space-y-1 text-sm">
+                <ul className="mt-2 ml-3 space-y-1 text-sm">
                   <li>
                     <Link
                       to="/EmpHome/LeaveForm"
                       onClick={() => setIsSidebarOpen(false)}
-                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
                     >
                       แบบฟอร์มใบลา
                     </Link>
@@ -290,7 +291,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                     <Link
                       to="/EmpHome/Document"
                       onClick={() => setIsSidebarOpen(false)}
-                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
                     >
                       เอกสารของฉัน
                     </Link>
@@ -299,16 +300,15 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                     <Link
                       to="/EmpHome"
                       onClick={() => setIsSidebarOpen(false)}
-                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
                     >
                       กราฟจำนวนเอกสาร
                     </Link>
                   </li>
                 </ul>
               </details>
-
-              <details className="group open:bg-blue-50">
-                <summary className="cursor-pointer flex items-center justify-between px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold whitespace-nowrap">
+              <details className="group open:bg-gray-50">
+                <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold shadow transition duration-200">
                   ข้อมูลส่วนตัว
                   <svg
                     className="w-4 h-4 transition-transform group-open:rotate-180"
@@ -324,13 +324,12 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                     />
                   </svg>
                 </summary>
-
-                <ul className="mt-2 ml-2 space-y-1 text-sm">
+                <ul className="mt-2 ml-3 space-y-1 text-sm">
                   <li>
                     <Link
                       to="/EmpHome/Worktime"
                       onClick={() => setIsSidebarOpen(false)}
-                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
                     >
                       การเข้า-ออกงาน
                     </Link>
@@ -339,7 +338,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                     <Link
                       to="/EmpHome/Profile"
                       onClick={() => setIsSidebarOpen(false)}
-                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
                     >
                       โปรไฟล์ของฉัน
                     </Link>
@@ -348,7 +347,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                     <Link
                       to="/EmpHome/My_experience"
                       onClick={() => setIsSidebarOpen(false)}
-                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
                     >
                       ประสบการณ์ทำงาน
                     </Link>
@@ -357,20 +356,28 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                     <Link
                       to="/EmpHome/My_education"
                       onClick={() => setIsSidebarOpen(false)}
-                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
                     >
                       การศึกษา
                     </Link>
                   </li>
+                  <li>
+                    <Link
+                      to="/EmpHome/BorrowEquipmentsEmp"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
+                    >
+                      ยืม-คืนอุปกรณ์
+                    </Link>
+                  </li>
                 </ul>
               </details>
-
               {role === "Hr" ? (
                 <>
                   <Link
                     to="/EmpHome/HRView"
                     onClick={() => setIsSidebarOpen(false)}
-                    className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 text-sm whitespace-nowrap overflow-hidden text-ellipsis"
+                    className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 text-sm break-words overflow-hidden text-ellipsis"
                   >
                     ใบลาพนักงาน
                   </Link>
@@ -382,7 +389,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                     <Link
                       to="/EmpHome/ManagerView"
                       onClick={() => setIsSidebarOpen(false)}
-                      className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 text-sm whitespace-nowrap overflow-hidden text-ellipsis"
+                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 text-sm break-words overflow-hidden text-ellipsis"
                     >
                       ใบลาพนักงาน
                     </Link>
@@ -391,8 +398,8 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
               ) : null}
               {role === "GM" || role === "Hr" ? (
                 <>
-                  <details className="group open:bg-blue-50">
-                    <summary className="cursor-pointer flex items-center justify-between px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold whitespace-nowrap">
+                  <details className="group open:bg-gray-50">
+                    <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold shadow transition duration-200">
                       ข้อมูลพนักงาน
                       <svg
                         className="w-4 h-4 transition-transform group-open:rotate-180"
@@ -408,13 +415,12 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                         />
                       </svg>
                     </summary>
-
-                    <ul className="mt-2 ml-2 space-y-1 text-sm">
+                    <ul className="mt-2 ml-3 space-y-1 text-sm">
                       <li>
                         <Link
                           to="/EmpHome/WorktimeEmp"
                           onClick={() => setIsSidebarOpen(false)}
-                          className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
                         >
                           รายการเข้า-ออกงาน
                         </Link>
@@ -423,7 +429,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                         <Link
                           to="/EmpHome/WorkplanGM"
                           onClick={() => setIsSidebarOpen(false)}
-                          className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
                         >
                           แผนการทำงาน
                         </Link>
@@ -432,25 +438,33 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                         <Link
                           to="/EmpHome/LeaveStatistics"
                           onClick={() => setIsSidebarOpen(false)}
-                          className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
                         >
                           สถิติการลา
                         </Link>
                       </li>
                       <li>
                         <Link
+                          to="/EmpHome/ManageEquipmentsAdmin"
+                          onClick={() => setIsSidebarOpen(false)}
+                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
+                        >
+                          รายการยืม-คืนอุปกรณ์
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
                           to="/EmpHome/TrendStatistics"
                           onClick={() => setIsSidebarOpen(false)}
-                          className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
                         >
                           กราฟเอกสารรายปี
                         </Link>
                       </li>
                     </ul>
                   </details>
-
-                  <details className="group open:bg-blue-50">
-                    <summary className="cursor-pointer flex items-center justify-between px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold whitespace-nowrap">
+                  <details className="group open:bg-gray-50">
+                    <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold shadow transition duration-200">
                       พนักงานในระบบ
                       <svg
                         className="w-4 h-4 transition-transform group-open:rotate-180"
@@ -467,12 +481,12 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                       </svg>
                     </summary>
 
-                    <ul className="mt-2 ml-2 space-y-1 text-sm">
+                    <ul className="mt-2 ml-3 space-y-1 text-sm">
                       <li>
                         <Link
                           to="/EmpHome/Allemployee"
                           onClick={() => setIsSidebarOpen(false)}
-                          className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
                         >
                           พนักงานในระบบ
                         </Link>
@@ -481,7 +495,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                         <Link
                           to="/EmpHome/Allcreate"
                           onClick={() => setIsSidebarOpen(false)}
-                          className="block px-3 py-1.5 rounded-md hover:bg-blue-100 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 break-words overflow-hidden text-ellipsis"
                         >
                           เพิ่มพนักงานใหม่
                         </Link>
@@ -496,7 +510,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                 <Link
                   to="/EmpHome/Logout"
                   onClick={() => setIsSidebarOpen(false)}
-                  className="cursor-pointer block px-4 py-2 rounded-md bg-white text-black hover:bg-blue-900 hover:text-red-500 font-FontNoto font-bold"
+                  className="cursor-pointer block px-4 py-2 rounded-md bg-white text-red-500 shadow hover:shadow-lg hover:bg-blue-900 hover:text-red-500 font-FontNoto font-bold transition duration-200"
                 >
                   ออกจากระบบ
                 </Link>

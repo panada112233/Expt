@@ -77,6 +77,28 @@ const Worktime = () => {
         const diffMinutes = (checkIn - expected) / (1000 * 60);
         return diffMinutes > 0 ? diffMinutes : 0;
     };
+    const calculateWorkingHours = (checkIn, checkOut, dateStr) => {
+        if (!checkIn || !checkOut) return '-';
+
+        const [inH, inM] = checkIn.split(':').map(Number);
+        const [outH, outM] = checkOut.split(':').map(Number);
+
+        const checkInDate = new Date(dateStr);
+        checkInDate.setHours(inH, inM, 0);
+
+        const checkOutDate = new Date(dateStr);
+        checkOutDate.setHours(outH, outM, 0);
+
+        const diffMs = checkOutDate - checkInDate;
+        if (diffMs <= 0) return '-';
+
+        const totalMinutes = diffMs / (1000 * 60);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = Math.round(totalMinutes % 60);
+
+        return `${hours} ชั่วโมง ${minutes} นาที`;
+    };
+
 
     const getTotalLateTimeThisMonth = () => {
         let totalLateMinutes = 0;
@@ -189,6 +211,7 @@ const Worktime = () => {
                                     <th className="py-3 font-FontNoto">สาย</th>
                                     <th className="py-3 font-FontNoto">Check-in</th>
                                     <th className="py-3 font-FontNoto">Check-out</th>
+                                    <th className="py-3 font-FontNoto">เวลาทำงาน</th>
                                 </tr>
                             </thead>
 
@@ -246,6 +269,10 @@ const Worktime = () => {
 
                                             <td className="py-2 font-FontNoto">{item.checkIn || '-'}</td>
                                             <td className="py-2 font-FontNoto">{item.checkOut || '-'}</td>
+                                            <td className="py-2 font-FontNoto">
+                                                {calculateWorkingHours(item.checkIn, item.checkOut, item.date)}
+                                            </td>
+
                                         </tr>
                                     ))
                                 ) : (
