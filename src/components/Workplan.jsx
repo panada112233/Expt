@@ -16,8 +16,9 @@ const Workplan = () => {
     const [roleText, setRoleText] = useState("กำลังโหลด...");
     const [isHoliday, setIsHoliday] = useState(false);
     const [todayWorktime, setTodayWorktime] = useState(null);
-    const [todayPlan, setTodayPlan] = useState(null);
+    const [notes, setNotes] = useState({});
 
+    const [todayPlan, setTodayPlan] = useState(null);
     const getCompensatedHolidays = (year, holidays) => {
         const compensated = {};
         const usedDates = new Set(Object.keys(holidays));
@@ -199,9 +200,12 @@ const Workplan = () => {
                 planRes.data.forEach((t) => {
                     const d = new Date(t.date);
                     const key = `${t.userID}-${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+
                     loadedTasks[key] = {
                         morning: t.morningTask,
-                        evening: t.eveningTask
+                        evening: t.eveningTask,
+                        privateNote: t.privateNote || "",     // ✅ เพิ่มส่วนนี้
+                        noteType: t.noteType || "public"      // ✅ เพิ่มส่วนนี้
                     };
 
                     // 🔍 ถ้าเจอแผนงานของวันนี้ ให้ตั้งค่า todayPlan ด้วยเลย
@@ -210,7 +214,11 @@ const Workplan = () => {
                         d.getMonth() === today.getMonth() &&
                         d.getDate() === today.getDate()
                     ) {
-                        setTodayPlan(t);
+                        setTodayPlan({
+                            ...t,
+                            privateNote: t.privateNote || "",   // ✅ เพิ่มเพื่อให้ใช้งานได้แน่นอน
+                            noteType: t.noteType || "public"
+                        });
                     }
                 });
 
@@ -234,58 +242,33 @@ const Workplan = () => {
         loadUserDataAndTodayData();
     }, []);
 
-    const getDaysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
-    const firstDayOfMonth = new Date(year, month, 1).getDay();
-    const daysInMonth = getDaysInMonth(month, year);
+    useEffect(() => {
+        const storedNotes = JSON.parse(localStorage.getItem("notes") || "{}");
+        setNotes(storedNotes);
+    }, []);
 
-    const openModal = (date) => {
-        const fullDate = new Date(year, month, date);
-        const dayOfWeek = fullDate.getDay();
 
-        const key = `${userId}-${year}-${month + 1}-${date}`;
-        setSelectedDate(date);
-        setTaskData(tasks[key] || { morning: '', evening: '' });
-
-        // ✅ เช็ควันหยุด: เสาร์-อาทิตย์ หรือวันหยุดราชการจาก holidaysByYear
-        const mmddKey = `${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-        const currentYearHolidays = holidaysByYear[year] || {};
-        const compensated = getCompensatedHolidays(year, currentYearHolidays);
-        const thaiHolidays = { ...currentYearHolidays, ...compensated };
-
-        const holidayName = thaiHolidays[mmddKey];
-        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-        const isThaiHoliday = !!holidayName;
-
-        setIsHoliday(isWeekend || isThaiHoliday);
-        setShowModal(true);
-    };
-
-    const saveOrUpdateTaskToDatabase = async (task) => {
+    const clearPrivateNoteFromDatabase = async (dateToClear) => {
         try {
-            const res = await axios.get(`https://localhost:7039/api/Workplan/${task.userID}`);
+            const res = await axios.get(`https://localhost:7039/api/Workplan/${userId}`);
 
-            // 🔍 ค้นหาเรคคอร์ดวันเดียวกันทั้งหมด (ไม่ใช่แค่ตัวเดียว)
-            const sameDayTasks = res.data.filter(t =>
-                new Date(t.date).toDateString() === new Date(task.date).toDateString()
+            const taskForTheDay = res.data.find(t =>
+                new Date(t.date).toDateString() === new Date(dateToClear).toDateString()
             );
 
-            if (sameDayTasks.length > 0) {
-                // ✅ มีหลายตัว → แก้ไขตัวแรก และ optionally ลบตัวอื่น
-                await axios.put(`https://localhost:7039/api/Workplan/${sameDayTasks[0].id}`, task);
+            if (taskForTheDay) {
+                const updatedTask = {
+                    ...taskForTheDay,
+                    privateNote: "", // ✅ ล้างโน้ตส่วนตัว
+                };
 
-                // ❌ ลบตัวซ้ำ (เหลือแค่ 1 ตัว)
-                for (let i = 1; i < sameDayTasks.length; i++) {
-                    await axios.delete(`https://localhost:7039/api/Workplan/${sameDayTasks[i].id}`);
-                }
-
-                console.log('อัปเดตข้อมูลสำเร็จ และลบข้อมูลซ้ำแล้ว');
+                await axios.put(`https://localhost:7039/api/Workplan/${taskForTheDay.id}`, updatedTask);
+                console.log("ล้างโน้ตส่วนตัวเรียบร้อยแล้ว");
             } else {
-                // ❇️ ไม่มี → บันทึกใหม่
-                await axios.post('https://localhost:7039/api/Workplan', task);
-                console.log('บันทึกใหม่สำเร็จ');
+                console.warn("ไม่พบแผนงานของวันนั้น");
             }
         } catch (error) {
-            console.error('เกิดข้อผิดพลาดในการบันทึกหรืออัปเดต:', error);
+            console.error("เกิดข้อผิดพลาดในการล้างโน้ตส่วนตัว:", error);
         }
     };
 
@@ -306,6 +289,78 @@ const Workplan = () => {
             console.error('ลบไม่สำเร็จ:', error);
         }
     };
+    const getDaysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    const daysInMonth = getDaysInMonth(month, year);
+
+    const openModal = (date) => {
+        const fullDate = new Date(year, month, date);
+        const dayOfWeek = fullDate.getDay();
+    
+        const key = `${userId}-${year}-${month + 1}-${date}`;
+        const existing = tasks[key] || {};
+    
+        setSelectedDate(date);
+    
+        // ✅ รีเซ็ต noteType เพื่อให้ขึ้นปุ่มเลือกประเภททุกครั้ง
+        setTaskData({
+            morning: existing.morning || '',
+            evening: existing.evening || '',
+            privateNote: existing.privateNote || "",   
+            noteType: '', // บังคับให้เลือกใหม่ทุกครั้ง
+        });
+    
+        // ✅ เช็ควันหยุด: เสาร์-อาทิตย์ หรือวันหยุดราชการ
+        const mmddKey = `${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+        const currentYearHolidays = holidaysByYear[year] || {};
+        const compensated = getCompensatedHolidays(year, currentYearHolidays);
+        const thaiHolidays = { ...currentYearHolidays, ...compensated };
+    
+        const holidayName = thaiHolidays[mmddKey];
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        const isThaiHoliday = !!holidayName;
+    
+        setIsHoliday(isWeekend || isThaiHoliday);
+        setShowModal(true);
+    };
+    
+
+    const saveOrUpdateTaskToDatabase = async (task) => {
+        try {
+            // ✨ สร้างอ็อบเจกต์ใหม่ที่แปลงชื่อ field ให้ตรงกับ backend
+            const mappedTask = {
+                ...task,
+                PrivateNote: task.personalNote,     // ✔ แปลงชื่อให้ตรงกับ backend
+                NoteType: task.noteType,            // ✔ ชื่อตรง backend แล้ว
+            };
+
+            // ดึงข้อมูลแผนในวันเดียวกัน
+            const res = await axios.get(`https://localhost:7039/api/Workplan/${task.userID}`);
+            const sameDayTasks = res.data.filter(t =>
+                new Date(t.date).toDateString() === new Date(task.date).toDateString()
+            );
+
+            if (sameDayTasks.length > 0) {
+                // แก้ไขตัวแรก และลบตัวอื่น
+                await axios.put(`https://localhost:7039/api/Workplan/${sameDayTasks[0].id}`, {
+                    ...mappedTask,
+                    id: sameDayTasks[0].id
+                });
+
+                for (let i = 1; i < sameDayTasks.length; i++) {
+                    await axios.delete(`https://localhost:7039/api/Workplan/${sameDayTasks[i].id}`);
+                }
+
+            } else {
+                // บันทึกใหม่
+                await axios.post('https://localhost:7039/api/Workplan', mappedTask);
+
+            }
+        } catch (error) {
+            console.error('เกิดข้อผิดพลาดในการบันทึกหรืออัปเดต:', error);
+        }
+    };
+
     const saveTask = async () => {
         const key = `${userId}-${year}-${month + 1}-${selectedDate}`;
         const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
@@ -313,7 +368,9 @@ const Workplan = () => {
             userID: parseInt(userId),
             date: formattedDate,
             morningTask: taskData.morning,
-            eveningTask: taskData.evening
+            eveningTask: taskData.evening,
+            privateNote: taskData.privateNote || "",
+            noteType: taskData.noteType || "public"
         };
 
         await saveOrUpdateTaskToDatabase(newTask);
@@ -394,24 +451,25 @@ const Workplan = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 mt-4 mb-6 animate-fade-in ">
                 {/* 🟡 การ์ดเวลาเข้า-ออก */}
-                <div className="bg-yellow-50 border border-yellow-400 rounded-xl p-3 shadow-md w-full sm:w-72 flex flex-col items-center relative overflow-hidden">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3595/3595455.png" alt="clock cute" className="w-10 h-10 absolute -top-3 -left-3 rotate-[-10deg]" />
-                    <h3 className="text-md font-bold text-yellow-800 font-FontNoto mb-2 text-center">⏰ เวลาเข้า-ออกงานวันนี้</h3>
+                <div className="bg-gradient-to-br from-emerald-50 via-teal-100 to-cyan-50 border border-teal-400 rounded-xl p-4 shadow-md w-full sm:w-72 flex flex-col items-center relative overflow-hidden">
+                    <h3 className="text-md font-bold text-teal-800 font-FontNoto mb-2 text-center">
+                        ⏰ เวลาเข้า-ออกงานวันนี้
+                    </h3>
                     {todayWorktime ? (
                         <div className="font-FontNoto text-xs text-gray-800 space-y-1">
-                            <p className="font-FontNoto">🕘 เช็คอิน: {todayWorktime.checkIn || "-"}</p>
-                            <p className="font-FontNoto">🕔 เช็คเอาท์: {todayWorktime.checkOut || "-"}</p>
-                            <p className="font-FontNoto">📍 สถานที่: {todayWorktime.location || "-"}</p>
+                            <p>🕘 เช็คอิน: {todayWorktime.checkIn || "-"}</p>
+                            <p>🕔 เช็คเอาท์: {todayWorktime.checkOut || "-"}</p>
+                            <p>📍 สถานที่: {todayWorktime.location || "-"}</p>
                         </div>
                     ) : (
-                        <p className="font-FontNoto text-xs text-gray-500 text-center">ไม่มีข้อมูลเข้า-ออก</p>
+                        <p className="font-FontNoto text-xs text-gray-500 text-center">
+                            ไม่มีข้อมูลเข้า-ออก
+                        </p>
                     )}
                 </div>
-
                 {/* 🌸 การ์ดแผนงานวันนี้ */}
-                <div className="bg-pink-50 border border-pink-400 rounded-xl p-3 shadow-md w-full sm:w-72 flex flex-col items-center relative overflow-hidden">
-                    <img src="https://cdn-icons-png.flaticon.com/512/616/616430.png" alt="plan cute" className="w-10 h-10 absolute -top-3 -right-3 rotate-[10deg]" />
-                    <h3 className="text-md font-bold text-pink-800 font-FontNoto mb-2 text-center">📝 แผนงานวันนี้</h3>
+                <div className="bg-orange-50 border border-orange-400 rounded-xl p-3 shadow-md w-full sm:w-72 flex flex-col items-center relative overflow-hidden">
+                    <h3 className="text-md font-bold text-orange-800 font-FontNoto mb-2 text-center">📝 แผนงานวันนี้</h3>
                     {todayPlan ? (
                         <div className="font-FontNoto text-xs text-gray-800 space-y-1">
                             <p className="font-FontNoto">วันนี้: {todayPlan.eveningTask || "-"}</p>
@@ -420,9 +478,9 @@ const Workplan = () => {
                         <p className="font-FontNoto text-xs text-gray-500 text-center">ยังไม่ได้เขียนแผนงาน</p>
                     )}
                 </div>
-                <div className="bg-blue-50 border border-blue-400 rounded-xl p-3 shadow-md w-full sm:w-72 flex flex-col items-center relative overflow-hidden">
-                    <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="yesterday plan" className="w-10 h-10 absolute -top-3 -right-3 rotate-[10deg]" />
-                    <h3 className="text-md font-bold text-blue-800 font-FontNoto mb-2 text-center">🌙 แผนงาน{yesterdayLabel}</h3>
+
+                <div className="bg-green-50 border border-green-400 rounded-xl p-3 shadow-md w-full sm:w-72 flex flex-col items-center relative overflow-hidden">
+                    <h3 className="text-md font-bold text-green-800 font-FontNoto mb-2 text-center">🌙 แผนงาน{yesterdayLabel}</h3>
                     {todayPlan ? (
                         <div className="font-FontNoto text-xs text-gray-800 space-y-1 text-center">
                             <p className="font-FontNoto">{yesterdayLabel}: {todayPlan.morningTask || "-"}</p>
@@ -431,13 +489,10 @@ const Workplan = () => {
                         <p className="font-FontNoto text-xs text-gray-500 text-center">ยังไม่ได้เขียนแผนงาน</p>
                     )}
                 </div>
-
             </div>
 
             <div className="w-full max-w-6xl mx-auto bg-transparent rounded-xl p-6 items-center justify-center">
-
                 <h2 className="text-2xl font-bold mb-2 font-FontNoto text-blue-800 text-center">🐾 ปฏิทินการทำงานของคุณ {userName} 🐾</h2>
-
                 {/* ตัวกรองเดือนและปี */}
                 <div className="flex items-center justify-end space-x-4 mb-4">
                     <select
@@ -451,7 +506,6 @@ const Workplan = () => {
                             </option>
                         ))}
                     </select>
-
                     <select
                         className="select select-bordered w-40 text-black font-FontNoto"
                         value={year}
@@ -465,63 +519,58 @@ const Workplan = () => {
                     </select>
                 </div>
                 <div className="relative">
-                    {/* ☁️ เมฆฟุ้งฟิ้งมุมซ้าย */}
-                    <img
-                        src="https://cdn-icons-png.flaticon.com/512/414/414927.png"
-                        alt="cloud left"
-                        className="w-16 h-16 absolute -top-6 -left-6 opacity-80 animate-float-slow"
-                    />
-
-                    {/* ☁️ เมฆฟุ้งฟิ้งมุมขวา */}
-                    <img
-                        src="https://cdn-icons-png.flaticon.com/512/414/414927.png"
-                        alt="cloud right"
-                        className="w-16 h-16 absolute -top-6 -right-6 opacity-80 animate-float-slow"
-                    />
-                    <div className="grid grid-cols-7 gap-1 text-center font-bold border rounded-xl overflow-hidden shadow-lg">
-
+                    {/* หัวตารางวัน */}
+                    <div className="grid grid-cols-7 gap-[1px] text-center font-bold bg-gray-400">
                         {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((day) => (
-                            <div key={day} className="border p-2 bg-blue-100 text-blue-800 font-FontNoto shadow-lg">
+                            <div key={day} className="bg-gray-100 py-2 font-FontNoto text-sm text-gray-700">
                                 {day}
                             </div>
                         ))}
+                    </div>
 
+                    {/* ตัววันในปฏิทิน */}
+                    <div className="grid grid-cols-7 gap-[1px] bg-gray-300">
                         {weeks.map((week, wi) =>
                             week.map((dayObj, di) => {
                                 const { day, type, date } = dayObj;
-                                const isSaturdayOrSunday = date.getDay() === 0 || date.getDay() === 6;
-                                const monthDayKey = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                                const holidayName = thaiHolidays[monthDayKey];
-                                const isSelected = selectedDate === day && type === 'current';
+                                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                                const isCurrentMonth = type === 'current';
+                                const holidayName = thaiHolidays[`${String(date.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`];
+                                const taskKey = `${userId}-${year}-${month + 1}-${day}`;
+                                const morning = tasks[taskKey]?.morning;
+                                const evening = tasks[taskKey]?.evening;
+                                const privateNote = tasks[taskKey]?.privateNote; // ✅ เพิ่มส่วนนี้
 
                                 return (
                                     <div
                                         key={`${wi}-${di}`}
-                                        className={`border h-28 relative p-1 text-left cursor-pointer
-        ${type === 'prev' || type === 'next' ? 'bg-gray-100 text-gray-400' :
-                                                isSelected ? (isSaturdayOrSunday ? 'bg-red-200' : 'bg-yellow-100') :
-                                                    isSaturdayOrSunday ? 'bg-white hover:bg-red-200' : 'bg-white hover:bg-yellow-100'}
-    `}
-                                        onClick={() => {
-                                            if (type === 'current') openModal(day);
-                                        }}
+                                        onClick={() => isCurrentMonth && openModal(day)}
+                                        className={`
+                    bg-white h-24 p-1 text-xs font-FontNoto cursor-pointer
+                    ${!isCurrentMonth ? 'bg-gray-100 text-gray-400' : ''}
+                `}
                                     >
-
-                                        <div className="font-bold text-right pr-1 font-FontNoto">{day}</div>
+                                        <div className="text-right font-semibold">{day}</div>
 
                                         {holidayName && (
-                                            <div className="text-[10px] text-red-500 font-FontNoto leading-tight">{holidayName}</div>
+                                            <div className="text-[10px] text-red-500 leading-tight">{holidayName}</div>
                                         )}
 
-                                        <div className="text-[8px] font-FontNoto flex flex-col gap-1 leading-tight">
-                                            {tasks[`${userId}-${year}-${month + 1}-${day}`]?.morning && type === 'current' && (
-                                                <div className="bg-blue-100 text-blue-800 rounded-md px-1 py-0.5 shadow-sm">
-                                                    {tasks[`${userId}-${year}-${month + 1}-${day}`].morning}
+                                        <div className="text-[8px] mt-1 space-y-1">
+                                            {morning && (
+                                                <div className="bg-blue-100 text-blue-800 px-1 py-0.5 rounded-sm">
+                                                    {morning}
                                                 </div>
                                             )}
-                                            {tasks[`${userId}-${year}-${month + 1}-${day}`]?.evening && type === 'current' && (
-                                                <div className="bg-green-100 text-green-800 rounded-md px-1 py-0.5 shadow-sm">
-                                                    {tasks[`${userId}-${year}-${month + 1}-${day}`].evening}
+                                            {evening && (
+                                                <div className="bg-green-100 text-green-800 px-1 py-0.5 rounded-sm">
+                                                    {evening}
+                                                </div>
+                                            )}
+                                            {/* ✅ แสดงโน้ตส่วนตัว ถ้ามี */}
+                                            {privateNote && (
+                                                <div className="bg-yellow-100 text-yellow-800 px-1 py-0.5 rounded-sm truncate">
+                                                    🗒️ {privateNote}
                                                 </div>
                                             )}
                                         </div>
@@ -531,7 +580,6 @@ const Workplan = () => {
                         )}
                     </div>
                 </div>
-
             </div>
 
             {showModal && (
@@ -539,12 +587,9 @@ const Workplan = () => {
                     <div
                         className="bg-white p-6 rounded-2xl shadow-2xl w-96 relative transition-transform duration-300 ease-in-out transform scale-100"
                         data-aos="zoom-in"
-                        data-aos-duration="500" // ปรับระยะเวลาการซูม
-                        data-aos-easing="ease-in-out" // ใช้การเคลื่อนที่แบบ smooth
+                        data-aos-duration="500"
+                        data-aos-easing="ease-in-out"
                     >
-                        {/* 🎀 รูปน่ารัก */}
-                        <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="cute" className="w-12 h-12 absolute -top-6 left-4 rounded-full border-4 border-white shadow-lg bg-pink-100" />
-
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-bold text-pink-600 font-FontNoto">
                                 📅 {selectedDate}/{month + 1}/{year + 543}
@@ -556,12 +601,26 @@ const Workplan = () => {
                                 ❌
                             </button>
                         </div>
-
-                        {isHoliday ? (
-                            <div className="text-red-500 text-center font-FontNoto mb-4">
-                                วันนี้เป็นวันหยุด ไม่สามารถบันทึกงานได้
+                        {!taskData.noteType && (
+                            <div className="mb-4 flex flex-col gap-2">
+                                <label className="block mb-1 font-bold text-gray-700 font-FontNoto">เลือกประเภท</label>
+                                <button
+                                    className="btn btn-outline btn-info font-FontNoto"
+                                    onClick={() => setTaskData({ ...taskData, noteType: "public" })}
+                                >
+                                    🗓️ แผนงาน (เพื่อนๆ เห็นได้)
+                                </button>
+                                <button
+                                    className="btn btn-outline btn-warning font-FontNoto"
+                                    onClick={() => setTaskData({ ...taskData, noteType: "private" })}
+                                >
+                                    🔒 โน้ตส่วนตัว (เห็นคนเดียว)
+                                </button>
                             </div>
-                        ) : (
+                        )}
+
+                        {/* ถ้าเลือกประเภทแล้วค่อยแสดง textarea */}
+                        {taskData.noteType === "public" && (
                             <>
                                 <div className="mb-4">
                                     <label className="block mb-1 font-bold text-blue-600 font-FontNoto">{yesterdayLabel}</label>
@@ -582,45 +641,88 @@ const Workplan = () => {
                                         onChange={(e) => setTaskData({ ...taskData, evening: e.target.value })}
                                     ></textarea>
                                 </div>
-
-                                <div className="flex justify-end gap-2 ">
-                                    <button
-                                        className="btn btn-outline btn-error font-FontNoto"
-                                        onClick={async () => {
-                                            const key = `${userId}-${year}-${month + 1}-${selectedDate}`;
-                                            const date = new Date(year, month, selectedDate);
-
-                                            await deleteTaskFromDatabase(date);
-
-                                            const newTasks = { ...tasks };
-                                            delete newTasks[key];
-                                            setTasks(newTasks);
-
-                                            // ✅ เคลียร์ todayPlan ถ้าวันที่ลบตรงกับวันนี้
-                                            const today = new Date();
-                                            const isToday =
-                                                today.getDate() === selectedDate &&
-                                                today.getMonth() === month &&
-                                                today.getFullYear() === year;
-
-                                            if (isToday) {
-                                                setTodayPlan(null);
-                                            }
-
-                                            setShowModal(false);
-                                        }}
-                                    >
-                                        ลบ
-                                    </button>
-
-                                    <button className="btn btn-outline btn-success font-FontNoto" onClick={saveTask}>บันทึก</button>
-                                </div>
                             </>
                         )}
+
+                        {taskData.noteType === "private" && (
+                            <div className="mb-4">
+                                <label className="block mb-1 font-bold text-purple-600 font-FontNoto">🔒 โน้ตส่วนตัว</label>
+                                <textarea
+                                    className="textarea textarea-bordered w-full bg-purple-50 font-FontNoto"
+                                    value={taskData.privateNote}
+                                    placeholder="เขียนโน้ตที่เห็นคนเดียว"
+                                    onChange={(e) => setTaskData({ ...taskData, privateNote: e.target.value })}
+                                ></textarea>
+                            </div>
+                        )}
+
+                        {taskData.noteType && (
+                            <div className="flex justify-end gap-2">
+                                {/* 🔒 ปุ่มลบเฉพาะโน้ตส่วนตัว */}
+                                <button
+                                    className="btn btn-outline btn-warning font-FontNoto"
+                                    onClick={async () => {
+                                        const date = new Date(year, month, selectedDate);
+                                        await clearPrivateNoteFromDatabase(date);
+
+                                        const key = `${userId}-${year}-${month + 1}-${selectedDate}`;
+                                        const updatedTasks = { ...tasks };
+                                        if (updatedTasks[key]) {
+                                            updatedTasks[key].privateNote = "";
+                                        }
+                                        setTasks(updatedTasks);
+
+                                        if (
+                                            date.getDate() === new Date().getDate() &&
+                                            date.getMonth() === new Date().getMonth() &&
+                                            date.getFullYear() === new Date().getFullYear()
+                                        ) {
+                                            setTodayPlan(prev => prev ? { ...prev, privateNote: "" } : null);
+                                        }
+                                    }}
+                                >
+                                    ลบโน้ตส่วนตัว
+                                </button>
+
+                                {/* 🗑️ ลบแผนงานทั้งวัน */}
+                                <button
+                                    className="btn btn-outline btn-error font-FontNoto"
+                                    onClick={async () => {
+                                        const key = `${userId}-${year}-${month + 1}-${selectedDate}`;
+                                        const date = new Date(year, month, selectedDate);
+
+                                        await deleteTaskFromDatabase(date);
+
+                                        const newTasks = { ...tasks };
+                                        delete newTasks[key];
+                                        setTasks(newTasks);
+
+                                        const today = new Date();
+                                        const isToday =
+                                            today.getDate() === selectedDate &&
+                                            today.getMonth() === month &&
+                                            today.getFullYear() === year;
+
+                                        if (isToday) {
+                                            setTodayPlan(null);
+                                        }
+
+                                        setShowModal(false);
+                                    }}
+                                >
+                                    ลบ
+                                </button>
+
+                                {/* 💾 บันทึก */}
+                                <button className="btn btn-outline btn-success font-FontNoto" onClick={saveTask}>
+                                    บันทึก
+                                </button>
+                            </div>
+                        )}
+
                     </div>
                 </div>
             )}
-
         </div>
     );
 };
