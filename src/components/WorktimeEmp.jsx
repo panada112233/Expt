@@ -258,31 +258,31 @@ const WorktimeEmp = () => {
             {editingRecord && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-start justify-center pt-20 z-50">
                     <div className="bg-white p-6 rounded-lg shadow-xl w-96">
-                        <h3 className="font-bold text-lg mb-4">แก้ไขเวลา</h3>
+                        <h3 className="font-bold text-lg mb-4 font-FontNoto">แก้ไขเวลา</h3>
                         <div className="space-y-3">
                             <div>
-                                <label className="label">เวลาเข้า (HH:mm)</label>
+                                <label className="label font-FontNoto">เวลาเข้า (HH:mm)</label>
                                 <input
                                     type="time"
                                     value={editForm.checkIn}
                                     onChange={(e) => setEditForm({ ...editForm, checkIn: e.target.value })}
-                                    className="input input-bordered w-full"
+                                    className="input input-bordered w-full font-FontNoto"
                                 />
                             </div>
                             <div>
-                                <label className="label">เวลาออก (HH:mm)</label>
+                                <label className="label font-FontNoto">เวลาออก (HH:mm)</label>
                                 <input
                                     type="text"
                                     value={editForm.checkOut}
                                     onChange={(e) => setEditForm({ ...editForm, checkOut: e.target.value })}
-                                    className="input input-bordered w-full"
+                                    className="input input-bordered w-full font-FontNoto"
                                     placeholder="17:30 หรือ -"
                                 />
                             </div>
                         </div>
                         <div className="flex justify-end gap-2 mt-4">
-                            <button onClick={handleEditSubmit} className="btn btn-success">บันทึก</button>
-                            <button onClick={() => setEditingRecord(null)} className="btn btn-ghost">ยกเลิก</button>
+                            <button onClick={handleEditSubmit} className="btn btn-success font-FontNoto">บันทึก</button>
+                            <button onClick={() => setEditingRecord(null)} className="btn btn-ghost font-FontNoto">ยกเลิก</button>
                         </div>
                     </div>
                 </div>
@@ -291,8 +291,8 @@ const WorktimeEmp = () => {
             {deleteRecordID && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-start justify-center pt-20 z-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md mx-auto">
-                        <h3 className="font-bold text-lg mb-4">คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</h3>
-                        <div className="flex justify-end gap-2">
+                        <h3 className="font-bold text-lg mb-4 font-FontNoto">คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</h3>
+                        <div className="flex justify-end gap-2 font-FontNoto">
                             <button onClick={handleDelete} className="btn btn-error">ลบ</button>
                             <button onClick={() => setDeleteRecordID(null)} className="btn btn-ghost">ยกเลิก</button>
                         </div>

@@ -11,32 +11,6 @@ const WorkplanEmp = () => {
         "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
         "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
     ];
-
-    const cuteIcons = {
-        "จันทร์": "https://cdn-icons-png.flaticon.com/512/616/616408.png",
-        "อังคาร": "https://cdn-icons-png.flaticon.com/512/616/616430.png",
-        "พุธ": "https://cdn-icons-png.flaticon.com/512/616/616421.png",
-        "พฤหัส": "https://cdn-icons-png.flaticon.com/512/616/616423.png",
-        "ศุกร์": "https://cdn-icons-png.flaticon.com/512/616/616445.png"
-    };
-
-    const getDayIcon = (dayOfWeek) => {
-        switch (dayOfWeek) {
-            case 1: return cuteIcons["จันทร์"];
-            case 2: return cuteIcons["อังคาร"];
-            case 3: return cuteIcons["พุธ"];
-            case 4: return cuteIcons["พฤหัส"];
-            case 5: return cuteIcons["ศุกร์"];
-            default: return null; // ถ้าเป็นวันอื่น (เช่น เสาร์ อาทิตย์) ก็ไม่แสดงไอคอน
-        }
-    };
-
-    const getIconForDate = (date) => {
-        const dayOfWeek = (new Date(date).getDay() + 6) % 7 + 1; // แปลงค่าให้เหมาะสม
-        return getDayIcon(dayOfWeek);
-    };
-
-
     const [yesterdayLabel, setYesterdayLabel] = useState("เมื่อวาน");
 
     useEffect(() => {
@@ -73,47 +47,42 @@ const WorkplanEmp = () => {
 
     const filteredPlans = plans.filter(p => {
         const d = new Date(p.date);
-        return d.getMonth() + 1 === parseInt(month) && d.getFullYear() === parseInt(year);
+        return d.getMonth() + 1 === parseInt(month) && d.getFullYear() === parseInt(year) &&
+            (p.morningTask || p.eveningTask); // กรองเฉพาะแผนงานที่มี morningTask หรือ eveningTask
     });
-
     const grouped = filteredPlans.reduce((acc, plan) => {
         const key = plan.date;
         if (!acc[key]) acc[key] = [];
         acc[key].push(plan);
         return acc;
     }, {});
- 
+
     return (
         <div className="flex flex-col w-full">
             <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
                 <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
-                ตารางแผนการปฏิบัติงาน
+                    ตารางแผนการปฏิบัติงาน
                 </h1>
                 <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบแผนการปฏิบัติงานของเพื่อนร่วมงาน</p>
             </div>
             <div className="w-full max-w-6xl mx-auto bg-transparent rounded-xl p-6">
-              
+
                 <div className="flex items-center justify-end space-x-4 mb-6">
                     <select className="select select-bordered w-40 font-FontNoto" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
                         {thaiMonths.map((m, idx) => (
-                            <option key={idx + 1} value={idx + 1}>{m}</option>
+                            <option className="font-FontNoto" key={idx + 1} value={idx + 1}>{m}</option>
                         ))}
                     </select>
                     <select className="select select-bordered w-40 font-FontNoto" value={year} onChange={(e) => setYear(Number(e.target.value))}>
                         {Array.from({ length: 11 }, (_, i) => 2024 + i).map((y) => (
-                            <option key={y} value={y}>{y + 543}</option>
+                            <option className="font-FontNoto" key={y} value={y}>{y + 543}</option>
                         ))}
                     </select>
                 </div>
 
                 {Object.entries(grouped).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([date, records], index) => (
                     <div key={date} className="relative bg-blue-50 rounded-2xl border border-blue-200 shadow mb-8 p-4 animate-fade-in">
-                        {/* ไอคอนน่ารัก */}
-                        <img
-                            src={getIconForDate(date)}
-                            alt="cute icon"
-                            className="w-12 h-12 absolute -top-6 left-4 rounded-full border-4 border-white shadow-lg bg-pink-100"
-                        />
+
                         <div className="flex justify-between items-center mb-4 pt-4">
                             <h3 className="font-semibold text-lg text-blue-700 font-FontNoto">
                                 📅 วันที่ {formatDate(date)}

@@ -68,7 +68,8 @@ const WorkplanGM = () => {
     const exportToExcelMonthly = () => {
         const filteredPlans = plans.filter(p => {
             const d = new Date(p.date);
-            return d.getMonth() + 1 === parseInt(month) && d.getFullYear() === parseInt(year);
+            return d.getMonth() + 1 === parseInt(month) && d.getFullYear() === parseInt(year) &&
+                (p.morningTask || p.eveningTask); // กรองเฉพาะแผนงานที่มี morningTask หรือ eveningTask
         });
 
         const groupedByDate = filteredPlans.reduce((acc, plan) => {
@@ -123,12 +124,12 @@ const WorkplanGM = () => {
                 <div className="flex items-center justify-end space-x-4 mb-4">
                     <select className="select select-bordered w-40 font-FontNoto" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
                         {thaiMonths.map((m, idx) => (
-                            <option key={idx + 1} value={idx + 1}>{m}</option>
+                            <option className="font-FontNoto" key={idx + 1} value={idx + 1}>{m}</option>
                         ))}
                     </select>
                     <select className="select select-bordered w-40 font-FontNoto" value={year} onChange={(e) => setYear(Number(e.target.value))}>
                         {Array.from({ length: 11 }, (_, i) => 2024 + i).map((y) => (
-                            <option key={y} value={y}>{y + 543}</option>
+                            <option className="font-FontNoto" key={y} value={y}>{y + 543}</option>
                         ))}
                     </select>
                 </div>
@@ -144,45 +145,54 @@ const WorkplanGM = () => {
                 </div>
 
                 {/* ตารางรายวัน */}
-                {Object.entries(grouped).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([date, records]) => (
-                    <div key={date} className="bg-white rounded-xl shadow border border-gray-200 p-4 mb-6">
-                        <div className="flex justify-between items-center mb-2">
-                            <h3 className="font-semibold font-FontNoto">📅 วันที่ {formatDate(date)}</h3>
-                            <button
-                                onClick={() => exportToExcel(records, date)}
-                                className="btn btn-sm btn-success !text-white font-FontNoto"
-                            >
-                                ส่งออก Excel
-                            </button>
-                        </div>
-                        <div className="overflow-x-hidden w-full">
-                            <table className="table text-sm text-center border border-gray-200 w-full table-auto shadow-md rounded-lg">
-                                <thead className="bg-blue-100 text-black font-FontNoto">
-                                    <tr>
-                                        <th className="w-[180px] whitespace-nowrap font-FontNoto text-left pl-4 py-3 text-black">ชื่อพนักงาน</th>
-                                        <th className="w-[300px] whitespace-nowrap font-FontNoto text-left pl-4 py-3 text-black">
-                                            {(() => {
-                                                const d = new Date(date); // date ของแถวนี้
-                                                return d.getDay() === 1 ? "เมื่อวันศุกร์" : "เมื่อวาน";
-                                            })()}
-                                        </th>
-                                        <th className="w-[300px] whitespace-nowrap font-FontNoto text-left pl-4 py-3 text-black">วันนี้</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white text-center font-FontNoto">
-                                    {records.map((rec, idx) => (
-                                        <tr key={idx} className="hover:bg-gray-100 transition-all duration-200">
-                                            <td className="text-left px-4 py-3 font-FontNoto">{getFullName(rec.userID)}</td>
-                                            <td className="text-left px-4 py-3 font-FontNoto text-gray-700">{rec.morningTask || "-"}</td>
-                                            <td className="text-left px-4 py-3 font-FontNoto text-gray-700">{rec.eveningTask || "-"}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                {Object.entries(grouped)
+                    .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+                    .map(([date, records]) => {
+                        // กรองแผนงานที่มี morningTask หรือ eveningTask เท่านั้น
+                        const validRecords = records.filter(rec => rec.morningTask || rec.eveningTask);
 
-                        </div>
-                    </div>
-                ))}
+                        // ถ้าไม่มีข้อมูลที่ผ่านการกรอง ก็ไม่แสดงตาราง
+                        if (validRecords.length === 0) return null;
+
+                        return (
+                            <div key={date} className="bg-white rounded-xl shadow border border-gray-200 p-4 mb-6">
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="font-semibold font-FontNoto">📅 วันที่ {formatDate(date)}</h3>
+                                    <button
+                                        onClick={() => exportToExcel(validRecords, date)}
+                                        className="btn btn-sm btn-success !text-white font-FontNoto"
+                                    >
+                                        ส่งออก Excel
+                                    </button>
+                                </div>
+                                <div className="overflow-x-hidden w-full">
+                                    <table className="table text-sm text-center border border-gray-200 w-full table-auto shadow-md rounded-lg">
+                                        <thead className="bg-blue-100 text-black font-FontNoto">
+                                            <tr>
+                                                <th className="w-[180px] whitespace-nowrap font-FontNoto text-left pl-4 py-3 text-black">ชื่อพนักงาน</th>
+                                                <th className="w-[300px] whitespace-nowrap font-FontNoto text-left pl-4 py-3 text-black">
+                                                    {(() => {
+                                                        const d = new Date(date); // date ของแถวนี้
+                                                        return d.getDay() === 1 ? "เมื่อวันศุกร์" : "เมื่อวาน";
+                                                    })()}
+                                                </th>
+                                                <th className="w-[300px] whitespace-nowrap font-FontNoto text-left pl-4 py-3 text-black">วันนี้</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white text-center font-FontNoto">
+                                            {validRecords.map((rec, idx) => (
+                                                <tr key={idx} className="hover:bg-gray-100 transition-all duration-200">
+                                                    <td className="text-left px-4 py-3 font-FontNoto">{getFullName(rec.userID)}</td>
+                                                    <td className="text-left px-4 py-3 font-FontNoto text-gray-700">{rec.morningTask || "-"}</td>
+                                                    <td className="text-left px-4 py-3 font-FontNoto text-gray-700">{rec.eveningTask || "-"}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        );
+                    })}
             </div>
         </div>
     );
