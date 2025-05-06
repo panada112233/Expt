@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { pdfMake, font } from "../libs/pdfmake";
 import axios from "axios";
 
 const LeaveForm = () => {
@@ -50,7 +49,6 @@ const LeaveForm = () => {
 
     const [savedForms, setSavedForms] = useState([]);
 
-    const [itemToDelete, setItemToDelete] = useState(null);
     const [isNotificationModalOpen, setNotificationModalOpen] = useState(false);
     const [isopendeletediglog, setisopendeletediglog] = useState(false)
 
@@ -250,7 +248,6 @@ const LeaveForm = () => {
         }
     };
 
-
     const resetFormData = () => {
         setFormData({
             documentId: "",  // ✅ รีเซ็ต documentId ด้วย
@@ -419,12 +416,9 @@ const LeaveForm = () => {
         }
     };
 
-
     const handleViewForm = (form) => {
         setFormData(form);
     };
-
-
     const handleSubmitToGM = async (form) => {
         if (!form || !form.ID) {
             alert("ไม่พบฟอร์มที่ต้องการส่ง กรุณาลองใหม่");
@@ -456,8 +450,6 @@ const LeaveForm = () => {
             alert("เกิดข้อผิดพลาดในการส่งฟอร์ม");
         }
     };
-
-
     const sendFrom = async (form) => {
         try {
             console.log("📌 กำลังส่งฟอร์ม:", form.documentId);
@@ -494,250 +486,6 @@ const LeaveForm = () => {
         }
 
         setNotificationModalOpen(true);
-    };
-
-    const handleDeleteForm = async () => {
-
-        if (!itemToDelete) {
-            alert("❌ ไม่พบ DocumentID");
-            return;
-        }
-
-        try {
-            const response = await fetch(`https://localhost:7039/api/Document/DeleteDocument/${itemToDelete}`, {
-                method: "DELETE",
-            });
-
-            console.log("📌 การตอบสนองจาก API:", response); // ดีบั๊กการตอบสนองจาก API
-
-            if (response.ok) {
-
-
-                setSavedForms((prevForms) => prevForms.filter((form) => form.documentId !== itemToDelete));
-                setisopendeletediglog(false)
-            } else {
-                const errorText = await response.text();
-                console.error("Server error:", errorText);
-                alert("❌ เกิดข้อผิดพลาด: " + errorText);
-            }
-        } catch (error) {
-            console.error("Error:", error);
-            alert("❌ เกิดข้อผิดพลาดในการลบฟอร์ม");
-        }
-    };
-    const handleGeneratePDF = () => {
-        // Helper function สำหรับแปลงวันที่เป็นรูปแบบ DD/MM/YYYY
-        const formatDate = (date) => {
-            if (!date) return "-"; // ถ้าไม่มีวันที่ให้แสดง "-"
-            const options = { year: "numeric", month: "2-digit", day: "2-digit" };
-            return new Intl.DateTimeFormat("th-TH", options).format(new Date(date));
-        };
-        const docDefinition = {
-            content: [
-                { text: "แบบฟอร์มใบลา", style: "header" },
-                {
-                    text: `วันที่ : ${formatDate(formData.createdate)}`,
-                    margin: [0, 10, 0, 10],
-                    alignment: 'right' // ทำให้ข้อความชิดขวา
-                },
-                { text: `เรื่อง : ขออนุญาติลา : ${leaveTypeName}`, margin: [0, 10, 0, 10] },
-                { text: `เรียน หัวหน้าแผนก/ฝ่ายบุคคล`, margin: [0, 10, 0, 10] },
-                {
-                    table: {
-                        widths: ["auto", "*"],
-                        body: [
-                            ["ข้าพเจ้า :", `${formData.fullname || "-"} แผนก ${roleName}`],
-                            ["ขอลา :", `${leaveTypeName} เนื่องจาก ${formData.reason || "-"}`],
-                            [
-                                "ตั้งแต่วันที่ :",
-                                `${formatDate(formData.startdate)} ถึงวันที่ : ${formatDate(formData.enddate)} รวม : ${formData.totalleave || "0"} วัน`
-                            ],
-                            [
-                                "ข้าพเจ้าได้ลา :",
-                                `${leavedTypeName} ครั้งสุดท้าย ตั้งแต่วันที่ : ${formatDate(formData.leaved_startdate)} ถึงวันที่ : ${formatDate(formData.leaved_enddate)} รวม ${formData.totalleaved || "0"} วัน`
-                            ],
-                        ],
-                    },
-                    layout: "noBorders",
-                    margin: [0, 0, 0, 20],
-                },
-                {
-                    table: {
-                        widths: ["auto", "*"],
-                        body: [
-                            [
-                                "ในระหว่างลา ติดต่อข้าพเจ้าได้ที่ :",
-                                `${formData.friendeContact || "-"}, เบอร์ติดต่อ ${formData.contact || "-"}`
-                            ],
-                        ],
-                    },
-                    layout: "noBorders",
-                    margin: [0, 0, 0, 20],
-
-                },
-                {
-                    text: [
-                        { text: "สถิติการลาในปีนี้ (วันเริ่มงาน)", style: "subheader" },
-                        { text: ` วันที่: ${formatDate(formData.workingstart)}`, style: "subheader" }
-                    ]
-                },
-                {
-                    table: {
-                        widths: ["auto", "*", "*", "*"],
-                        body: [
-                            [
-                                { text: "ประเภทลา", alignment: 'center' },
-                                { text: "ลามาแล้ว", alignment: 'center' },
-                                { text: "ลาครั้งนี้", alignment: 'center' },
-                                { text: "รวมเป็น", alignment: 'center' }
-                            ],
-                            [
-                                { text: "ป่วย", alignment: 'center' },
-                                { text: formData.historyRequset?.last_total_stickDay ?? "-", alignment: 'center' },
-                                { text: formData.historyRequset?.total_stickDay ?? "-", alignment: 'center' },
-                                { text: formData.historyRequset?.sum_stickDay ?? "-", alignment: 'center' }
-                            ],
-                            [
-                                { text: "กิจส่วนตัว", alignment: 'center' },
-                                { text: formData.historyRequset?.last_total_personDay ?? "-", alignment: 'center' },
-                                { text: formData.historyRequset?.total_personDay ?? "-", alignment: 'center' },
-                                { text: formData.historyRequset?.sum_personDay ?? "-", alignment: 'center' }
-                            ],
-                            [
-                                { text: "พักร้อน", alignment: 'center' },
-                                { text: formData.historyRequset?.last_total_vacationDays ?? "-", alignment: 'center' },
-                                { text: formData.historyRequset?.total_vacationDays ?? "-", alignment: 'center' },
-                                { text: formData.historyRequset?.sum_vacationDays ?? "-", alignment: 'center' }
-                            ],
-                            [
-                                { text: "คลอดบุตร", alignment: 'center' },
-                                { text: formData.historyRequset?.last_total_maternityDaystotal ?? "-", alignment: 'center' },
-                                { text: formData.historyRequset?.total_maternityDaystotal ?? "-", alignment: 'center' },
-                                { text: formData.historyRequset?.sum_maternityDaystotal ?? "-", alignment: 'center' }
-                            ],
-                            [
-                                { text: "บวช", alignment: 'center' },
-                                { text: formData.historyRequset?.last_total_ordinationDays ?? "-", alignment: 'center' },
-                                { text: formData.historyRequset?.total_ordinationDays ?? "-", alignment: 'center' },
-                                { text: formData.historyRequset?.sum_ordinationDays ?? "-", alignment: 'center' }
-                            ]
-                        ]
-                    },
-                    margin: [0, 0, 0, 20]
-                },
-                {
-                    text: `ขอแสดงความนับถือ          .`,
-                    margin: [0, 10, 0, 0],
-                    alignment: 'right' // ทำให้ข้อความชิดขวา
-                },
-                {
-                    columns: [
-                        {
-                            width: '33%',  // กำหนดความกว้างให้เป็น 1/3 ของพื้นที่
-                            text: `ลงชื่อ:  ...............................พนักงาน`,
-                            alignment: 'center',
-                            margin: [0, 10, 0, 0]
-                        },
-                        {
-                            width: '33%',
-                            text: `ลงชื่อ:  ............................หัวหน้าแผนก`,
-                            alignment: 'center',
-                            margin: [0, 10, 0, 0]
-                        },
-                        {
-                            width: '33%',
-                            text: `ลงชื่อ:  ...............................ผู้ตรวจสอบ`,
-                            alignment: 'center',
-                            margin: [0, 10, 0, 0]
-                        }
-                    ]
-                },
-                {
-                    columns: [
-                        {
-                            width: '33%',  // กำหนดความกว้างให้เป็น 1/3 ของพื้นที่
-                            text: `(..............................)`,
-                            alignment: 'center',
-                            margin: [0, 10, 0, 0]
-                        },
-                        {
-                            width: '33%',  // กำหนดความกว้างให้เป็น 1/3 ของพื้นที่
-                            text: `(..............................)`,
-                            alignment: 'center',
-                            margin: [0, 10, 0, 0]
-                        },
-                        {
-                            width: '33%',  // กำหนดความกว้างให้เป็น 1/3 ของพื้นที่
-                            text: `(..............................)`,
-                            alignment: 'center',
-                            margin: [0, 10, 0, 0]
-                        }
-                    ]
-                },
-                {
-                    columns: [
-                        {
-                            width: '33%',
-                            text: `วันที่ ......../......../.........`,
-                            alignment: 'center',
-                            margin: [0, 10, 0, 0]
-                        },
-                        {
-                            width: '33%',
-                            text: `แผนก........................`,
-                            alignment: 'center',
-                            margin: [0, 10, 0, 0]
-                        },
-                        {
-                            width: '33%',
-                            text: `แผนก........................`,
-                            alignment: 'center',
-                            margin: [0, 10, 0, 0]
-                        }
-                    ]
-                },
-                {
-                    columns: [
-                        {
-                            width: '33%',
-                            text: ``,
-                            alignment: 'center',
-                            margin: [0, 10, 0, 0]
-                        },
-                        {
-                            width: '33%',
-                            text: `วันที่ ......../......../.........`,
-                            alignment: 'center',
-                            margin: [0, 10, 0, 0]
-                        },
-                        {
-                            width: '33%',
-                            text: `วันที่ ......../......../.........`,
-                            alignment: 'center',
-                            margin: [0, 10, 0, 0]
-                        }
-                    ]
-                },
-            ],
-            styles: {
-                header: {
-                    fontSize: 18,
-                    bold: true,
-                    alignment: "center"
-                },
-                subheader: {
-                    fontSize: 18,
-                    bold: true,
-                    margin: [0, 10, 0, 5]
-                }
-            },
-            defaultStyle: {
-                font: "THSarabunNew",
-                fontSize: 16, // ตั้งค่าขนาดฟ้อนต์เป็น 16
-            },
-        };
-
-        pdfMake.createPdf(docDefinition).download("แบบฟอร์มใบลา.pdf");
     };
 
     return (
@@ -1400,175 +1148,26 @@ const LeaveForm = () => {
                             </tbody>
                         </table>
                     </div>
-                    <div className="flex justify-center gap-4 my-4">
-                        <button
-                            type="button"
-                            className="px-4 py-2 bg-pink-100 hover:bg-pink-200 text-pink-800 font-bold rounded-2xl shadow-md transition-all duration-300 font-FontNoto flex items-center gap-2"
-                            onClick={() => resetFormData()}
-                        >
-                            🧹 ฟอร์มใหม่
-                        </button>
-                    </div>
-
                     <div className="flex gap-4 my-4">
-                        <button
-                            type="button"
-                            className="w-1/2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold rounded-2xl shadow-md transition-all duration-300 font-FontNoto flex items-center justify-center gap-2"
-                            onClick={handleGeneratePDF}
-                        >
-                            📄 สร้าง PDF
-                        </button>
 
                         <button
                             type="button"
-                            className="w-1/2 px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-bold rounded-2xl shadow-md transition-all duration-300 font-FontNoto flex items-center justify-center gap-2"
-                            onClick={handleSaveForm}
+                            className="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold rounded-2xl shadow-md transition-all duration-300 font-FontNoto flex items-center gap-2"
+                            onClick={() => {
+                                setmessageModalState({
+                                    title: "📌 ยืนยันการส่งใบลา",
+                                    textdetail: "คุณแน่ใจหรือไม่ว่าต้องการส่งใบลานี้ไปยังหัวหน้า?",
+                                    confirmAction: () => sendFrom(formData),  // ✅ ใส่ function ส่งฟอร์มไว้
+                                });
+                                setNotificationModalOpen(true);
+                            }}
                         >
-                            💾 บันทึกฟอร์ม
+                            ส่งใบลา
                         </button>
+
                     </div>
                 </form>
                 <div>
-                    <h3 className="text-xl font-bold mb-4 font-FontNoto">แบบฟอร์มที่บันทึก:</h3>
-                    <div className="overflow-x-auto w-full">
-                        <table className="table w-full">
-                            <thead className="text-center font-FontNoto">
-                                <tr>
-                                    <th>#</th>
-                                    <th className="font-FontNoto">ชื่อแบบฟอร์ม</th>
-                                    <th className="font-FontNoto">การจัดการ</th>
-                                </tr>
-
-                            </thead>
-                            <tbody className=" text-center font-FontNoto">
-                                {savedForms.map((form, index) => {
-
-                                    return (
-                                        <tr key={form.id} className="hover:bg-base-100">
-                                            <td>{index + 1}</td>
-                                            <td className="font-FontNoto">
-                                                {leavetpyeState.find(item => item.leaveTypeid === form.leaveTypeId)?.leaveTypeTh || "ไม่ระบุ"} {form.reason} ตั้งแต่วันที่ {new Date(form.startdate).toLocaleDateString("th-TH")} ถึงวันที่ {new Date(form.enddate).toLocaleDateString("th-TH")}
-                                            </td>
-                                            <td className="p-2">
-                                                <div className="flex flex-col sm:flex-row justify-center items-center gap-4 my-4">
-                                                    <button
-                                                        onClick={() => setFormViewData(form)}
-                                                        type="button"
-                                                        className="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-800 font-bold rounded-2xl shadow-md transition-all duration-300 font-FontNoto flex items-center gap-2"
-                                                    >
-                                                        ดู
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-800 font-bold rounded-2xl shadow-md transition-all duration-300 font-FontNoto flex items-center gap-2"
-                                                        onClick={() => {
-                                                            setItemToDelete(form.documentId);
-                                                            setisopendeletediglog(true);
-                                                        }}
-                                                    >
-                                                        ลบ
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold rounded-2xl shadow-md transition-all duration-300 font-FontNoto flex items-center gap-2"
-                                                        onClick={() => {
-                                                            setmessageModalState({
-                                                                title: "📌 ยืนยันการส่งใบลา",
-                                                                textdetail: "คุณแน่ใจหรือไม่ว่าต้องการส่งใบลานี้ไปยังหัวหน้า?",
-                                                                confirmAction: () => sendFrom(formData),  // ✅ ใส่ function ส่งฟอร์มไว้
-                                                            });
-                                                            setNotificationModalOpen(true);
-                                                        }}
-                                                    >
-                                                        ส่งใบลา
-                                                    </button>
-
-                                                </div>
-
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {isNotificationModalOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                            <div className="bg-white w-11/12 max-w-md rounded-2xl shadow-lg flex flex-col max-h-[90vh] overflow-hidden">
-
-                                {/* เนื้อหา */}
-                                <div className="overflow-y-auto flex-1 p-6">
-                                    <h3 className="font-bold text-lg font-FontNoto">{messageModalState.title}</h3>
-                                    <p className="py-4 font-FontNoto">{messageModalState.textdetail}</p>
-                                </div>
-
-                                {/* ปุ่ม */}
-                                <div className="flex justify-end gap-4 p-4 ">
-                                    {messageModalState.confirmAction ? (
-                                        <>
-                                            <button
-                                                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black font-bold rounded-2xl font-FontNoto"
-                                                onClick={() => setNotificationModalOpen(false)}
-                                            >
-                                                ยกเลิก
-                                            </button>
-                                            <button
-                                                className="px-4 py-2 bg-green-500 hover:bg-green-400 text-white font-bold rounded-2xl font-FontNoto"
-                                                onClick={() => {
-                                                    messageModalState.confirmAction();
-                                                    setNotificationModalOpen(false);
-                                                }}
-                                            >
-                                                ยืนยัน
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <button
-                                            className="px-4 py-2 bg-green-500 hover:bg-green-400 text-white font-bold rounded-2xl font-FontNoto"
-                                            onClick={() => setNotificationModalOpen(false)}
-                                        >
-                                            ตกลง
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {isopendeletediglog && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                            <div className="bg-white w-11/12 max-w-md rounded-2xl shadow-lg flex flex-col max-h-[90vh] overflow-hidden">
-
-                                {/* เนื้อหา */}
-                                <div className="overflow-y-auto flex-1 p-6">
-                                    <h3 className="font-bold text-lg font-FontNoto">🗑️ ยืนยันการลบ</h3>
-                                    <p className="py-4 font-FontNoto">คุณต้องการลบข้อมูลนี้หรือไม่?</p>
-                                </div>
-
-                                {/* ปุ่ม */}
-                                <div className="flex justify-end gap-4 p-4">
-                                    <button
-                                        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black font-bold rounded-2xl font-FontNoto"
-                                        onClick={() => setisopendeletediglog(false)}
-                                    >
-                                        ยกเลิก
-                                    </button>
-                                    <button
-                                        className="px-4 py-2 bg-red-400 hover:bg-red-500 text-white font-bold rounded-2xl font-FontNoto"
-                                        onClick={() => {
-                                            handleDeleteForm();
-                                            setisopendeletediglog(false);
-                                        }}
-                                    >
-                                        ลบข้อมูล
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
                 </div>
             </div>
         </div>

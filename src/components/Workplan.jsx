@@ -466,7 +466,7 @@ const Workplan = () => {
                         <div className="font-FontNoto text-xs text-gray-800 space-y-1">
                             <p className="font-FontNoto">🕘 เช็คอิน: {todayWorktime.checkIn || "-"}</p>
                             <p className="font-FontNoto">🕔 เช็คเอาท์: {todayWorktime.checkOut || "-"}</p>
-                            <p className="font-FontNoto">📍 สถานที่: {todayWorktime.location || "-"}</p>
+                            <p className="font-FontNoto">📍 ประเภทการทำงาน: {todayWorktime.location || "-"}</p>
                         </div>
                     ) : (
                         <p className="font-FontNoto text-xs text-gray-500 text-center">

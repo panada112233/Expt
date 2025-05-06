@@ -88,7 +88,7 @@ const LeaveGraph = () => {
             return;
           }
 
-          const docDate = new Date(doc.sentToHrdate);
+          const docDate = new Date(doc.startdate);
           if (docDate.getMonth() === selectedMonth && docDate.getFullYear() === selectedYear) {
             const leaveTypeKey = doc.leaveTypeId?.trim().toUpperCase();
             console.log("🔍 ตรวจสอบ leaveTypeKey:", leaveTypeKey);

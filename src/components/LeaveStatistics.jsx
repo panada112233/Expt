@@ -81,7 +81,7 @@ const LeaveStatistics = () => {
             return;
           }
 
-          const docDate = new Date(doc.sentToHrdate);
+          const docDate = new Date(doc.startdate);
           if (docDate.getMonth() === selectedMonth && docDate.getFullYear() === selectedYear) {
             const leaveTypeKey = doc.leaveTypeId?.trim().toUpperCase();
             console.log("🔍 ตรวจสอบ leaveTypeKey:", leaveTypeKey);
@@ -180,7 +180,6 @@ const LeaveStatistics = () => {
       "#F48FB1", // ชมพูพาสเทลชัด (ใบลาคลอด)
       "#FFD54F", // เหลืองพาสเทลสด (ใบลาบวช)
     ];
-
 
     const datasets = [
       ...documentTypes.map((type, index) => ({

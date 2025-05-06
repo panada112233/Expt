@@ -14,6 +14,9 @@ const ManageEquipmentsAdmin = () => {
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
+  const borrowerName = users.find(u => u.userID === parseInt(selectedUserId));
+
+  
 
   const openModal = (equipment) => {
     setSelectedEquipment(equipment);
@@ -88,9 +91,27 @@ const ManageEquipmentsAdmin = () => {
     fetchData();
   };
 
-  const handleConfirmBorrow = async () => {
+
+  const handleBorrow = (equipment) => {
     if (!selectedUserId) {
       setStatusMessage("กรุณาเลือกพนักงานก่อน");
+      document.getElementById("status_modal").showModal();
+      return;
+    }
+
+    if (!equipment) {
+      setStatusMessage("กรุณาเลือกอุปกรณ์ก่อน");
+      document.getElementById("status_modal").showModal();
+      return;
+    }
+
+    // กำหนดอุปกรณ์ที่เลือก แล้วเปิด modal ยืนยัน
+    setSelectedEquipment(equipment);
+    setIsModalOpen(true);
+  };
+  const handleConfirmBorrow = async () => {
+    if (!selectedUserId || !selectedEquipment) {
+      setStatusMessage("ข้อมูลไม่ครบถ้วน กรุณาลองใหม่");
       document.getElementById("status_modal").showModal();
       return;
     }
@@ -105,41 +126,15 @@ const ManageEquipmentsAdmin = () => {
       document.getElementById("status_modal").showModal();
       fetchData();
       setIsModalOpen(false);
+      setSelectedEquipment(null);
     } catch (error) {
       console.error("เกิดข้อผิดพลาดในการยืมอุปกรณ์:", error);
       setStatusMessage("ไม่สามารถยืมอุปกรณ์ได้ โปรดลองอีกครั้ง");
       document.getElementById("status_modal").showModal();
     }
   };
-  const handleBorrow = async (equipmentId) => {
-    if (!selectedUserId) {
-      setStatusMessage("กรุณาเลือกพนักงานก่อน");
-      document.getElementById("status_modal").showModal();
-      return;
-    }
 
-    if (!equipmentId) {
-      setStatusMessage("กรุณาเลือกอุปกรณ์ก่อน");
-      document.getElementById("status_modal").showModal();
-      return;
-    }
 
-    try {
-      await axios.post("https://localhost:7039/api/Equipment/Borrow", {
-        equipmentId: parseInt(equipmentId),
-        userId: parseInt(selectedUserId)
-      });
-
-      setStatusMessage("ยืมอุปกรณ์เรียบร้อยแล้ว");
-      document.getElementById("status_modal").showModal();
-      fetchData();
-      setSelectedEquipmentId("");
-    } catch (error) {
-      console.error("เกิดข้อผิดพลาดในการยืมอุปกรณ์:", error);
-      setStatusMessage("ไม่สามารถยืมอุปกรณ์ได้ โปรดลองอีกครั้ง");
-      document.getElementById("status_modal").showModal();
-    }
-  };
   const calculateAvailableEquipments = (equipmentId) => {
     const borrowedCount = borrows.filter(br => br.equipmentID === equipmentId && !br.returnDate).length;
     const equipment = equipments.find(eq => eq.equipmentID === equipmentId);
@@ -154,7 +149,13 @@ const ManageEquipmentsAdmin = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="">
+      <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+        <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+          ยืม-คืน อุปกรณ์สำนักงาน
+        </h1>
+        <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบข้อมูลการยืมอุปกรณ์สำนักงาน</p>
+      </div>
       <h3 className="text-xl font-bold mt-6 mb-2 font-FontNoto">เบิกอุปกรณ์ให้พนักงาน</h3>
       <div className="flex flex-col md:flex-row flex-wrap gap-2 items-start md:items-center mb-4">
         <select
@@ -189,7 +190,11 @@ const ManageEquipmentsAdmin = () => {
 
         <button
           className="btn btn-primary font-FontNoto w-full md:w-auto"
-          onClick={() => handleBorrow(selectedEquipmentId)}
+          onClick={() => {
+            const eq = equipments.find(e => e.equipmentID === parseInt(selectedEquipmentId));
+            handleBorrow(eq);
+          }}
+
           disabled={!selectedUserId || !selectedEquipmentId}
         >
           ยืมอุปกรณ์
@@ -258,7 +263,6 @@ const ManageEquipmentsAdmin = () => {
 
                   </td>
                 </tr>
-
               );
             })}
           </tbody>
@@ -294,6 +298,7 @@ const ManageEquipmentsAdmin = () => {
           </div>
         </div>
       </dialog>
+
       <dialog id="error_modal" className="modal">
         <div className="modal-box">
           <h3 className="font-bold text-lg text-red-600 font-FontNoto">เกิดข้อผิดพลาด</h3>
@@ -317,15 +322,22 @@ const ManageEquipmentsAdmin = () => {
         </div>
       </dialog>
 
-
       {isModalOpen && (
-        <div className="modal modal-open">
-          <div className="modal-box">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
             <h2 className="text-xl font-bold mb-4 font-FontNoto">ยืนยันการยืมอุปกรณ์</h2>
-            <p className="font-FontNoto">คุณต้องการยืมอุปกรณ์: {selectedEquipment?.name} หรือไม่?</p>
-            <div className="flex justify-end gap-2 mt-4">
-              <button className="btn btn-secondary font-FontNoto" onClick={() => setIsModalOpen(false)}>ยกเลิก</button>
+            <p className="font-FontNoto mb-2">
+              คุณต้องการยืมอุปกรณ์: <span className="font- font-FontNoto">{selectedEquipment?.name}</span> หรือไม่?
+            </p>
+            <p className="font-FontNoto mb-4">
+              ผู้ยืม: <span className="font-semibold font-FontNoto">
+                {borrowerName ? `${borrowerName.firstName} ${borrowerName.lastName}` : "ไม่พบข้อมูลผู้ใช้"}
+              </span>
+            </p>
+
+            <div className="flex justify-end space-x-2">
               <button className="btn btn-primary font-FontNoto" onClick={handleConfirmBorrow}>ยืนยัน</button>
+              <button className="btn font-FontNoto" onClick={() => setIsModalOpen(false)}>ยกเลิก</button>
             </div>
           </div>
         </div>
