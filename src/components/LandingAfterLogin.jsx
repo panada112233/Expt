@@ -189,7 +189,6 @@ const LandingAfterLogin = () => {
         return () => clearInterval(interval);
     }, []);
 
-
     const fetchData = async (userId) => {
         try {
             const profileImgUrl = `https://localhost:7039/api/Files/GetProfileImage?userID=${userId}`;
@@ -206,9 +205,9 @@ const LandingAfterLogin = () => {
             const userWork = worktimeRes.data.find(item =>
                 item.userID === parseInt(userId) && item.date.startsWith(today)
             );
+            console.log("Today's worktime data:", userWork); // เพิ่มเพื่อตรวจสอบ
             setTodayWorktime(userWork || {});
 
-            // ✅ เพิ่มส่วนนี้เข้าไป
             setWorktimes(worktimeRes.data.filter(item => item.userID === parseInt(userId)));
         } catch (error) {
             console.error("โหลดข้อมูลล้มเหลว:", error);
@@ -554,15 +553,15 @@ const LandingAfterLogin = () => {
                                 </button>
                             </div>
                         )}
-
+                        {/* ส่วนที่แก้ไขทั้งหมด - ตรงส่วนการแสดงเนื้อหาใน Modal */}
                         {modalMessage ? (
                             <p className="text-gray-700 mb-4 whitespace-pre-wrap font-FontNoto">{modalMessage}</p>
                         ) : (
                             <>
                                 {(() => {
                                     const nextLeave = getNextLeaveInfo();
-
                                     if (nextLeave) {
+                                        // กรณีมีวันลาที่บันทึกไว้ล่วงหน้า
                                         return (
                                             <div className="text-red-600 font-FontNoto mb-4 font-bold">
                                                 <div className="font-FontNoto">
@@ -571,16 +570,40 @@ const LandingAfterLogin = () => {
                                                 <p className="text-gray-600 text-sm mt-1 font-FontNoto">
                                                     ประเภท: {nextLeave.location.replace('|', ' - ').trim()}
                                                 </p>
-
                                             </div>
                                         );
                                     } else if (todayWorktime?.checkIn) {
+                                        // กรณีที่เช็คอินแล้ว
                                         return (
-                                            <div className="text-blue-600 font-FontNoto mb-4 font-bold">
-                                                เช็คอินแล้ววันนี้: {todayWorktime.checkIn}
-                                            </div>
+                                            <>
+                                                <div className="text-blue-600 font-FontNoto mb-4 font-bold">
+                                                    เช็คอินแล้ววันนี้: {todayWorktime.checkIn}
+                                                    {todayWorktime?.checkOut && (
+                                                        <div className="text-red-700 mt-2">
+                                                            เช็คเอาท์แล้วเวลา {todayWorktime.checkOut}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* ปุ่มเช็คเอาท์ แสดงเฉพาะเมื่อยังไม่ได้เช็คเอาท์ */}
+                                                {!todayWorktime.checkOut && (
+                                                    <div className="flex justify-end gap-2">
+                                                        <button
+                                                            onClick={handleCheckOut}
+                                                            className="relative rounded-full bg-red-500 px-4 py-2 font-FontNoto text-white font-bold transition-colors duration-300 ease-linear 
+                                    before:absolute before:right-1/2 before:top-1/2 before:-z-[1] 
+                                    before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2 
+                                    before:translate-x-1/2 before:animate-ping before:rounded-full 
+                                    before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
+                                                        >
+                                                            เช็คเอาท์
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </>
                                         );
                                     } else {
+                                        // กรณียังไม่ได้เช็คอิน
                                         return (
                                             <>
                                                 <div className="mb-3">
@@ -648,66 +671,49 @@ const LandingAfterLogin = () => {
                                                     </div>
                                                 )}
 
-                                                {todayWorktime?.checkOut ? (
-                                                    <div className="text-red-700 font-FontNoto mb-2 font-bold">
-                                                        เช็คเอาท์แล้วเวลา {todayWorktime.checkOut}
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex justify-end gap-2">
-                                                        {!todayWorktime?.checkIn &&
-                                                            !(leaveType === 'เต็มวัน' ||
-                                                                location === 'ลาบวช' ||
-                                                                location === 'ลาพักร้อน' ||
-                                                                location === 'ลาคลอด') && (
-                                                                <button
-                                                                    onClick={handleCheckIn}
-                                                                    className="relative rounded-full bg-green-500 px-4 py-2 font-FontNoto text-white font-bold transition-colors duration-300 ease-linear 
-                        before:absolute before:right-1/2 before:top-1/2 before:-z-[1] 
-                        before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2 
-                        before:translate-x-1/2 before:animate-ping before:rounded-full 
-                        before:bg-green-500 hover:bg-green-700 hover:before:bg-green-700"
-                                                                >
-                                                                    เช็คอิน
-                                                                </button>
-                                                            )}
-
-                                                        {(leaveType === 'เต็มวัน' ||
+                                                <div className="flex justify-end gap-2">
+                                                    {/* ปุ่มเช็คอิน */}
+                                                    {!todayWorktime?.checkIn &&
+                                                        !(leaveType === 'เต็มวัน' ||
                                                             location === 'ลาบวช' ||
                                                             location === 'ลาพักร้อน' ||
                                                             location === 'ลาคลอด') && (
-                                                                <button
-                                                                    onClick={saveLeave}
-                                                                    className="relative rounded-full bg-blue-500 px-4 py-2 font-FontNoto text-white font-bold transition-colors duration-300 ease-linear 
-                        before:absolute before:right-1/2 before:top-1/2 before:-z-[1] 
-                        before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2 
-                        before:translate-x-1/2 before:animate-ping before:rounded-full 
-                        before:bg-blue-500 hover:bg-blue-700 hover:before:bg-blue-700"
-                                                                >
-                                                                    บันทึกวันลา
-                                                                </button>
-                                                            )}
-
-                                                        {todayWorktime?.checkIn && (
                                                             <button
-                                                                onClick={handleCheckOut}
-                                                                className="relative rounded-full bg-red-500 px-4 py-2 font-FontNoto text-white font-bold transition-colors duration-300 ease-linear 
-                      before:absolute before:right-1/2 before:top-1/2 before:-z-[1] 
-                      before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2 
-                      before:translate-x-1/2 before:animate-ping before:rounded-full 
-                      before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
+                                                                onClick={handleCheckIn}
+                                                                className="relative rounded-full bg-green-500 px-4 py-2 font-FontNoto text-white font-bold transition-colors duration-300 ease-linear 
+                                        before:absolute before:right-1/2 before:top-1/2 before:-z-[1] 
+                                        before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2 
+                                        before:translate-x-1/2 before:animate-ping before:rounded-full 
+                                        before:bg-green-500 hover:bg-green-700 hover:before:bg-green-700"
                                                             >
-                                                                เช็คเอาท์
+                                                                เช็คอิน
                                                             </button>
                                                         )}
-                                                    </div>
-                                                )}
+
+                                                    {/* ปุ่มบันทึกวันลา */}
+                                                    {!todayWorktime?.checkIn &&
+                                                        (leaveType === 'เต็มวัน' ||
+                                                            location === 'ลาบวช' ||
+                                                            location === 'ลาพักร้อน' ||
+                                                            location === 'ลาคลอด') && (
+                                                            <button
+                                                                onClick={saveLeave}
+                                                                className="relative rounded-full bg-blue-500 px-4 py-2 font-FontNoto text-white font-bold transition-colors duration-300 ease-linear 
+                                        before:absolute before:right-1/2 before:top-1/2 before:-z-[1] 
+                                        before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2 
+                                        before:translate-x-1/2 before:animate-ping before:rounded-full 
+                                        before:bg-blue-500 hover:bg-blue-700 hover:before:bg-blue-700"
+                                                            >
+                                                                บันทึกวันลา
+                                                            </button>
+                                                        )}
+                                                </div>
                                             </>
                                         );
                                     }
                                 })()}
                             </>
                         )}
-
 
                         {modalConfirmAction && (
                             <div className="flex justify-end gap-2 mt-4">

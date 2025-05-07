@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import AOS from 'aos';
+import remove from '../assets/remove.png';
+import bin from '../assets/icons8-bin-24.png';
+import calendar from '../assets/calendar1.png';
+import calenda from '../assets/calendar.png';
+import note from '../assets/post-it.png';
 import 'aos/dist/aos.css';
 
 const Workplan = () => {
@@ -9,7 +14,7 @@ const Workplan = () => {
     const [year, setYear] = useState(today.getFullYear());
     const [tasks, setTasks] = useState({});
     const [selectedDate, setSelectedDate] = useState(null);
-    const [taskData, setTaskData] = useState({ morning: '', evening: '' });
+    const [taskData, setTaskData] = useState({ morning: '', evening: '', privateNote: [], noteType: '' });
     const [showModal, setShowModal] = useState(false);
     const [userName, setUserName] = useState('พนักงาน');
     const [userId, setUserId] = useState(null);
@@ -17,10 +22,24 @@ const Workplan = () => {
     const [isHoliday, setIsHoliday] = useState(false);
     const [todayWorktime, setTodayWorktime] = useState(null);
     const [notes, setNotes] = useState({});
-
+    const [monthlyWorktime, setMonthlyWorktime] = useState({});
+    const [confirmDeleteIdx, setConfirmDeleteIdx] = useState(null); // index ที่ต้องการลบ
+    const [selectedDay, setSelectedDay] = useState("yesterday");
     const [todayPlan, setTodayPlan] = useState(null);
+
+    const thaiDayNames = {
+        "sunday": "วันอาทิตย์",
+        "monday": "วันจันทร์",
+        "tuesday": "วันอังคาร",
+        "wednesday": "วันพุธ",
+        "thursday": "วันพฤหัสบดี",
+        "friday": "วันศุกร์",
+        "saturday": "วันเสาร์",
+        "yesterday": "เมื่อวาน"
+    };
     const getCompensatedHolidays = (year, holidays) => {
         const compensated = {};
+        // สร้าง Set ของวันที่มีการใช้งานแล้ว (ทั้งวันหยุดปกติและวันหยุดชดเชย)
         const usedDates = new Set(Object.keys(holidays));
 
         Object.entries(holidays).forEach(([key, name]) => {
@@ -31,12 +50,22 @@ const Workplan = () => {
             if (day === 0 || day === 6) {
                 // ถ้าเป็นเสาร์-อาทิตย์ → หา "วันทำงานถัดไป" ที่ยังไม่ถูกใช้
                 let next = new Date(date);
+                let maxAttempts = 10; // ป้องกันลูปไม่สิ้นสุด
+                let attemptCount = 0;
+
                 do {
                     next.setDate(next.getDate() + 1);
                     const newKey = `${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
+
+                    // ตรวจสอบว่าไม่ซ้ำกับวันหยุดที่มีอยู่แล้ว และไม่ใช่วันเสาร์-อาทิตย์
                     if (!usedDates.has(newKey) && (next.getDay() !== 0 && next.getDay() !== 6)) {
                         compensated[newKey] = `ชดเชย${name}`;
-                        usedDates.add(newKey);
+                        usedDates.add(newKey); // เพิ่มวันหยุดชดเชยเข้าไปใน Set
+                        break;
+                    }
+                    attemptCount++;
+                    if (attemptCount >= maxAttempts) {
+                        console.warn(`ไม่พบวันที่เหมาะสมสำหรับชดเชย ${name} (${key})`);
                         break;
                     }
                 } while (true);
@@ -167,16 +196,55 @@ const Workplan = () => {
         holidaysByYear[year] = { ...baseHolidayTemplate };
     }
 
-    // ภายใน Workplan component:
+    // แก้ตรงนี้ให้แน่ใจว่าวันหยุดชดเชยถูกรวมเข้าไปใน thaiHolidays
     const currentYearHolidays = holidaysByYear[year] || {};
     const compensated = getCompensatedHolidays(year, currentYearHolidays);
     const thaiHolidays = { ...currentYearHolidays, ...compensated };
+
+    const getDateFromSelectedDay = (selectedDay) => {
+        const today = new Date();
+        let targetDate = new Date(today);
+
+        if (selectedDay === "yesterday") {
+            // Just go back one day
+            targetDate.setDate(today.getDate() - 1);
+        } else {
+            // Get today's day of week (0-6)
+            const currentDayOfWeek = today.getDay();
+
+            // Map day names to numbers
+            const dayMapping = {
+                "sunday": 0,
+                "monday": 1,
+                "tuesday": 2,
+                "wednesday": 3,
+                "thursday": 4,
+                "friday": 5,
+                "saturday": 6
+            };
+
+            // Calculate the difference
+            let daysToSubtract = currentDayOfWeek - dayMapping[selectedDay];
+            if (daysToSubtract <= 0) {
+                daysToSubtract += 7; // Go back to previous week
+            }
+
+            targetDate.setDate(today.getDate() - daysToSubtract);
+        }
+
+        return targetDate;
+    };
+
+    const getPreviousDayPlan = (selectedDay) => {
+        const targetDate = getDateFromSelectedDay(selectedDay);
+        const targetKey = `${userId}-${targetDate.getFullYear()}-${targetDate.getMonth() + 1}-${targetDate.getDate()}`;
+        return tasks[targetKey]?.evening || '';
+    };
 
     useEffect(() => {
         const loadUserDataAndTodayData = async () => {
             const id = parseInt(sessionStorage.getItem('userId'));
             if (!id) return;
-
             setUserId(id);
 
             try {
@@ -186,7 +254,7 @@ const Workplan = () => {
                     const userData = userRes.data;
                     setUserName(`${userData.firstName} ${userData.lastName}`);
 
-                    const role = userData.role; // เช่น "Dev", "Hr"
+                    const role = userData.role;
                     const mapped = roleMapping[role] || "ไม่ทราบตำแหน่ง";
                     setRoleText(mapped);
                 }
@@ -204,11 +272,10 @@ const Workplan = () => {
                     loadedTasks[key] = {
                         morning: t.morningTask,
                         evening: t.eveningTask,
-                        privateNote: t.privateNote || "",     // ✅ เพิ่มส่วนนี้
-                        noteType: t.noteType || "public"      // ✅ เพิ่มส่วนนี้
+                        privateNote: t.privateNote || "",
+                        noteType: t.noteType || "public"
                     };
 
-                    // 🔍 ถ้าเจอแผนงานของวันนี้ ให้ตั้งค่า todayPlan ด้วยเลย
                     if (
                         d.getFullYear() === today.getFullYear() &&
                         d.getMonth() === today.getMonth() &&
@@ -216,7 +283,7 @@ const Workplan = () => {
                     ) {
                         setTodayPlan({
                             ...t,
-                            privateNote: t.privateNote || "",   // ✅ เพิ่มเพื่อให้ใช้งานได้แน่นอน
+                            privateNote: t.privateNote || "",
                             noteType: t.noteType || "public"
                         });
                     }
@@ -224,15 +291,29 @@ const Workplan = () => {
 
                 setTasks(loadedTasks);
 
-                // 🔹 โหลดข้อมูลเวลาเข้า-ออกวันนี้
+                // 🔹 โหลดข้อมูลเวลาเข้า-ออกทั้งหมดของผู้ใช้
                 const worktimeRes = await axios.get("https://localhost:7039/api/Worktime");
-                const userWork = worktimeRes.data.find(item => item.userID === id && item.date.startsWith(today.toISOString().split("T")[0]));
-                setTodayWorktime(userWork || {});
+                const allWorktimes = worktimeRes.data.filter(item => item.userID === id);
+
+                // แปลงเป็น map: key = userID-year-month-day
+                const worktimeMap = {};
+                allWorktimes.forEach(item => {
+                    const d = new Date(item.date);
+                    const key = `${item.userID}-${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+                    worktimeMap[key] = item;
+                });
+
+                setMonthlyWorktime(worktimeMap); // ✅ ใช้สำหรับปฏิทิน
+
+                // 🔹 สำหรับวันนี้โดยเฉพาะ
+                const todayWorkKey = `${id}-${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+                setTodayWorktime(worktimeMap[todayWorkKey] || {});
 
             } catch (error) {
                 console.error('เกิดข้อผิดพลาดในการโหลดข้อมูล:', error);
             }
         };
+
         // เริ่มการตั้งค่า AOS
         AOS.init({
             duration: 1500,  // เวลาในการทำให้การซูมช้าๆ
@@ -306,18 +387,30 @@ const Workplan = () => {
     const openModal = (date) => {
         const fullDate = new Date(year, month, date);
         const dayOfWeek = fullDate.getDay();
-
         const key = `${userId}-${year}-${month + 1}-${date}`;
         const existing = tasks[key] || {};
-
         setSelectedDate(date);
 
-        // ✅ รีเซ็ต noteType เพื่อให้ขึ้นปุ่มเลือกประเภททุกครั้ง
+        // ✅ แปลง privateNote ให้ปลอดภัยเสมอ
+        let privateNoteArray = [];
+        if (typeof existing.privateNote === "string" && existing.privateNote.trim() !== "") {
+            privateNoteArray = existing.privateNote.split('\n');
+        } else if (Array.isArray(existing.privateNote)) {
+            privateNoteArray = existing.privateNote;
+        } else {
+            privateNoteArray = [""];
+        }
+
+        const savedNoteType = existing.noteType || "public";
+        const prevPlan = getPreviousDayPlan(selectedDay);
+
+        // ✅ โหลดข้อมูลเดิมไว้ครบ แต่ reset noteType เพื่อให้เด้ง Step 1 เสมอ
         setTaskData({
             morning: existing.morning || '',
             evening: existing.evening || '',
-            privateNote: existing.privateNote || "",
-            noteType: '', // บังคับให้เลือกใหม่ทุกครั้ง
+            privateNote: privateNoteArray,
+            noteType: "",                  // 🔸 บังคับเลือกใหม่
+            _cachedNoteType: savedNoteType // 🔸 เก็บไว้เผื่ออยากใช้ต่อ
         });
 
         // ✅ เช็ควันหยุด: เสาร์-อาทิตย์ หรือวันหยุดราชการ
@@ -340,7 +433,7 @@ const Workplan = () => {
             // ✨ สร้างอ็อบเจกต์ใหม่ที่แปลงชื่อ field ให้ตรงกับ backend
             const mappedTask = {
                 ...task,
-                PrivateNote: task.personalNote,     // ✔ แปลงชื่อให้ตรงกับ backend
+                PrivateNote: task.privateNote,     // ✔ แปลงชื่อให้ตรงกับ backend
                 NoteType: task.noteType,            // ✔ ชื่อตรง backend แล้ว
             };
 
@@ -371,12 +464,19 @@ const Workplan = () => {
     const saveTask = async () => {
         const key = `${userId}-${year}-${month + 1}-${selectedDate}`;
         const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
+
+        // ตรวจสอบและแปลงค่า privateNote ให้เป็นสตริงถ้าเป็นอาร์เรย์
+        let privateNoteValue = taskData.privateNote || "";
+        if (Array.isArray(privateNoteValue)) {
+            privateNoteValue = privateNoteValue.join('\n');
+        }
+
         const newTask = {
             userID: parseInt(userId),
             date: formattedDate,
             morningTask: taskData.morning,
             eveningTask: taskData.evening,
-            privateNote: taskData.privateNote || "",
+            privateNote: privateNoteValue,
             noteType: taskData.noteType || "public"
         };
 
@@ -396,11 +496,6 @@ const Workplan = () => {
 
         setShowModal(false);
     };
-
-    const selectedFullDate = selectedDate ? new Date(year, month, selectedDate) : null;
-    const isMonday = selectedFullDate?.getDay() === 1;
-    const yesterdayLabel = isMonday ? "เมื่อวันศุกร์" : "เมื่อวาน";
-
     const prevMonth = month === 0 ? 11 : month - 1;
     const nextMonth = month === 11 ? 0 : month + 1;
     const prevMonthYear = month === 0 ? year - 1 : year;
@@ -446,28 +541,35 @@ const Workplan = () => {
     weeks.push(currentWeek);
     return (
         <div className="flex flex-col w-full">
-            <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
-                <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
-                    ปฎิทินการทำงาน{" "}
-                    <span className="font-normal font-FontNoto text-base sm:text-lg">
+            <div className="w-full bg-gradient-to-r from-slate-100 via-blue-50 to-cyan-50 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+                <h1 className="text-xl sm:text-2xl text-cyan-950 font-bold font-FontNoto leading-snug">
+                    ปฏิทินการทำงาน{" "}
+                    <span className="font-normal font-FontNoto text-cyan-950 text-base sm:text-lg">
                         {roleText ? `(${roleText})` : ""}
                     </span>
                 </h1>
-                <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบแผนการทำงาน และกิจกรรมที่เกี่ยวข้อง</p>
+                <p className="text-xs sm:text-sm mt-1 text-cyan-950 font-FontNoto">ตรวจสอบแผนการทำงาน และกิจกรรมที่เกี่ยวข้อง</p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 mt-4 mb-6 animate-fade-in ">
                 {/* 🟡 การ์ดเวลาเข้า-ออก */}
-                <div className="bg-gradient-to-br from-emerald-50 via-teal-100 to-cyan-50 border border-teal-400 rounded-xl p-4 shadow-md w-full sm:w-72 flex flex-col items-center relative overflow-hidden">
-                    <h3 className="text-md font-bold text-teal-800 font-FontNoto mb-2 text-center">
-                        ⏰ เวลาเข้า-ออกงานวันนี้
+                <div className="bg-gradient-to-r from-orange-100 via-slate-50 to-orange-100 border-teal-100 rounded-xl p-4 shadow-md w-full sm:w-72 flex flex-col items-center relative overflow-hidden">
+                    <h3 className="text-md font-bold text-cyan-950 font-FontNoto mb-2 text-center">
+                        เวลาเข้า-ออกงานวันนี้
                     </h3>
                     {todayWorktime ? (
-                        <div className="font-FontNoto text-xs text-gray-800 space-y-1">
-                            <p className="font-FontNoto">🕘 เช็คอิน: {todayWorktime.checkIn || "-"}</p>
-                            <p className="font-FontNoto">🕔 เช็คเอาท์: {todayWorktime.checkOut || "-"}</p>
-                            <p className="font-FontNoto">📍 ประเภทการทำงาน: {todayWorktime.location || "-"}</p>
+                        <div className="font-FontNoto text-sm text-gray-800 space-y-1">
+                            <div className="flex items-center gap-2 font-FontNoto">
+                                <span className="font-FontNoto">เช็คอิน: {todayWorktime.checkIn || "-"}</span>
+                            </div>
+                            <div className="flex items-center gap-2 font-FontNoto">
+                                <span className="font-FontNoto">เช็คเอาท์: {todayWorktime.checkOut || "-"}</span>
+                            </div>
+                            <div className="flex items-center gap-2 font-FontNoto">
+                                <span className="font-FontNoto">สถานที่: {todayWorktime.location || "-"}</span>
+                            </div>
                         </div>
+
                     ) : (
                         <p className="font-FontNoto text-xs text-gray-500 text-center">
                             ไม่มีข้อมูลเข้า-ออก
@@ -475,22 +577,23 @@ const Workplan = () => {
                     )}
                 </div>
                 {/* 🌸 การ์ดแผนงานวันนี้ */}
-                <div className="bg-orange-50 border border-orange-400 rounded-xl p-3 shadow-md w-full sm:w-72 flex flex-col items-center relative overflow-hidden">
-                    <h3 className="text-md font-bold text-orange-800 font-FontNoto mb-2 text-center">📝 แผนงานวันนี้</h3>
+                <div className="bg-gradient-to-r from-green-100 via-slate-50 to-green-100 border-orange-100 rounded-xl p-3 shadow-md w-full sm:w-72 flex flex-col items-center relative overflow-hidden">
+                    <h3 className="text-md font-bold text-cyan-950 font-FontNoto mb-2 text-center">📝 แผนงานวันนี้</h3>
                     {todayPlan ? (
                         <div className="font-FontNoto text-xs text-gray-800 space-y-1">
-                            <p className="font-FontNoto">วันนี้: {todayPlan.eveningTask || "-"}</p>
+                            <p className="font-FontNoto text-sm">วันนี้: {todayPlan.eveningTask || "-"}</p>
                         </div>
                     ) : (
-                        <p className="font-FontNoto text-xs text-gray-500 text-center">ยังไม่ได้เขียนแผนงาน</p>
+                        <p className="font-FontNoto text-sm text-gray-500 text-center">ยังไม่ได้เขียนแผนงาน</p>
                     )}
                 </div>
 
-                <div className="bg-green-50 border border-green-400 rounded-xl p-3 shadow-md w-full sm:w-72 flex flex-col items-center relative overflow-hidden">
-                    <h3 className="text-md font-bold text-green-800 font-FontNoto mb-2 text-center">🌙 แผนงาน{yesterdayLabel}</h3>
+                <div className="bg-gradient-to-r from-blue-100 via-slate-50 to-blue-100 border-green-100 rounded-xl p-3 shadow-md w-full sm:w-72 flex flex-col items-center relative overflow-hidden">
+                    <h3 className="text-md font-bold text-cyan-950 font-FontNoto mb-2 text-center">🌙 แผนงานย้อนหลัง</h3>
+                    
                     {todayPlan ? (
-                        <div className="font-FontNoto text-xs text-gray-800 space-y-1 text-center">
-                            <p className="font-FontNoto">{yesterdayLabel}: {todayPlan.morningTask || "-"}</p>
+                        <div className="font-FontNoto text-xs text-gray-800 space-y-1">
+                            <p className="font-FontNoto text-sm">{thaiDayNames[selectedDay]}: {getPreviousDayPlan(selectedDay) || "-"}</p>
                         </div>
                     ) : (
                         <p className="font-FontNoto text-xs text-gray-500 text-center">ยังไม่ได้เขียนแผนงาน</p>
@@ -498,8 +601,8 @@ const Workplan = () => {
                 </div>
             </div>
 
-            <div className="w-full max-w-6xl mx-auto bg-transparent rounded-xl p-6 items-center justify-center">
-                <h2 className="text-2xl font-bold mb-2 font-FontNoto text-blue-800 text-center">🐾 ปฏิทินการทำงานของคุณ {userName} 🐾</h2>
+            <div className="w-full max-w-6xl mx-auto bg-slate-50 rounded-xl p-6 items-center justify-center">
+                <h2 className="text-2xl font-bold mb-2 font-FontNoto text-blue-950 text-center"> ปฏิทินการทำงานของคุณ {userName} </h2>
                 {/* ตัวกรองเดือนและปี */}
                 <div className="flex items-center justify-end space-x-4 mb-4">
                     <select
@@ -528,8 +631,8 @@ const Workplan = () => {
                 <div className="relative">
                     {/* หัวตารางวัน */}
                     <div className="grid grid-cols-7 gap-[1px] text-center font-bold bg-gray-400">
-                        {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((day) => (
-                            <div key={day} className="bg-gray-100 py-2 font-FontNoto text-sm text-gray-700">
+                        {["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"].map((day) => (
+                            <div key={day} className="bg-gray-300 py-2 font-FontNoto text-sm text-gray-700">
                                 {day}
                             </div>
                         ))}
@@ -543,16 +646,28 @@ const Workplan = () => {
                                 const isWeekend = date.getDay() === 0 || date.getDay() === 6;
                                 const isCurrentMonth = type === 'current';
 
-                                // ✅ ดึงชื่อวันหยุดจาก holidaysByYear โดยไม่จำกัดแค่เดือนปัจจุบัน
                                 const year = date.getFullYear();
                                 const month = String(date.getMonth() + 1).padStart(2, '0');
                                 const dayStr = String(date.getDate()).padStart(2, '0');
-                                const holidayName = holidaysByYear[year]?.[`${month}-${dayStr}`] || null;
 
-                                const dateKey = `${userId}-${year}-${date.getMonth() + 1}-${date.getDate()}`;
-                                const morning = tasks[dateKey]?.morning;
-                                const evening = tasks[dateKey]?.evening;
-                                const privateNote = tasks[dateKey]?.privateNote;
+                                // คีย์สำหรับ tasks และ worktime
+                                const fullDateKey = `${userId}-${year}-${parseInt(month)}-${parseInt(dayStr)}`;
+                                const worktimeKey = `${year}-${month}-${dayStr}`;
+                                const mmddKey = `${month}-${dayStr}`;
+
+                                const morning = tasks[fullDateKey]?.morning;
+                                const evening = tasks[fullDateKey]?.evening;
+                                const privateNote = tasks[fullDateKey]?.privateNote;
+                                const workLocation = monthlyWorktime[fullDateKey]?.location;
+
+                                // รวมวันหยุด + วันหยุดชดเชย
+                                const currentYearHolidays = holidaysByYear[year] || {};
+                                const compensated = getCompensatedHolidays(year, currentYearHolidays);
+                                const allHolidays = { ...currentYearHolidays, ...compensated };
+
+                                // ตรวจสอบชื่อวันหยุด
+                                const holidayName = allHolidays[mmddKey] || null;
+
                                 return (
                                     <div
                                         key={`${wi}-${di}`}
@@ -563,12 +678,16 @@ const Workplan = () => {
                 `}
                                     >
                                         <div className="text-right font-semibold">{day}</div>
-
                                         {holidayName && (
                                             <div className="text-[10px] text-red-500 leading-tight font-FontNoto">{holidayName}</div>
                                         )}
 
                                         <div className="text-[8px] mt-1 space-y-1">
+                                            {workLocation?.includes("ลา") && (
+                                                <div className="bg-pink-100 text-pink-800 px-1 py-0.5 rounded-sm truncate font-FontNoto">
+                                                    🌴 {workLocation}
+                                                </div>
+                                            )}
                                             {morning && (
                                                 <div className="bg-blue-100 text-blue-800 px-1 py-0.5 rounded-sm font-FontNoto">
                                                     {morning}
@@ -579,12 +698,24 @@ const Workplan = () => {
                                                     {evening}
                                                 </div>
                                             )}
-                                            {/* ✅ แสดงโน้ตส่วนตัว ถ้ามี */}
-                                            {privateNote && (
-                                                <div className="bg-yellow-100 text-yellow-800 px-1 py-0.5 rounded-sm truncate font-FontNoto">
-                                                    🗒️ {privateNote}
-                                                </div>
-                                            )}
+                                            {(() => {
+                                                const noteArray = Array.isArray(privateNote)
+                                                    ? privateNote
+                                                    : typeof privateNote === 'string'
+                                                        ? privateNote.split('\n')
+                                                        : [];
+
+                                                return noteArray
+                                                    .filter(n => n.trim() !== "")
+                                                    .map((n, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className="bg-yellow-100 text-yellow-800 px-1 py-0.5 rounded-sm truncate font-FontNoto"
+                                                        >
+                                                            🗒️ {n}
+                                                        </div>
+                                                    ));
+                                            })()}
                                         </div>
                                     </div>
                                 );
@@ -598,9 +729,11 @@ const Workplan = () => {
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 animate-fade-in">
                     <div className="bg-white p-6 rounded-2xl shadow-2xl w-96 relative transition-transform duration-300 ease-in-out transform scale-100">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-pink-600 font-FontNoto">
-                                📅 {selectedDate}/{month + 1}/{year + 543}
+                            <h3 className="text-lg font-bold text-cyan-950 font-FontNoto flex items-center gap-1">
+                                <img src={calenda} alt="calendar" className="w-6 h-6" />
+                                {selectedDate}/{month + 1}/{year + 543}
                             </h3>
+
                             <button
                                 onClick={() => {
                                     setShowModal(false);
@@ -608,44 +741,70 @@ const Workplan = () => {
                                 }}
                                 className="text-red-500 text-lg font-bold hover:scale-110 transition"
                             >
-                                ❌
+                                <img src={remove} alt="remove" className="w-5 h-5" />
                             </button>
                         </div>
 
                         {/* Step 1: เลือกประเภท */}
                         {!taskData.noteType && (
                             <div className="mb-4 flex flex-col gap-3 items-center">
-                                <p className="text-center font-bold text-gray-700 font-FontNoto">เลือกประเภทที่ต้องการเพิ่ม</p>
+                                <p className="text-center font-bold text-cyan-950 font-FontNoto">เลือกประเภทที่ต้องการเพิ่ม</p>
+
                                 <button
-                                    className="btn btn-info w-full font-FontNoto"
+                                    className="btn w-full font-FontNoto !bg-blue-400 hover:!bg-blue-600 !text-white"
                                     onClick={() => setTaskData({ ...taskData, noteType: "public" })}
                                 >
-                                    🗓️ แผนงาน (เพื่อนๆ เห็นได้)
+                                    <img src={calendar} alt="calendar" className="w-6 h-6" /> ลงแผนงาน
                                 </button>
                                 <button
-                                    className="btn btn-warning w-full font-FontNoto"
-                                    onClick={() => setTaskData({ ...taskData, noteType: "private" })}
+                                    className="btn !bg-gray-200 w-full font-FontNoto"
+                                    onClick={() =>
+                                        setTaskData({
+                                            ...taskData,
+                                            noteType: "private",
+                                            privateNote: taskData.privateNote.length > 0 ? taskData.privateNote : [""]
+                                        })
+                                    }
                                 >
-                                    🔒 โน้ตส่วนตัว (เห็นคนเดียว)
+                                    <img src={note} alt="note" className="w-6 h-6" /> โน้ตส่วนตัว
                                 </button>
                             </div>
                         )}
-
                         {/* Step 2: ถ้าเลือกแล้ว ค่อยแสดงฟอร์ม */}
                         {taskData.noteType === "public" && (
                             <div className="mb-4">
                                 <div className="mb-4">
-                                    <label className="block mb-1 font-bold text-blue-600 font-FontNoto">{yesterdayLabel}</label>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <label className="font-bold text-cyan-950 font-FontNoto">แผนงานย้อนหลัง</label>
+                                        <select
+                                            className="select select-sm select-bordered font-FontNoto"
+                                            value={selectedDay}
+                                            onChange={(e) => {
+                                                setSelectedDay(e.target.value);
+                                                // ดึงข้อมูลแผนงานจากวันที่เลือก
+                                                const prevPlan = getPreviousDayPlan(e.target.value);
+                                                setTaskData({ ...taskData, morning: prevPlan });
+                                            }}
+                                        >
+                                            <option value="yesterday">เมื่อวาน</option>
+                                            <option value="monday">วันจันทร์</option>
+                                            <option value="tuesday">วันอังคาร</option>
+                                            <option value="wednesday">วันพุธ</option>
+                                            <option value="thursday">วันพฤหัสบดี</option>
+                                            <option value="friday">วันศุกร์</option>
+                                            <option value="saturday">วันเสาร์</option>
+                                            <option value="sunday">วันอาทิตย์</option>
+                                        </select>
+                                    </div>
                                     <textarea
                                         className="textarea textarea-bordered w-full bg-blue-50 font-FontNoto"
                                         value={taskData.morning || ""}
-                                        placeholder="กรอกงานเมื่อวาน"
+                                        placeholder={`กรอกงาน${thaiDayNames[selectedDay] || "เมื่อวาน"}`}
                                         onChange={(e) => setTaskData({ ...taskData, morning: e.target.value })}
                                     />
                                 </div>
-
                                 <div className="mb-4">
-                                    <label className="block mb-1 font-bold text-green-600 font-FontNoto">วันนี้</label>
+                                    <label className="block mb-1 font-bold text-cyan-950 font-FontNoto">วันนี้</label>
                                     <textarea
                                         className="textarea textarea-bordered w-full bg-green-50 font-FontNoto"
                                         value={taskData.evening || ""}
@@ -656,7 +815,7 @@ const Workplan = () => {
 
                                 <div className="flex justify-end gap-2 mt-2">
                                     <button
-                                        className="btn btn-outline btn-error font-FontNoto"
+                                        className="btn !bg-slate-200 font-FontNoto"
                                         onClick={async () => {
                                             const date = new Date(year, month, selectedDate);
                                             await deleteTaskFromDatabase(date);
@@ -682,9 +841,13 @@ const Workplan = () => {
                                     >
                                         ลบแผนงาน
                                     </button>
-                                    <button className="btn btn-outline btn-success font-FontNoto" onClick={saveTask}>
+                                    <button
+                                        className="btn !bg-green-400 hover:!bg-green-500 text-white font-FontNoto "
+                                        onClick={saveTask}
+                                    >
                                         บันทึก
                                     </button>
+
                                 </div>
                             </div>
                         )}
@@ -692,42 +855,106 @@ const Workplan = () => {
                         {taskData.noteType === "private" && (
                             <div className="mb-4">
                                 <label className="block mb-1 font-bold text-purple-600 font-FontNoto">🔒 โน้ตส่วนตัว</label>
-                                <textarea
-                                    className="textarea textarea-bordered w-full bg-purple-50 font-FontNoto"
-                                    value={taskData.privateNote || ""}
-                                    placeholder="เขียนโน้ตที่เห็นคนเดียว"
-                                    onChange={(e) => setTaskData({ ...taskData, privateNote: e.target.value })}
-                                />
+
+                                {(Array.isArray(taskData.privateNote) ? taskData.privateNote : []).map((note, idx) => (
+                                    <div key={idx} className="relative mb-2">
+                                        <textarea
+                                            className="textarea textarea-bordered w-full bg-purple-50 font-FontNoto pr-10"
+                                            value={note}
+                                            placeholder={`โน้ต ${idx + 1}`}
+                                            onChange={(e) => {
+                                                const updated = [...taskData.privateNote];
+                                                updated[idx] = e.target.value;
+                                                setTaskData({ ...taskData, privateNote: updated });
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="absolute top-1 right-1 btn btn-xs btn-circle bg-gray-100 hover:bg-gray-300 text-gray-600 border-none shadow-sm"
+                                            onClick={() => setConfirmDeleteIdx(idx)}
+                                            title="ลบโน้ตนี้"
+                                        >
+                                            <img src={bin} alt="bin" className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                ))}
+
+                                <button
+                                    className="btn btn-sm btn-outline btn-accent w-full font-FontNoto mb-2"
+                                    onClick={() =>
+                                        setTaskData({
+                                            ...taskData,
+                                            privateNote: [...(Array.isArray(taskData.privateNote) ? taskData.privateNote : []), ""]
+                                        })
+                                    }
+                                >
+                                    ➕ เพิ่มโน้ต
+                                </button>
 
                                 <div className="flex justify-end gap-2 mt-2">
                                     <button
-                                        className="btn btn-outline btn-warning font-FontNoto"
-                                        onClick={async () => {
-                                            const date = new Date(year, month, selectedDate);
-                                            await clearPrivateNoteFromDatabase(date);
-
-                                            const key = `${userId}-${year}-${month + 1}-${selectedDate}`;
-                                            const updatedTasks = { ...tasks };
-                                            if (updatedTasks[key]) {
-                                                updatedTasks[key].privateNote = "";
-                                            }
-                                            setTasks(updatedTasks);
-
-                                            if (
-                                                date.getDate() === new Date().getDate() &&
-                                                date.getMonth() === new Date().getMonth() &&
-                                                date.getFullYear() === new Date().getFullYear()
-                                            ) {
-                                                setTodayPlan(prev => prev ? { ...prev, privateNote: "" } : null);
-                                            }
-                                            setShowModal(false);
+                                        className="btn !bg-green-400 hover:!bg-green-500 text-white font-FontNoto"
+                                        onClick={() => {
+                                            const joinedNote = (Array.isArray(taskData.privateNote) ? taskData.privateNote : []).join('\n');
+                                            setTaskData({ ...taskData, privateNote: joinedNote });
+                                            saveTask();
                                         }}
                                     >
-                                        ลบโน้ตส่วนตัว
-                                    </button>
-                                    <button className="btn btn-outline btn-success font-FontNoto" onClick={saveTask}>
                                         บันทึก
                                     </button>
+
+                                    {confirmDeleteIdx !== null && (
+                                        <dialog id="deleteNoteModal" className="modal modal-open">
+                                            <div className="modal-box font-FontNoto">
+                                                <h3 className="font-bold text-lg text-red-600 font-FontNoto">⚠️ ยืนยันการลบ</h3>
+                                                <p className="py-4 font-FontNoto">คุณต้องการลบโน้ตนี้ ใช่หรือไม่?</p>
+                                                <div className="modal-action">
+                                                    <form method="dialog" className="flex gap-2">
+                                                        <button
+                                                            className="btn btn-sm btn-outline font-FontNoto"
+                                                            onClick={() => setConfirmDeleteIdx(null)}
+                                                        >
+                                                            ยกเลิก
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-sm btn-error text-white font-FontNoto"
+                                                            onClick={async () => {
+                                                                const updated = [...taskData.privateNote];
+                                                                updated.splice(confirmDeleteIdx, 1);
+                                                                const finalNote = updated.length > 0 ? updated : [""];
+
+                                                                // รวมโน้ตใหม่เป็น string
+                                                                const joinedNote = finalNote.join('\n');
+
+                                                                // เตรียมข้อมูลสำหรับบันทึก
+                                                                const key = `${userId}-${year}-${month + 1}-${selectedDate}`;
+                                                                const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
+
+                                                                const updatedTask = {
+                                                                    userID: parseInt(userId),
+                                                                    date: formattedDate,
+                                                                    morningTask: taskData.morning,
+                                                                    eveningTask: taskData.evening,
+                                                                    privateNote: joinedNote,
+                                                                    noteType: taskData.noteType || "private"
+                                                                };
+
+                                                                // 🔥 บันทึกทันที
+                                                                await saveOrUpdateTaskToDatabase(updatedTask);
+
+                                                                // อัปเดต state หน้าจอ
+                                                                setTaskData({ ...taskData, privateNote: finalNote });
+                                                                setTasks(prev => ({ ...prev, [key]: updatedTask }));
+                                                                setConfirmDeleteIdx(null);
+                                                            }}
+                                                        >
+                                                            ลบ
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </dialog>
+                                    )}
                                 </div>
                             </div>
                         )}
