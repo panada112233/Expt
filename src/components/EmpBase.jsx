@@ -270,6 +270,15 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                 </summary>
 
                 <ul className="mt-2 ml-3 space-y-1 text-sm">
+                <li>
+                    <Link
+                      to="/EmpHome/Leavetest"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                    >
+                      Test แบบฟอร์มใบลา
+                    </Link>
+                  </li>
                   <li>
                     <Link
                       to="/EmpHome/LeaveForm"

@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const LeaveForm = () => {
+const Leavetest = () => {
     const userId = String(sessionStorage.getItem("userId") || "");
+    const [leavetpyeState, setleavetpyeState] = useState([]);
+    const [rolesState, setrolesState] = useState([]);
+    const [historyList, setHistoryList] = useState([]);
+    const [selectedForm, setSelectedForm] = useState(null); // สำหรับเปิด modal ดูย่อ
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+
     const [formData, setFormData] = useState({
         documentId: "",
         userid: userId,
@@ -45,9 +51,18 @@ const LeaveForm = () => {
         }
     });
 
+    const fetchHistoryList = async () => {
+        try {
+            const res = await fetch(`https://localhost:7039/api/Document/GetDocumentsByUser/${userId}`);
+            if (res.ok) {
+                const data = await res.json();
+                setHistoryList(data);
+            }
+        } catch (err) {
+            console.error("❌ ดึงข้อมูลย้อนหลังไม่สำเร็จ:", err);
+        }
+    };
 
-    const [leavetpyeState, setleavetpyeState] = useState([]);
-    const [rolesState, setrolesState] = useState([]);
 
     useEffect(() => {
         if (userId) {
@@ -456,13 +471,14 @@ const LeaveForm = () => {
                                 onChange={handleChange}
                             >
                                 <option value="" className="font-FontNoto">-- เลือกการลา --</option>
-                                {leavetpyeState.map((item) => (
-                                    <option key={item.leaveTypeid} value={item.leaveTypeid} className="font-FontNoto">
-                                        {item.leaveTypeTh}
-                                    </option>
-                                ))}
+                                <option value="sick" className="font-FontNoto">ป่วย</option>
+                                <option value="personal" className="font-FontNoto">กิจส่วนตัว</option>
+                                <option value="vacation" className="font-FontNoto">พักร้อน</option>
+                                <option value="maternity" className="font-FontNoto">ลาคลอด</option>
+                                <option value="ordination" className="font-FontNoto">บวช</option>
                             </select>
                         </div>
+
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <label className="label">
                                 <span className="label-text font-FontNoto">เรียน หัวหน้าแผนก/ฝ่ายบุคคล</span>
@@ -507,24 +523,64 @@ const LeaveForm = () => {
                         <label className="label font-FontNoto">
                             <span className="label-text font-FontNoto">ขอลา :</span>
                         </label>
-
                         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                            {leavetpyeState.map((item) => (
-                                <label key={item.leaveTypeid} className="flex items-center gap-2">
-                                    <input
-                                        type="radio"
-                                        name="leaveTypeId"
-                                        value={item.leaveTypeid}
-                                        checked={formData.leaveTypeId == item.leaveTypeid}
-                                        className="radio"
-                                        onChange={handleChange}
-                                    />
-                                    <span className="font-FontNoto text-black">{item.leaveTypeTh}</span>
-                                </label>
-                            ))}
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="leaveTypeId"
+                                    value="sick"
+                                    checked={formData.leaveTypeId === "sick"}
+                                    className="radio"
+                                    onChange={handleChange}
+                                />
+                                <span className="font-FontNoto text-black">ป่วย</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="leaveTypeId"
+                                    value="personal"
+                                    checked={formData.leaveTypeId === "personal"}
+                                    className="radio"
+                                    onChange={handleChange}
+                                />
+                                <span className="font-FontNoto text-black">กิจส่วนตัว</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="leaveTypeId"
+                                    value="vacation"
+                                    checked={formData.leaveTypeId === "vacation"}
+                                    className="radio"
+                                    onChange={handleChange}
+                                />
+                                <span className="font-FontNoto text-black">พักร้อน</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="leaveTypeId"
+                                    value="maternity"
+                                    checked={formData.leaveTypeId === "maternity"}
+                                    className="radio"
+                                    onChange={handleChange}
+                                />
+                                <span className="font-FontNoto text-black">ลาคลอด</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="leaveTypeId"
+                                    value="ordination"
+                                    checked={formData.leaveTypeId === "ordination"}
+                                    className="radio"
+                                    onChange={handleChange}
+                                />
+                                <span className="font-FontNoto text-black">บวช</span>
+                            </label>
                         </div>
                     </div>
-
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
                         <label className="label font-FontNoto whitespace-nowrap">
                             <span className="label-text font-FontNoto">เนื่องจาก :</span>
@@ -590,22 +646,63 @@ const LeaveForm = () => {
                             <span className="label-text font-FontNoto">ข้าพเจ้าได้ลา :</span>
                         </label>
                         <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4">
-                            {leavetpyeState.map((item) => (
-                                <label key={item.leaveTypeid} className="flex items-center gap-2">
-                                    <input
-                                        type="radio"
-                                        name="leavedType"
-                                        value={item.leaveTypeid}
-                                        checked={formData.leavedType == item.leaveTypeid}
-                                        className="radio"
-                                        onChange={handleChange}
-                                    />
-                                    <span className="font-FontNoto text-black">{item.leaveTypeTh}</span>
-                                </label>
-                            ))}
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="leavedType"
+                                    value="sick"
+                                    checked={formData.leavedType === "sick"}
+                                    className="radio"
+                                    onChange={handleChange}
+                                />
+                                <span className="font-FontNoto text-black">ป่วย</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="leavedType"
+                                    value="personal"
+                                    checked={formData.leavedType === "personal"}
+                                    className="radio"
+                                    onChange={handleChange}
+                                />
+                                <span className="font-FontNoto text-black">กิจส่วนตัว</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="leavedType"
+                                    value="vacation"
+                                    checked={formData.leavedType === "vacation"}
+                                    className="radio"
+                                    onChange={handleChange}
+                                />
+                                <span className="font-FontNoto text-black">พักร้อน</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="leavedType"
+                                    value="maternity"
+                                    checked={formData.leavedType === "maternity"}
+                                    className="radio"
+                                    onChange={handleChange}
+                                />
+                                <span className="font-FontNoto text-black">ลาคลอด</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="leavedType"
+                                    value="ordination"
+                                    checked={formData.leavedType === "ordination"}
+                                    className="radio"
+                                    onChange={handleChange}
+                                />
+                                <span className="font-FontNoto text-black">บวช</span>
+                            </label>
                         </div>
                     </div>
-
                     <div className="flex flex-col sm:flex-row sm:items-center flex-wrap gap-4 w-full">
                         {/* วันที่เริ่มลา */}
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-1">
@@ -1005,10 +1102,76 @@ const LeaveForm = () => {
                     </div>
                 </form>
                 <div>
+                    <div className="mt-8">
+                        <h2 className="text-xl font-bold font-FontNoto mb-4">ประวัติการลา</h2>
+                        <div className="overflow-x-auto">
+                            <table className="table w-full text-center font-FontNoto">
+                                <thead>
+                                    <tr>
+                                        <th>วันที่สร้าง</th>
+                                        <th>ประเภทการลา</th>
+                                        <th>วันที่ลา</th>
+                                        <th>สถานะ</th>
+                                        <th>ดูเพิ่มเติม</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {historyList.map((form) => (
+                                        <tr key={form.documentId}>
+                                            <td>{form.createdate?.split("T")[0]}</td>
+                                            <td>{form.leaveTypeTh}</td>
+                                            <td>{form.startdate?.split("T")[0]} - {form.enddate?.split("T")[0]}</td>
+                                            <td>
+                                                {form.status === "pending_manager" && "อยู่ระหว่างดำเนินการ"}
+                                                {form.status === "approved" && "อนุมัติแล้ว"}
+                                                {form.status === "rejected" && "แบบฟอร์มที่ไม่อนุมัติ"}
+                                                {(form.status !== "pending_manager" && form.status !== "approved" && form.status !== "rejected") && "รอดำเนินการ"}
+                                            </td>
+                                            <td>
+                                                <button
+                                                    className="btn btn-sm btn-info"
+                                                    onClick={() => {
+                                                        setSelectedForm(form);
+                                                        setShowHistoryModal(true);
+                                                    }}
+                                                >
+                                                    ดู
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            {showHistoryModal && selectedForm && (
+                                <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+                                    <div className="bg-white p-6 rounded-lg w-full max-w-lg shadow-lg font-FontNoto">
+                                        <h3 className="text-xl font-bold mb-4">รายละเอียดใบลา</h3>
+                                        <p><strong>เรื่อง:</strong> ขออนุญาตลา {selectedForm.leaveTypeTh}</p>
+                                        <p><strong>ช่วงเวลา:</strong> {selectedForm.startdate?.split("T")[0]} ถึง {selectedForm.enddate?.split("T")[0]}</p>
+                                        <p><strong>เหตุผล:</strong> {selectedForm.reason}</p>
+                                        <p><strong>สถานะ:</strong> {
+                                            selectedForm.status === "pending_manager" ? "อยู่ระหว่างดำเนินการ" :
+                                                selectedForm.status === "approved" ? "อนุมัติแล้ว" :
+                                                    selectedForm.status === "rejected" ? "แบบฟอร์มที่ไม่อนุมัติ" : "รอดำเนินการ"
+                                        }</p>
+
+                                        <div className="text-right mt-4">
+                                            <button
+                                                className="btn btn-sm btn-error"
+                                                onClick={() => setShowHistoryModal(false)}
+                                            >
+                                                ปิด
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     );
 };
 
-export default LeaveForm;
+export default Leavetest;

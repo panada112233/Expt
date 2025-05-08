@@ -42,6 +42,7 @@ import MyExperience from './components/My_experience';
 import ChangeProfile from './components/Change_profile';
 import ForgotPassword from './components/ForgotPassword';
 import LeaveForm from './components/LeaveForm';
+import Leavetest from './components/Leavetest';
 import Allcreate from './components/Allcreate';
 
 import AdminDashboard from "./components/AdminDashboard";
@@ -107,6 +108,7 @@ function App() {
               />
 
               <Route path="LeaveForm" element={<LeaveForm />} />
+              <Route path="Leavetest" element={<Leavetest />} />
               <Route path="Change_password" element={<ChangePassword />} />
               <Route path="Document" element={<Document />} />
               <Route path="My_education" element={<MyEducation />} />
