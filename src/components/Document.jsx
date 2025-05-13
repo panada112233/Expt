@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 function Document() {
@@ -39,37 +38,19 @@ function Document() {
     Others: 'อื่นๆ',
   };
 
-  const categoryMappingg = {
-    "A461E72F-B9A3-4F9D-BF69-1BBE6EA514EC": "ใบลาป่วย",
-    "6CF7C54A-F9BA-4151-A554-6487FDD7ED8D": "ใบลาพักร้อน",
-    "1799ABEB-158C-479E-A9DC-7D45E224E8ED": "ใบลากิจ",
-    "DAA14555-28E7-497E-B1D8-E0DA1F1BE283": "ใบลาคลอด",
-    "AE3C3A05-1FCB-4B8A-9044-67A83E781ED6": "ใบลาบวช",
-  };
-
   const leavedTypeMapping = {
-    "A461E72F-B9A3-4F9D-BF69-1BBE6EA514EC": "ป่วย",
-    "6CF7C54A-F9BA-4151-A554-6487FDD7ED8D": "พักร้อน",
-    "AE3C3A05-1FCB-4B8A-9044-67A83E781ED6": "บวช",
-    "1799ABEB-158C-479E-A9DC-7D45E224E8ED": "กิจส่วนตัว",
-    "DAA14555-28E7-497E-B1D8-E0DA1F1BE283": "ลาคลอด",
-  }
-  const rolesMapping = {
-    "17E87D2B-94C5-44A3-AD5C-1A6669FE46AF": "พนักงาน",
-    "54DFE7BA-8EEC-40AD-9CDE-37A78E9CB045": "ผู้จัดการทั่วไป",
-    "9D97FB2C-4356-417E-84BC-44A76EF7E301": "นักวิเคราะห์ธุรกิจ",
-    "34801390-360B-450E-92B4-6493E1CFC146": "ทรัพยากรบุคคล",
-    "26090F1D-A579-4242-969D-F16DD921EB05": "นักพัฒนาระบบ",
-  }
-  // ฟังก์ชันแปลง leaveTypeId เป็นชื่อหมวดหมู่ที่อ่านง่าย
+    sick: "ลาป่วย",
+    business: "ลากิจ",
+    vacation: "ลาพักร้อน",
+    maternity: "ลาคลอด",
+    other: "ลาอื่นๆ",
+  };
   const getCategoryName = (leaveTypeId) => {
-    return categoryMappingg[leaveTypeId.toUpperCase()] || "ไม่ระบุหมวดหมู่";
+    return leavedTypeMapping[leaveTypeId.toUpperCase()] || "ไม่ระบุหมวดหมู่";
   };
 
-  // ดึง User ID จาก session หรือ localStorage
   const userID = localStorage.getItem('userId') || sessionStorage.getItem('userId');
 
-  // Fetch documents
   const fetchDocuments = async () => {
     try {
       const response = await fetch(`https://localhost:7039/api/Files/Document?userID=${userID}`);
@@ -93,36 +74,10 @@ function Document() {
       console.log(e)
     }
   }
-  const fetchDocumentsFromHR = async () => {
-    try {
-      const response = await fetch(`https://localhost:7039/api/Document/GetCommitedDocumentsByUser/${userID}`);
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          console.warn("ไม่มีเอกสารใบลา (API คืน 404)");
-          sethrdocunet([]); // ตั้งค่าเป็น array ว่าง เพื่อป้องกัน UI พัง
-          return;
-        }
-        throw new Error(`เกิดข้อผิดพลาด: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      sethrdocunet(data);
-      console.log("Commited Documents:", data);
-
-      // ตรวจสอบว่า API ส่งข้อมูลมาหรือไม่ก่อนเรียก fetchHistory
-      if (data.length > 0) {
-        await fetchHistory(data[0].documentId);
-      }
-    } catch (error) {
-      console.error("เกิดข้อผิดพลาดระหว่างดึงข้อมูล:", error);
-      sethrdocunet([]); // ป้องกัน UI พังถ้า API มีปัญหา
-    }
-  };
-
+ 
   useEffect(() => {
     fetchDocuments();
-    fetchDocumentsFromHR();
+
   }, []);
 
   const handleOpenModal = async (filePathOrDoc) => {
@@ -130,9 +85,12 @@ function Document() {
     setSelectedDocument(typeof filePathOrDoc === 'object' ? filePathOrDoc : null);
     setPassword('');
     setIsModalOpen(true);
-    console.log("verifyPassword", hrdocument[0].documentId)
 
-    await fetchHistory(hrdocument[0].documentId)
+    if (hrdocument.length > 0 && typeof filePathOrDoc === 'object' && filePathOrDoc.documentId) {
+      await fetchHistory(filePathOrDoc.documentId);
+    } else if (hrdocument.length > 0) {
+      await fetchHistory(hrdocument[0].documentId);
+    }
   };
 
   const handleVerifyPassword = async () => {
@@ -258,10 +216,9 @@ function Document() {
     }
   };
 
-  // ✅ รีเซ็ตค่า hrdocument ทุกครั้งที่เปลี่ยนแท็บ
   useEffect(() => {
     if (activeTab === "leave") {
-      sethrdocunet([...hrdocument]); // ใช้ spread operator เพื่อให้ React อัปเดต UI
+      sethrdocunet([...hrdocument]);
     }
   }, [activeTab]); // เรียกเมื่อเปลี่ยนแท็บ
 
@@ -309,224 +266,143 @@ function Document() {
     handleCloseDeleteModal();
   };
 
-  const createPDF = (doc) => {
+  const createPDF = async (doc) => {
     if (!doc) {
       alert("ไม่พบข้อมูลเอกสาร");
       return;
     }
 
-    // Helper function แปลงวันที่defaultStyle
+    const userID = localStorage.getItem("userId") || sessionStorage.getItem("userId");
+
+    let userData = {
+      firstName: "",
+      lastName: "",
+      departmentName: "",
+      positionName: "",
+      address: "",
+      phoneNumber: ""
+    };
+
+    try {
+      const userResponse = await axios.get(`https://localhost:7039/api/User/${userID}`);
+      userData = userResponse.data || userData;
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      const fullNameParts = doc.fullName?.split(" ") || [];
+      userData.firstName = fullNameParts[0] || "ไม่ระบุ";
+      userData.lastName = fullNameParts[1] || "";
+      userData.departmentName = doc.department || "ไม่ระบุแผนก";
+      userData.positionName = doc.position || "ไม่ระบุตำแหน่ง";
+      userData.address = "ไม่ระบุที่อยู่";
+      userData.phoneNumber = "ไม่ระบุเบอร์โทร";
+    }
+
     const formatDate = (date) => {
       if (!date) return "-";
-      return new Intl.DateTimeFormat("th-TH", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(date));
+      return new Intl.DateTimeFormat("th-TH", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(new Date(date));
     };
+
+    const safeConcat = (firstName, lastName) => {
+      if (firstName && lastName) return `${firstName} ${lastName}`;
+      if (firstName) return firstName;
+      if (lastName) return lastName;
+      return "ไม่ระบุชื่อ";
+    };
+
+    const docData = {
+      createdAt: doc.createdAt || doc.uploadDate || new Date(),
+      fullName: doc.fullName || safeConcat(userData.firstName, userData.lastName),
+      department: doc.department || userData.departmentName || "ไม่ระบุแผนก",
+      position: doc.position || userData.positionName || "ไม่ระบุตำแหน่ง",
+      startDate: doc.startDate || doc.createdAt || doc.uploadDate,
+      endDate: doc.endDate || doc.createdAt || doc.uploadDate,
+      totalDays: doc.totalDays || "1",
+      reason: doc.reason || doc.description || "ไม่ระบุเหตุผล",
+      contact: doc.contact || `${userData.address} / ${userData.phoneNumber}`
+    };
+
+    let address = "ไม่ระบุที่อยู่";
+    let phone = "ไม่ระบุเบอร์โทร";
+
+    if (docData.contact && docData.contact.includes(" / ")) {
+      [address, phone] = docData.contact.split(" / ");
+    }
+
+    const leavedTypeMapping = {
+      sick: "ลาป่วย",
+      business: "ลากิจ",
+      vacation: "ลาพักร้อน",
+      maternity: "ลาคลอด",
+      ordination: "ลาบวช",
+      other: "ลาอื่นๆ"
+    };
+
+    const isHRDocument = doc.leaveType || doc.leaveTypeId;
+    let leaveTypeText = "ไม่ระบุ";
+
+    if (isHRDocument) {
+      const leaveTypeId = (doc.leaveTypeId || "").toLowerCase();
+      const leaveType = (doc.leaveType || "").toLowerCase();
+      leaveTypeText = leavedTypeMapping[leaveTypeId] || leavedTypeMapping[leaveType] || "ไม่ระบุ";
+    } else if (doc.category === "Leave") {
+      const description = (doc.description || "").toLowerCase();
+      if (description.includes("ป่วย")) leaveTypeText = "ลาป่วย";
+      else if (description.includes("กิจ")) leaveTypeText = "ลากิจ";
+      else if (description.includes("พักร้อน")) leaveTypeText = "ลาพักร้อน";
+      else if (description.includes("คลอด")) leaveTypeText = "ลาคลอด";
+      else if (description.includes("บวช")) leaveTypeText = "ลาบวช";
+      else leaveTypeText = "ตามที่ระบุในเอกสาร";
+    } else {
+      leaveTypeText = "ตามที่ระบุในเอกสาร";
+    }
 
     const docDefinition = {
       content: [
         { text: "แบบฟอร์มใบลา", style: "header" },
         {
-          text: `วันที่ : ${formatDate(doc.createdate)}`,
-          margin: [0, 10, 0, 10],
-          alignment: 'right' // ทำให้ข้อความชิดขวา
+          text: `วันที่: ${new Date(docData.createdAt).toLocaleDateString("th-TH", {
+            day: "2-digit", month: "2-digit", year: "numeric"
+          })}`,
+          alignment: "right", margin: [0, 0, 0, 10]
         },
-        { text: `เรื่อง : ขออนุญาติลา : ${leavedTypeMapping[doc.leaveTypeId.toUpperCase()] || "-"}`, margin: [0, 10, 0, 10] },
-        { text: `เรียน หัวหน้าแผนก/ฝ่ายบุคคล`, margin: [0, 10, 0, 10] },
-        {
-          table: {
-            widths: ["auto", "*"],
-            body: [
-              ["ข้าพเจ้า :", `${doc.fullname || "-"} แผนก ${rolesMapping[doc.rolesid.toUpperCase()] || "-"}`],
-              ["ขอลา :", `${leavedTypeMapping[doc.leaveTypeId.toUpperCase()] || "-"} เนื่องจาก ${doc.reason || "-"}`],
-              [
-                "ตั้งแต่วันที่ :",
-                `${formatDate(doc.startdate)} ถึงวันที่ : ${formatDate(doc.enddate)} รวม : ${doc.totalleave || "0"} วัน`
-              ],
-              [
-                "ข้าพเจ้าได้ลา :",
-                `${leavedTypeMapping[doc.leavedType.toUpperCase()] || "-"} ครั้งสุดท้าย ตั้งแต่วันที่ : ${formatDate(doc.leavedStartdate)} ถึงวันที่ : ${formatDate(doc.leavedEnddate)} รวม ${doc.totalleaved || "0"} วัน`
-              ],
-            ],
-          },
-          layout: "noBorders",
-          margin: [0, 0, 0, 20],
-        },
-        {
-          table: {
-            widths: ["auto", "*"],
-            body: [
-              [
-                "ในระหว่างลา ติดต่อข้าพเจ้าได้ที่ :",
-                `${doc.friendeContact || "-"}, เบอร์ติดต่อ ${doc.contact || "-"}`
-              ],
-            ],
-          },
-          layout: "noBorders",
-          margin: [0, 0, 0, 20],
 
-        },
-        {
-          text: [
-            { text: "สถิติการลาในปีนี้ (วันเริ่มงาน)", style: "subheader" },
-            { text: ` วันที่: ${formatDate(doc.workingstart)}`, style: "subheader" }
-          ]
-        },
-        {
-          table: {
-            widths: ["auto", "*", "*", "*"],
-            body: [
-              [
-                { text: "ประเภทลา", alignment: 'center' },
-                { text: "ลามาแล้ว", alignment: 'center' },
-                { text: "ลาครั้งนี้", alignment: 'center' },
-                { text: "รวมเป็น", alignment: 'center' }
-              ],
-              [
-                { text: "ป่วย", alignment: 'center' },
-                { text: historyState.lastTotalStickDay ?? "0", alignment: 'center' },
-                { text: historyState.totalStickDay ?? "0", alignment: 'center' },
-                { text: historyState.sumStickDay ?? "0", alignment: 'center' }
-              ],
-              [
-                { text: "กิจส่วนตัว", alignment: 'center' },
-                { text: historyState.lastTotalPersonDay ?? "0", alignment: 'center' },
-                { text: historyState.totalPersonDay ?? "0", alignment: 'center' },
-                { text: historyState.sumPersonDay ?? "0", alignment: 'center' }
-              ],
-              [
-                { text: "พักร้อน", alignment: 'center' },
-                { text: historyState.lastTotalVacationDays ?? "0", alignment: 'center' },
-                { text: historyState.totalVacationDays ?? "0", alignment: 'center' },
-                { text: historyState.sumVacationDays ?? "0", alignment: 'center' }
-              ],
-              [
-                { text: "คลอดบุตร", alignment: 'center' },
-                { text: historyState.lastTotalMaternityDaystotal ?? "0", alignment: 'center' },
-                { text: historyState.totalMaternityDaystotal ?? "0", alignment: 'center' },
-                { text: historyState.sumMaternityDaystotal ?? "0", alignment: 'center' }
-              ],
-              [
-                { text: "บวช", alignment: 'center' },
-                { text: historyState.lastTotalOrdinationDays ?? "0", alignment: 'center' },
-                { text: historyState.totalOrdinationDays ?? "0", alignment: 'center' },
-                { text: historyState.sumOrdinationDays ?? "0", alignment: 'center' }
-              ]
-            ]
-          },
-          margin: [0, 0, 0, 20]
-        },
-        {
-          text: `ขอแสดงความนับถือ          .`,
-          margin: [0, 10, 0, 0],
-          alignment: 'right' // ทำให้ข้อความชิดขวา
-        },
-        {
-          columns: [
-            {
-              width: '33%',  // กำหนดความกว้างให้เป็น 1/3 ของพื้นที่
-              text: `ลงชื่อ: ... ${doc.fullname || "-"} ...`,
-              alignment: 'center',
-              margin: [0, 10, 0, 0]
-            },
-            {
-              width: '33%',
-              text: `ลงชื่อ:  ... ${doc.managerName || "-"} ...`,
-              alignment: 'center',
-              margin: [0, 10, 0, 0]
-            },
-            {
-              width: '33%',
-              text: `ลงชื่อ:  ... ${doc.hrSignature || "-"} ...`,
-              alignment: 'center',
-              margin: [0, 10, 0, 0]
-            }
-          ]
-        },
-        {
-          columns: [
-            {
-              width: '33%',  // กำหนดความกว้างให้เป็น 1/3 ของพื้นที่
-              text: `(... ${doc.fullname || "-"} ...)`,
-              alignment: 'center',
-              margin: [0, 10, 0, 0]
-            },
-            {
-              width: '33%',  // กำหนดความกว้างให้เป็น 1/3 ของพื้นที่
-              text: `(... ${doc.managerName || "-"} ...)`,
-              alignment: 'center',
-              margin: [0, 10, 0, 0]
-            },
-            {
-              width: '33%',  // กำหนดความกว้างให้เป็น 1/3 ของพื้นที่
-              text: `(... ${doc.hrSignature || "-"} ...)`,
-              alignment: 'center',
-              margin: [0, 10, 0, 0]
-            }
-          ]
-        },
-        {
-          columns: [
-            {
-              width: '33%',
-              text: `วันที่ ${formatDate(doc.createdate)}`,
-              alignment: 'center',
-              margin: [0, 10, 0, 0]
-            },
-            {
-              width: '33%',
-              text: `แผนก... ผู้จัดการทั่วไป ...`,
-              alignment: 'center',
-              margin: [0, 10, 0, 0]
-            },
-            {
-              width: '33%',
-              text: `แผนก... ทรัพยากรบุคคล ...`,
-              alignment: 'center',
-              margin: [0, 10, 0, 0]
-            }
-          ]
-        },
-        {
-          columns: [
-            {
-              width: '33%',
-              text: ``,
-              alignment: 'center',
-              margin: [0, 10, 0, 0]
-            },
-            {
-              width: '33%',
-              text: `วันที่ ${formatDate(doc.approvedDate)}`,
-              alignment: 'center',
-              margin: [0, 10, 0, 0]
-            },
-            {
-              width: '33%',
-              text: `วันที่ ${formatDate(doc.hrApprovedDate)}`,
-              alignment: 'center',
-              margin: [0, 10, 0, 0]
-            }
-          ]
-        },
+
+        { text: `เรื่อง: ขออนุญาตลา ${leaveTypeText}`, margin: [0, 0, 0, 10] },
+        { text: "เรียน หัวหน้าแผนก/ฝ่ายบุคคล", margin: [0, 0, 0, 10] },
+        { text: `ข้าพเจ้า: ${docData.fullName}`, margin: [0, 0, 0, 5] },
+        { text: `แผนก: ${docData.department}`, margin: [0, 0, 0, 5] },
+        { text: `ตำแหน่ง: ${docData.position}`, margin: [0, 0, 0, 5] },
+        { text: `ขอลาในช่วงวันที่: ${formatDate(docData.startDate)} ถึง ${formatDate(docData.endDate)}`, margin: [0, 0, 0, 5] },
+        { text: `จำนวน: ${docData.totalDays} วัน`, margin: [0, 0, 0, 5] },
+        { text: `เนื่องจาก: ${docData.reason}`, margin: [0, 0, 0, 10] },
+        { text: "สามารถติดต่อข้าพเจ้าได้ที่:", bold: true, margin: [0, 10, 0, 5] },
+        { text: `ที่อยู่: ${address}`, margin: [0, 0, 0, 3] },
+        { text: `เบอร์โทรศัพท์: ${phone}`, margin: [0, 0, 0, 3] },
+        { text: "ขอแสดงความนับถือ", alignment: "right", margin: [0, 20, 0, 10] },
+        { text: "(ลงชื่อ) ...............................................", alignment: "right", margin: [0, 0, 0, 5] },
+        { text: `( ${docData.fullName} )`, alignment: "right" }
       ],
       styles: {
         header: {
-          fontSize: 18,
+          fontSize: 20,
           bold: true,
-          alignment: "center"
-        },
-        subheader: {
-          fontSize: 18,
-          bold: true,
-          margin: [0, 10, 0, 5]
+          alignment: "center",
+          margin: [0, 0, 0, 10]
         }
       },
       defaultStyle: {
         font: "THSarabunNew",
-        fontSize: 16, // ตั้งค่าขนาดฟ้อนต์เป็น 16
-      },
+        fontSize: 16
+      }
     };
 
-    pdfMake.createPdf(docDefinition).download("เอกสารใบลา.pdf");
+    pdfMake.createPdf(docDefinition).download(`เอกสารใบลา_${leaveTypeText}.pdf`);
+    console.log("DOC:", doc);
+    console.log("createdAt:", doc.createdAt);
   };
 
   const handleFileChange = (e) => {
@@ -548,7 +424,7 @@ function Document() {
       </div>
       <h2 className="text-2xl font-bold text-black font-FontNoto"></h2>
       <div className="max-w-screen-lg mx-auto bg-transparent rounded-lg p-3">
-        {/* Modal ใส่รหัสผ่าน */}
+
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-[400px] relative">
@@ -625,7 +501,7 @@ function Document() {
             </div>
           </div>
         )}
-        {/* Modal สำเร็จ */}
+
         {isSuccessModalOpen && (
           <dialog id="success_modal" className="modal" open>
             <div className="modal-box">
@@ -643,7 +519,6 @@ function Document() {
           </dialog>
         )}
 
-        {/* Modal ล้มเหลว */}
         {isErrorModalOpen && (
           <dialog id="error_modal" className="modal" open>
             <div className="modal-box">
@@ -661,7 +536,6 @@ function Document() {
           </dialog>
         )}
 
-        {/* Form อัปโหลดเอกสาร */}
         <form
           onSubmit={handleAddDocument}
           className="space-y-4 mb-8 bg-base-100 p-4 rounded-lg shadow"
@@ -693,11 +567,6 @@ function Document() {
                 }
               >
                 <option className="font-FontNoto" value="">กรุณาเลือกหมวดหมู่เอกสาร</option>
-                {/* <option className="font-FontNoto" value="Certificate">ใบลาป่วย</option>
-                <option className="font-FontNoto" value="WorkContract">ใบลากิจ</option>
-                <option className="font-FontNoto" value="Identification">ใบลาพักร้อน</option>
-                <option className="font-FontNoto" value="Maternity">ใบลาคลอด</option>
-                <option className="font-FontNoto" value="Ordination">ใบลาบวช</option> */}
                 <option className="font-FontNoto" value="Doc">เอกสารส่วนตัว</option>
                 <option className="font-FontNoto" value="Others">อื่นๆ</option>
               </select>
@@ -731,27 +600,23 @@ function Document() {
 
         <div className="bg-base-100 p-4 rounded-lg shadow mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-
-            {/* Tabs */}
             <div className="flex flex-col sm:flex-row w-full font-FontNoto text-base gap-2 sm:gap-2">
               <button
-                className={`w-full sm:w-1/2 px-4 py-2 rounded-lg transition-all ${activeTab === 'leave'
-                  ? 'bg-[#87CEFA] text-white font-bold shadow' // เปลี่ยนเป็นสีที่อ่อนกว่า
-                  : 'bg-[#F2F9FC] text-[#6B7A8F] hover:bg-[#B0D6F1] hover:text-white' // ใช้สีพื้นหลังอ่อนลง
-                  }`}
-                onClick={() => setActiveTab('leave')}
-              >
-                เอกสารใบลา
-              </button>
-
-              <button
-                className={`w-full sm:w-1/2 px-4 py-2 rounded-lg transition-all ${activeTab === 'uploaded'
-                  ? 'bg-[#87CEFA] text-white font-bold shadow' // เปลี่ยนเป็นสีที่อ่อนกว่า
-                  : 'bg-[#F2F9FC] text-[#6B7A8F] hover:bg-[#B0D6F1] hover:text-white' // ใช้สีพื้นหลังอ่อนลง
-                  }`}
+                className={`w-full sm:w-1/3 px-4 py-2 rounded-lg transition-all ${activeTab === 'uploaded'
+                  ? 'bg-[#87CEFA] text-white font-bold shadow'
+                  : 'bg-[#F2F9FC] text-[#6B7A8F] hover:bg-[#B0D6F1] hover:text-white'}`}
                 onClick={() => setActiveTab('uploaded')}
               >
                 เอกสารอัปโหลด
+              </button>
+
+              <button
+                className={`w-full sm:w-1/3 px-4 py-2 rounded-lg transition-all ${activeTab === 'approvedLeave'
+                  ? 'bg-[#87CEFA] text-white font-bold shadow'
+                  : 'bg-[#F2F9FC] text-[#6B7A8F] hover:bg-[#B0D6F1] hover:text-white'}`}
+                onClick={() => setActiveTab('approvedLeave')}
+              >
+                เอกสารการลา
               </button>
             </div>
 
@@ -770,45 +635,50 @@ function Document() {
           </div>
         </div>
 
-        {activeTab === 'leave' && (
+        {activeTab === 'approvedLeave' && (
           <div className="bg-base-100 p-6 rounded-lg shadow-lg font-FontNoto">
-            <h3 className="text-xl font-bold text-black mb-4 font-FontNoto">เอกสารใบลา</h3>
+            <h3
+              className="text-xl font-bold text-black mb-4 font-FontNoto cursor-pointer hover:text-blue-600 transition"
+              onClick={() => {
+                const approvedDoc = documents.find(doc => doc.category === 'Leave');
+                if (approvedDoc) {
+                  createPDF(approvedDoc);
+                } else {
+                  alert("ไม่พบเอกสารใบลาที่อนุมัติแล้ว");
+                }
+              }}
+            >
+              เอกสารการลา (อนุมัติแล้ว)
+            </h3>
 
-            {hrdocument.length > 0 ? (
-              <ul className="space-y-4 font-FontNoto">
-                {hrdocument.map((doc) => (
-                  <li key={doc.documentId} className="p-4 bg-white rounded-lg shadow flex justify-between items-center">
-                    <div>
-                      <h4 className="text-lg font-bold font-FontNoto">{doc.reason || "ใบลา"}</h4>
-                      <p className="text-sm text-gray-600 font-FontNoto">
-                        หมวดหมู่เอกสาร: <span className="font-FontNoto">{categoryMappingg[doc.leaveTypeId?.toUpperCase()] || "ไม่ระบุหมวดหมู่"}</span>
-                      </p>
-                      <p className="text-sm text-gray-600 font-FontNoto">
-                        วันที่อัปโหลด: <span className="font-FontNoto">{doc.hrApprovedDate ? new Date(doc.hrApprovedDate).toLocaleDateString('th-TH') : "จาก HR"}</span>
-                      </p>
-                      <p className="text-sm text-gray-600 font-FontNoto">
-                        นามสกุลไฟล์: <span className="font-FontNoto">pdf</span>
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        className="btn btn-outline btn-info flex items-center gap-2 font-FontNoto hover:bg-blue-500 hover:text-white transition-all"
-                        onClick={() => handleOpenModal(doc)}
-                      >
-                        ดูไฟล์
-                      </button>
-                      {/* <button
-                        className="btn btn-outline btn-error font-FontNoto"
-                        onClick={() => handleOpenDeleteModal(doc.documentId, "leave")}
-                      >
-                        ลบ
-                      </button> */}
-                    </div>
-                  </li>
-                ))}
+            {documents.filter(doc => doc.category === 'Leave').length > 0 ? (
+              <ul className="space-y-4">
+                {documents
+                  .filter(doc => doc.category === 'Leave')
+                  .map((doc) => {
+                    const uploadDate = doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString('th-TH') : "-";
+                    return (
+                      <li key={doc.fileID} className="p-4 bg-white rounded-lg shadow flex justify-between items-center">
+                        <div>
+                          <h4 className="text-lg font-bold font-FontNoto">{doc.description || "ใบลา"}</h4>
+                          <p className="text-sm text-gray-600 font-FontNoto">วันที่อัปโหลด: {uploadDate}</p>
+                          <p className="text-sm text-gray-600 font-FontNoto">หมวดหมู่: ใบลา</p>
+                          <p className="text-sm text-gray-600 font-FontNoto">นามสกุลไฟล์: pdf</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            className="btn btn-outline btn-success font-FontNoto"
+                            onClick={() => createPDF(doc)}
+                          >
+                            ดาวน์โหลด PDF
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
               </ul>
             ) : (
-              <p className="text-gray-500 text-center mt-4 font-FontNoto">ไม่มีเอกสารใบลา</p>
+              <p className="text-gray-500 text-center mt-4 font-FontNoto">ไม่มีเอกสารการลา</p>
             )}
           </div>
         )}
@@ -817,38 +687,34 @@ function Document() {
           <div className="bg-base-100 p-6 rounded-lg shadow-lg font-FontNoto">
             <h3 className="text-xl font-bold text-black mb-4 font-FontNoto">เอกสารอัปโหลด</h3>
             <ul className="space-y-4 font-FontNoto">
-              {filteredDocuments.map((doc) => {
-                const fileExtension = doc.filePath ? doc.filePath.split('.').pop() : "ไม่พบข้อมูล";
-                const uploadDate = doc.uploadDate || "จาก HR";
-                const fileCategory = doc.category || "ไม่ระบุหมวดหมู่";
-                const fileUrl = doc.filePath ? `https://localhost:7039${doc.filePath}` : null;
-                return (
-                  <li key={doc.fileID || Math.random()} className="p-4 bg-white rounded-lg shadow flex justify-between items-center">
-                    <div>
-                      <h4 className="text-lg font-bold font-FontNoto">{doc.description || "เอกสาร"}</h4>
-                      <p className="text-sm text-gray-600 font-FontNoto">หมวดหมู่เอกสาร: {categoryMapping[fileCategory]}</p>
-                      <p className="text-sm text-gray-600 font-FontNoto">
-                        วันที่อัปโหลด: {uploadDate ? new Date(uploadDate).toLocaleDateString('th-TH') : ""}
-                      </p>
-                      <p className="text-sm text-gray-600 font-FontNoto">นามสกุลไฟล์: {fileExtension}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="btn btn-outline btn-info font-FontNoto" onClick={() => handleOpenModal(doc.filePath)}>ดูไฟล์</button>
-                      <button className="btn btn-outline btn-error font-FontNoto" onClick={() => handleOpenDeleteModal(doc.fileID, "upload")}>ลบ</button>
-                    </div>
-                  </li>
-                );
-              })}
-
+              {filteredDocuments
+                .filter((doc) => doc.category !== 'Leave') // ✅ กรองออกใบลา
+                .map((doc) => {
+                  const fileExtension = doc.filePath ? doc.filePath.split('.').pop().toLowerCase() : "ไม่พบข้อมูล";
+                  const uploadDate = doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString('th-TH') : "จาก HR";
+                  const fileCategory = doc.category || "ไม่ระบุหมวดหมู่";
+                  return (
+                    <li key={doc.fileID || Math.random()} className="p-4 bg-white rounded-lg shadow flex justify-between items-center">
+                      <div>
+                        <h4 className="text-lg font-bold font-FontNoto">{doc.description || "เอกสาร"}</h4>
+                        <p className="text-sm text-gray-600 font-FontNoto">หมวดหมู่เอกสาร: {categoryMapping[fileCategory]}</p>
+                        <p className="text-sm text-gray-600 font-FontNoto">วันที่อัปโหลด: {uploadDate}</p>
+                        <p className="text-sm text-gray-600 font-FontNoto">นามสกุลไฟล์: {fileExtension}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button className="btn btn-outline btn-info font-FontNoto" onClick={() => handleOpenModal(doc.filePath)}>ดูไฟล์</button>
+                        <button className="btn btn-outline btn-error font-FontNoto" onClick={() => handleOpenDeleteModal(doc.fileID, "upload")}>ลบ</button>
+                      </div>
+                    </li>
+                  );
+                })}
             </ul>
-            {/* กรณีไม่มีเอกสาร */}
-            {filteredDocuments.length === 0 && (
+            {filteredDocuments.filter((doc) => doc.category !== 'Leave').length === 0 && (
               <p className="text-gray-500 text-center mt-4 font-FontNoto">ไม่มีเอกสารอัปโหลด</p>
             )}
           </div>
         )}
       </div>
-
     </div>
 
   );

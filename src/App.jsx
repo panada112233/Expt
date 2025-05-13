@@ -6,6 +6,10 @@ import {
 } from 'react-router-dom';
 
 import { useEffect, useState } from 'react';
+import LeaveRequestForm from './components/LeaveRequestForm';
+import GMInbox from './components/GMInbox';
+import HRInbox from './components/HRInbox';
+
 import LeaveGraph from './components/LeaveGraph';
 import Login from './components/Login';
 import Navbars from './components/Navbars';
@@ -42,7 +46,6 @@ import MyExperience from './components/My_experience';
 import ChangeProfile from './components/Change_profile';
 import ForgotPassword from './components/ForgotPassword';
 import LeaveForm from './components/LeaveForm';
-import Leavetest from './components/Leavetest';
 import Allcreate from './components/Allcreate';
 
 import AdminDashboard from "./components/AdminDashboard";
@@ -92,6 +95,11 @@ function App() {
             {/* Routes สำหรับผู้ใช้ที่ล็อกอิน */}
             <Route path="/EmpHome" element={<EmpBase />}>
               <Route index element={<EmpHome />} />
+
+              <Route path="LeaveRequestForm" element={<LeaveRequestForm />} />
+              <Route path="GMInbox" element={<GMInbox />} />
+              <Route path="HRInbox" element={<HRInbox />} />
+              
               <Route path="Profile" element={<Profile />} />
               <Route path="Worktime" element={<Worktime />} />
               <Route path="WorktimeEmp" element={<WorktimeEmp />} />
@@ -108,7 +116,6 @@ function App() {
               />
 
               <Route path="LeaveForm" element={<LeaveForm />} />
-              <Route path="Leavetest" element={<Leavetest />} />
               <Route path="Change_password" element={<ChangePassword />} />
               <Route path="Document" element={<Document />} />
               <Route path="My_education" element={<MyEducation />} />
