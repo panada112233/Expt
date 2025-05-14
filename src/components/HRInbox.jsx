@@ -11,10 +11,29 @@ const HRInbox = () => {
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hrComment, setHrComment] = useState("");
+  const [history, setHistory] = useState([]);
+
+  const labelMap = {
+    sick: "ป่วย",
+    personal: "กิจส่วนตัว",
+    vacation: "พักร้อน",
+    ordain: "บวช",
+    maternity: "ลาคลอด"
+  };
 
   useEffect(() => {
     fetchRequests();
+    fetchHistory();
   }, []);
+
+  const fetchHistory = async () => {
+    try {
+      const res = await axios.get("https://localhost:7039/api/LeaveRequest/hr/history");
+      setHistory(res.data);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+  };
 
   const fetchRequests = async () => {
     setIsLoading(true);
@@ -39,9 +58,26 @@ const HRInbox = () => {
     });
   };
 
-  const showDetailModal = (request) => {
-    setCurrentRequest(request);
-    setIsDetailModalOpen(true);
+  const showDetailModal = async (request) => {
+    try {
+      const userId = request.userID || request.user?.id;
+      if (!userId) throw new Error("ไม่พบ userId");
+
+      const res = await axios.get(`https://localhost:7039/api/LeaveRequest/stats/${userId}`);
+
+      const enrichedRequest = {
+        ...request,
+        leaveStats: res.data
+      };
+
+      setCurrentRequest(enrichedRequest);
+      setIsDetailModalOpen(true);
+    } catch (error) {
+      console.error("❌ ดึง leaveStats ไม่สำเร็จ:", error);
+      alert("ไม่สามารถโหลดสถิติการลาได้");
+      setCurrentRequest(request);
+      setIsDetailModalOpen(true);
+    }
   };
 
   const toggleExpand = (id) => {
@@ -70,7 +106,7 @@ const HRInbox = () => {
       await axios.post(
         `https://localhost:7039/api/LeaveRequest/hr/approve/${currentRequest.id}`,
         {
-          comment: hrComment.trim() !== "" ? hrComment.trim() : "HR อนุมัติแล้ว"
+          Comment: signature.trim()
         },
         {
           headers: {
@@ -83,6 +119,7 @@ const HRInbox = () => {
 
       setRequests(prev => prev.filter(r => r.id !== currentRequest.id));
       setCurrentRequest(null);
+      await fetchHistory();
       setSignature("");
       setHrComment("");
       setConfirmationModalOpen(false);
@@ -185,6 +222,55 @@ const HRInbox = () => {
         </div>
       )}
 
+      <div className="mt-10">
+        <h2 className="text-2xl sm:text-3xl font-bold text-blue-800 text-center mb-6 sm:mb-8 font-FontNoto">
+          ประวัติการตรวจสอบใบลา
+        </h2>
+
+        {isLoading ? (
+          <div className="flex justify-center items-center h-40">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700"></div>
+          </div>
+        ) : history.length === 0 ? (
+          <div className="bg-gray-50 rounded-xl p-6 sm:p-10 text-center">
+            <p className="text-lg sm:text-xl text-gray-500 font-FontNoto">ไม่มีประวัติการตรวจสอบใบลา</p>
+          </div>
+        ) : (
+          <div className="bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-gray-100 text-gray-700">
+                  <tr>
+                    <th className="px-4 py-3 font-FontNoto">ชื่อผู้ขอลา</th>
+                    <th className="px-4 py-3 font-FontNoto">ประเภท</th>
+                    <th className="px-4 py-3 font-FontNoto">ช่วงเวลา</th>
+                    <th className="px-4 py-3 font-FontNoto">สถานะ</th>
+                    <th className="px-4 py-3 font-FontNoto">ชื่อ HR</th>
+                    <th className="px-4 py-3 font-FontNoto">วันที่ดำเนินการ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map(item => (
+                    <tr key={item.id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-3 font-FontNoto">{item.user?.firstName} {item.user?.lastName}</td>
+                      <td className="px-4 py-3 font-FontNoto">{item.leaveType}</td>
+                      <td className="px-4 py-3 font-FontNoto">{formatDate(item.startDate)} {item.timeType === "ครึ่งวันเช้า" ? "(เช้า)" : item.timeType === "ครึ่งวันบ่าย" ? "(บ่าย)" : ""} - {formatDate(item.endDate)}</td>
+                      <td className="px-4 py-3 font-FontNoto">
+                        <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                          ผ่าน
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-FontNoto">{item.hrComment || "-"}</td>
+                      <td className="px-4 py-3 font-FontNoto">{formatDate(item.hrApprovedAt || item.updatedAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
       {isModalOpen && currentRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -214,6 +300,7 @@ const HRInbox = () => {
                 </p>
               </div>
             </div>
+
             <div className="mb-6">
               <label className="block text-gray-700 font-FontNoto mb-2">ชื่อ-สกุล (ลายเซ็น):</label>
               <input
@@ -275,7 +362,6 @@ const HRInbox = () => {
                       <p className="font-FontNoto"><span className="font-semibold font-FontNoto">แผนก:</span> {getRoleDisplay(currentRequest.user?.role)}</p>
                     </div>
                   </div>
-
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-semibold mb-2 font-FontNoto">รายละเอียดการลา</h4>
                     <div className="space-y-2">
@@ -287,9 +373,6 @@ const HRInbox = () => {
                       <p className="font-FontNoto"><span className="font-semibold font-FontNoto">จำนวนวัน:</span> {currentRequest.totalDays} วัน</p>
                     </div>
                   </div>
-                </div>
-
-                <div className="space-y-4">
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-semibold mb-2 font-FontNoto">การติดต่อ</h4>
                     <div className="space-y-2">
@@ -297,6 +380,10 @@ const HRInbox = () => {
                       <p className="font-FontNoto"><span className="font-semibold font-FontNoto">โทร:</span> {(currentRequest.contact || "").split(" / ")[1] || "-"}</p>
                     </div>
                   </div>
+                </div>
+
+                <div className="space-y-4">
+
 
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-semibold mb-2 font-FontNoto">ลายเซ็นผู้จัดการทั่วไป</h4>
@@ -321,7 +408,7 @@ const HRInbox = () => {
                           <tbody>
                             {Object.entries(currentRequest.leaveStats).map(([key, stat]) => (
                               <tr key={key}>
-                                <td className="capitalize font-FontNoto p-2">{key}</td>
+                                <td className="capitalize font-FontNoto p-2">{labelMap[key] || key}</td>
                                 <td className="p-2">{stat.used}</td>
                                 <td className="p-2">{stat.current}</td>
                                 <td className="p-2">{stat.total}</td>

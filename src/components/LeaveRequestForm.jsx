@@ -50,10 +50,10 @@ const LeaveRequestForm = () => {
         }
     });
     const typeMap = {
-        "ลาป่วย": "sick",
-        "ลากิจ": "personal",
-        "ลาพักร้อน": "vacation",
-        "ลาบวช": "ordain",
+        "ป่วย": "sick",
+        "กิจส่วนตัว": "personal",
+        "พักร้อน": "vacation",
+        "บวช": "ordain",
         "ลาคลอด": "maternity"
     };
     const roleMapping = {
@@ -149,10 +149,9 @@ const LeaveRequestForm = () => {
 
             if (res.status === 200) {
                 if (res.data.length === 0) {
-                    console.log("ไม่พบข้อมูลการลา");
                     return;
                 }
-
+                console.log(res.data)
                 setLeaveHistory(res.data);
 
                 const stats = {
@@ -167,16 +166,32 @@ const LeaveRequestForm = () => {
 
                 res.data.forEach(item => {
                     const leaveStartYear = new Date(item.startDate).getFullYear();
+
                     if (item.status === "ApprovedByHR" && leaveStartYear === currentYear) {
-                        const days = Math.ceil((new Date(item.endDate) - new Date(item.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+                        let days;
+
+                        if (item.timeType === "ครึ่งวันเช้า" || item.timeType === "ครึ่งวันบ่าย") {
+                            days = 0.5;
+                        } else {
+                            days = Math.ceil((new Date(item.endDate) - new Date(item.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+                        }
+
                         const key = typeMap[item.leaveType];
-                        if (key && stats[key]) stats[key].used += days;
+                        if (key && stats[key]) {
+                            stats[key].used += days;
+                            stats[key].total = stats[key].used;
+                        }
                     }
                 });
-
                 const lastLeave = res.data.find(r => r.status === "ApprovedByHR");
                 if (lastLeave) {
-                    const days = Math.ceil((new Date(lastLeave.endDate) - new Date(lastLeave.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+                    let days = (new Date(lastLeave.endDate) - new Date(lastLeave.startDate)) / (1000 * 60 * 60 * 24) + 1;
+
+                    // ตรวจสอบกรณีครึ่งวัน
+                    if (lastLeave.timeType === "ครึ่งวันเช้า" || lastLeave.timeType === "ครึ่งวันบ่าย") {
+                        days = 0.5;
+                    }
+
                     setForm(prev => ({
                         ...prev,
                         lastLeaveStart: lastLeave.startDate.split("T")[0],
@@ -185,7 +200,6 @@ const LeaveRequestForm = () => {
                         lastLeaveType: lastLeave.leaveType
                     }));
                 }
-
                 setForm(prev => ({
                     ...prev,
                     leaveStats: stats

@@ -230,33 +230,6 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                 </summary>
 
                 <ul className="mt-2 ml-3 space-y-1 text-sm">
-                <li>
-                    <Link
-                      to="/EmpHome/LeaveRequestForm"
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                    >
-                      Test ใบลา
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/EmpHome/GMInbox"
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                    >
-                      Test GM
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/EmpHome/HRInbox"
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                    >
-                      Test HR
-                    </Link>
-                  </li>
                   <li>
                     <Link
                       to="/EmpHome/Workplan"
@@ -299,7 +272,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                 <ul className="mt-2 ml-3 space-y-1 text-sm">
                   <li>
                     <Link
-                      to="/EmpHome/LeaveForm"
+                      to="/EmpHome/LeaveRequestForm"
                       onClick={() => setIsSidebarOpen(false)}
                       className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
                     >
@@ -394,7 +367,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
               {role === "Hr" ? (
                 <>
                   <Link
-                    to="/EmpHome/HRView"
+                    to="/EmpHome/HRInbox"
                     onClick={() => setIsSidebarOpen(false)}
                     className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 text-sm whitespace-nowrap overflow-hidden text-ellipsis"
                   >
@@ -406,7 +379,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                 <>
                   <li>
                     <Link
-                      to="/EmpHome/ManagerView"
+                      to="/EmpHome/GMInbox"
                       onClick={() => setIsSidebarOpen(false)}
                       className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 text-sm whitespace-nowrap overflow-hidden text-ellipsis"
                     >

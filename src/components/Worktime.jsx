@@ -279,7 +279,8 @@ const Worktime = () => {
                             <tbody className="bg-white">
                                 {filteredWorktimes.map((item, index) => {
                                     const locationText = item.location || '';
-                                    const isLeave = locationText.includes('ลา');
+                                    const leaveKeywords = ['ป่วย', 'กิจส่วนตัว', 'บวช', 'พักร้อน', 'ลาคลอด'];
+                                    const isLeave = leaveKeywords.some(keyword => locationText.includes(keyword));
                                     const leaveType = locationText.includes('ครึ่งวันเช้า')
                                         ? 'morning'
                                         : locationText.includes('ครึ่งวันบ่าย')
@@ -301,6 +302,7 @@ const Worktime = () => {
                                                 <>
                                                     <td className="py-2 font-FontNoto">-</td>
                                                     <td className="py-2 font-FontNoto">
+                                                        {/* ✅ แก้ตรงนี้ */}
                                                         {locationText.split('|')[0]?.trim() || '-'}<br />
                                                         <span className="text-sm text-gray-600 font-FontNoto">
                                                             {locationText.split('|')[1]?.trim() || ''}
@@ -313,6 +315,7 @@ const Worktime = () => {
                                                     <td className="py-2 font-FontNoto">-</td>
                                                 </>
                                             )}
+
 
                                             <td className="py-2 font-FontNoto">
                                                 {item.photoPath && item.photoPath.includes('|') ? (

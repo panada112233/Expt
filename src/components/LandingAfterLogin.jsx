@@ -24,7 +24,7 @@ const LandingAfterLogin = () => {
     const [location, setLocation] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [leaveReason, setLeaveReason] = useState('');
+    const [todayLeave, setTodayLeave] = useState(null);
     const [showLeaveForm, setShowLeaveForm] = useState(false);
 
     const userID = sessionStorage.getItem('userId');
@@ -35,6 +35,7 @@ const LandingAfterLogin = () => {
         const LINE_LOGIN_URL = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=random123&scope=profile%20openid%20email`;
         window.location.href = LINE_LOGIN_URL;
     };
+
 
     const generateLeaveDates = (start, end) => {
         const dates = [];
@@ -55,8 +56,13 @@ const LandingAfterLogin = () => {
     };
     const getNextLeaveInfo = () => {
         // เรียงลำดับวันที่ลาตามวันที่
+        const leaveKeywords = ['ป่วย', 'กิจส่วนตัว', 'บวช', 'พักร้อน', 'ลาคลอด'];
+
         const sortedLeaveDates = worktimes
-            .filter(item => item.location?.includes('ลา') && item.date)
+            .filter(item => {
+                return item.date && item.location &&
+                    leaveKeywords.some(keyword => item.location.includes(keyword));
+            })
             .sort((a, b) => new Date(a.date) - new Date(b.date));
 
         if (sortedLeaveDates.length === 0) return null;
@@ -201,14 +207,27 @@ const LandingAfterLogin = () => {
 
             const today = new Date().toISOString().split("T")[0];
             const worktimeRes = await axios.get("https://localhost:7039/api/Worktime");
+            const userWorktimes = worktimeRes.data.filter(item => item.userID === parseInt(userId));
 
-            const userWork = worktimeRes.data.find(item =>
-                item.userID === parseInt(userId) && item.date.startsWith(today)
+            setWorktimes(userWorktimes);
+
+            const userWork = userWorktimes.find(item =>
+                item.date.startsWith(today)
             );
-            console.log("Today's worktime data:", userWork); // เพิ่มเพื่อตรวจสอบ
             setTodayWorktime(userWork || {});
 
-            setWorktimes(worktimeRes.data.filter(item => item.userID === parseInt(userId)));
+            // แก้ไขการตรวจสอบประเภทการลาในฟังก์ชัน fetchData
+            const leaveKeywords = ['ป่วย', 'กิจส่วนตัว', 'บวช', 'พักร้อน', 'ลาคลอด'];
+            const todayLeaveData = userWorktimes.find(item => {
+                if (item.date !== today) return false;
+                // ตรวจสอบว่า location มีคำที่เกี่ยวข้องกับการลาหรือไม่
+                return item.location && leaveKeywords.some(keyword =>
+                    item.location.includes(keyword)
+                );
+            });
+            setTodayLeave(todayLeaveData || null);
+
+
         } catch (error) {
             console.error("โหลดข้อมูลล้มเหลว:", error);
         }
@@ -239,10 +258,14 @@ const LandingAfterLogin = () => {
             return 'เกิดข้อผิดพลาด';
         }
     };
+    const leaveKeywords = ['ป่วย', 'กิจส่วนตัว', 'บวช', 'พักร้อน', 'ลาคลอด'];
 
-    // สร้างรายการวันที่ลาทั้งหมด (รองรับทุกประเภทที่มีคำว่า "ลา")
     const leaveDates = worktimes
-        .filter(item => item.location?.includes('ลา') && item.date) // ตรวจสอบว่า location มีคำว่า 'ลา' และ date มีอยู่จริง
+        .filter(item => {
+            // ตรวจสอบว่า location มีคำที่เกี่ยวข้องกับการลาหรือไม่
+            return item.date && item.location &&
+                leaveKeywords.some(keyword => item.location.includes(keyword));
+        })
         .map(item => item.date)
         .sort();
 
@@ -252,14 +275,7 @@ const LandingAfterLogin = () => {
         return leaveDates.includes(todayISO);
     };
 
-    const getTodayLeaveInfo = () => {
-        const todayISO = new Date().toISOString().split("T")[0];
-        const todayLeaveRecord = worktimes.find(item =>
-            item.date === todayISO &&
-            item.location?.includes('ลา')
-        );
-        return todayLeaveRecord;
-    };
+
     const handleCheckIn = () => {
         if (!location) {
             setModalMessage("กรุณาเลือกสถานที่ทำงานก่อนเช็คอิน");
@@ -480,18 +496,16 @@ const LandingAfterLogin = () => {
                         onClick={() => setModalOpen(true)}
                         className="relative group cursor-pointer p-6 rounded-xl w-64 shadow-lg transition-all duration-300 overflow-hidden bg-white"
                     >
-                        {/* วงกลมสีเขียวที่ขยายเมื่อ hover */}
                         <div className="circle absolute h-20 w-20 -top-10 -right-10 rounded-full bg-green-200 group-hover:scale-[800%] duration-500 z-[-1]"></div>
-
-                        {/* เนื้อหาหลัก (รูปกลางการ์ด) */}
                         <div className="flex items-center justify-center mb-4">
                             <img src={imgPath} alt="clock" className="w-20 h-20 object-contain animate-float-slow z-10" />
                         </div>
-
-                        {/* ข้อความ */}
                         <h1 className="font-bold text-md text-center font-FontNoto group-hover:text-black duration-500 z-10">
-                            เวลาเข้า-ออกงาน
+                            {todayLeave
+                                ? `วันนี้ลา: ${todayLeave.location?.split('|')[0]?.trim() || ''} (${todayLeave.location?.split('|')[1]?.trim() || ''})`
+                                : 'เวลาเข้า-ออกงาน'}
                         </h1>
+
                     </div>
                     {/* กล่องที่ 2: Profile */}
                     <div
@@ -505,9 +519,7 @@ const LandingAfterLogin = () => {
                         }}
                         className="relative group cursor-pointer p-6 rounded-xl w-64 shadow-lg transition-all duration-300 overflow-hidden bg-white flex flex-col items-center justify-center"
                     >
-                        {/* วงกลมน้ำเงินที่ขยายเมื่อ hover */}
                         <div className="circle absolute h-20 w-20 -top-10 -right-10 rounded-full bg-blue-300 group-hover:scale-[800%] duration-500 z-[-1]"></div>
-                        {/* เนื้อหาหลัก */}
                         <img
                             src={profileImage}
                             alt="profile"
@@ -560,20 +572,34 @@ const LandingAfterLogin = () => {
                             <>
                                 {(() => {
                                     const nextLeave = getNextLeaveInfo();
-                                    if (nextLeave) {
-                                        // กรณีมีวันลาที่บันทึกไว้ล่วงหน้า
+
+                                    if (todayLeave) {
+                                        return (
+                                            <div className="text-red-600 font-FontNoto mb-4 font-bold">
+                                                วันนี้คุณได้ลาไว้แล้ว<br />
+                                                <span className="text-gray-700 text-sm font-FontNoto">
+                                                    ประเภทการลา: {todayLeave.location?.split('|')[0]?.trim() || todayLeave.location || '-'}<br />
+                                                    {todayLeave.location?.includes('|') && (
+                                                        <>ช่วงเวลา: {todayLeave.location?.split('|')[1]?.trim() || '-'}</>
+                                                    )}
+                                                </span>
+                                            </div>
+                                        );
+                                    } else if (nextLeave && !nextLeave.location?.includes('ครึ่งวัน')) {
+                                        // ลาล่วงหน้า แบบเต็มวัน → return ทันที
                                         return (
                                             <div className="text-red-600 font-FontNoto mb-4 font-bold">
                                                 <div className="font-FontNoto">
                                                     ลางานล่วงหน้า วันที่ {formatThaiDate(nextLeave.startDate)} - {formatThaiDate(nextLeave.endDate)}
                                                 </div>
                                                 <p className="text-gray-600 text-sm mt-1 font-FontNoto">
-                                                    ประเภท: {nextLeave.location.replace('|', ' - ').trim()}
+                                                    ประเภทการลา: {nextLeave.location?.split('|')[0]?.replace('ลา', '').trim() || '-'}<br />
+                                                    ช่วงเวลา: {nextLeave.location?.split('|')[1]?.trim() || '-'}
                                                 </p>
                                             </div>
                                         );
                                     } else if (todayWorktime?.checkIn) {
-                                        // กรณีที่เช็คอินแล้ว
+
                                         return (
                                             <>
                                                 <div className="text-blue-600 font-FontNoto mb-4 font-bold">
@@ -586,20 +612,21 @@ const LandingAfterLogin = () => {
                                                 </div>
 
                                                 {/* ปุ่มเช็คเอาท์ แสดงเฉพาะเมื่อยังไม่ได้เช็คเอาท์ */}
-                                                {!todayWorktime.checkOut && (
+                                                {todayWorktime?.checkIn && !todayWorktime?.checkOut && (
                                                     <div className="flex justify-end gap-2">
                                                         <button
                                                             onClick={handleCheckOut}
                                                             className="relative rounded-full bg-red-500 px-4 py-2 font-FontNoto text-white font-bold transition-colors duration-300 ease-linear 
-                                    before:absolute before:right-1/2 before:top-1/2 before:-z-[1] 
-                                    before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2 
-                                    before:translate-x-1/2 before:animate-ping before:rounded-full 
-                                    before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
+        before:absolute before:right-1/2 before:top-1/2 before:-z-[1] 
+        before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2 
+        before:translate-x-1/2 before:animate-ping before:rounded-full 
+        before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
                                                         >
                                                             เช็คเอาท์
                                                         </button>
                                                     </div>
                                                 )}
+
                                             </>
                                         );
                                     } else {
@@ -672,8 +699,9 @@ const LandingAfterLogin = () => {
                                                 )}
 
                                                 <div className="flex justify-end gap-2">
-                                                    {/* ปุ่มเช็คอิน */}
-                                                    {!todayWorktime?.checkIn &&
+                                                    {/* ✅ ปุ่มเช็คอิน (แสดงเฉพาะเมื่อยังไม่ได้เช็คอิน และไม่มีข้อมูลการลา) */}
+                                                    {!todayLeave &&
+                                                        !todayWorktime?.checkIn &&
                                                         !(leaveType === 'เต็มวัน' ||
                                                             location === 'ลาบวช' ||
                                                             location === 'ลาพักร้อน' ||
@@ -681,17 +709,18 @@ const LandingAfterLogin = () => {
                                                             <button
                                                                 onClick={handleCheckIn}
                                                                 className="relative rounded-full bg-green-500 px-4 py-2 font-FontNoto text-white font-bold transition-colors duration-300 ease-linear 
-                                        before:absolute before:right-1/2 before:top-1/2 before:-z-[1] 
-                                        before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2 
-                                        before:translate-x-1/2 before:animate-ping before:rounded-full 
-                                        before:bg-green-500 hover:bg-green-700 hover:before:bg-green-700"
+                before:absolute before:right-1/2 before:top-1/2 before:-z-[1] 
+                before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2 
+                before:translate-x-1/2 before:animate-ping before:rounded-full 
+                before:bg-green-500 hover:bg-green-700 hover:before:bg-green-700"
                                                             >
                                                                 เช็คอิน
                                                             </button>
                                                         )}
 
-                                                    {/* ปุ่มบันทึกวันลา */}
-                                                    {!todayWorktime?.checkIn &&
+                                                    {/* ✅ ปุ่มบันทึกวันลา (แสดงเมื่อเลือกลาเต็มวัน หรือลาแบบไม่ต้องเลือกช่วงเวลา และไม่มีข้อมูลการลาอยู่แล้ว) */}
+                                                    {!todayLeave &&
+                                                        !todayWorktime?.checkIn &&
                                                         (leaveType === 'เต็มวัน' ||
                                                             location === 'ลาบวช' ||
                                                             location === 'ลาพักร้อน' ||
@@ -699,10 +728,10 @@ const LandingAfterLogin = () => {
                                                             <button
                                                                 onClick={saveLeave}
                                                                 className="relative rounded-full bg-blue-500 px-4 py-2 font-FontNoto text-white font-bold transition-colors duration-300 ease-linear 
-                                        before:absolute before:right-1/2 before:top-1/2 before:-z-[1] 
-                                        before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2 
-                                        before:translate-x-1/2 before:animate-ping before:rounded-full 
-                                        before:bg-blue-500 hover:bg-blue-700 hover:before:bg-blue-700"
+                before:absolute before:right-1/2 before:top-1/2 before:-z-[1] 
+                before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2 
+                before:translate-x-1/2 before:animate-ping before:rounded-full 
+                before:bg-blue-500 hover:bg-blue-700 hover:before:bg-blue-700"
                                                             >
                                                                 บันทึกวันลา
                                                             </button>

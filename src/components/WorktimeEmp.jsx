@@ -201,7 +201,8 @@ const WorktimeEmp = () => {
             if (isWeekend) return;
 
             const locationText = (item.location || '').toLowerCase().replace(/\s/g, '');
-            const isLeave = locationText.includes('ลา');
+            const leaveKeywords = ['ป่วย', 'กิจส่วนตัว', 'บวช', 'พักร้อน', 'ลาคลอด'];
+            const isLeave = leaveKeywords.some(keyword => locationText.includes(keyword));
             const leaveType = locationText.includes('ครึ่งวันเช้า')
                 ? 'morning'
                 : locationText.includes('ครึ่งวันบ่าย')
@@ -339,7 +340,8 @@ const WorktimeEmp = () => {
                             <tbody className="bg-white">
                                 {filteredWorktimes.map((item, index) => {
                                     const locationText = item.location || '';
-                                    const isLeave = locationText.includes('ลา');
+                                    const leaveKeywords = ['ป่วย', 'กิจส่วนตัว', 'บวช', 'พักร้อน', 'ลาคลอด'];
+                                    const isLeave = leaveKeywords.some(keyword => locationText.includes(keyword));
                                     const leaveType = locationText.includes('ครึ่งวันเช้า')
                                         ? 'morning'
                                         : locationText.includes('ครึ่งวันบ่าย')
