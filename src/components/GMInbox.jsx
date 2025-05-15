@@ -423,20 +423,20 @@ const GMInbox = () => {
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <h4 className="font-semibold mb-2 font-FontNoto">ข้อมูลพนักงาน</h4>
                       <div className="space-y-2">
-                        <p className="font-FontNoto"><span className="font-medium">ชื่อ-นามสกุล:</span> {currentRequest.user?.firstName} {currentRequest.user?.lastName}</p>
-                        <p className="font-FontNoto"><span className="font-medium">แผนก:</span> {getRoleDisplay(currentRequest.user?.role)}</p>
+                        <p className="font-FontNoto"><span className="font-FontNoto">ชื่อ-นามสกุล:</span> {currentRequest.user?.firstName} {currentRequest.user?.lastName}</p>
+                        <p className="font-FontNoto"><span className="font-FontNoto">แผนก:</span> {getRoleDisplay(currentRequest.user?.role)}</p>
                       </div>
                     </div>
 
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <h4 className="font-semibold mb-2 font-FontNoto">รายละเอียดการลา</h4>
                       <div className="space-y-2">
-                        <p className="font-FontNoto"><span className="font-medium">ประเภทการลา:</span> {currentRequest.leaveType}</p>
-                        <p className="font-FontNoto"><span className="font-medium">ช่วงเวลา:</span> {currentRequest.timeType}</p>
-                        <p className="font-FontNoto"><span className="font-medium">เนื่องจาก:</span> {currentRequest.reason}</p>
-                        <p className="font-FontNoto"><span className="font-medium">วันที่เริ่มลา:</span> {formatDate(currentRequest.startDate)}</p>
-                        <p className="font-FontNoto"><span className="font-medium">วันที่สิ้นสุด:</span> {formatDate(currentRequest.endDate)}</p>
-                        <p className="font-FontNoto"><span className="font-medium">จำนวนวัน:</span> {currentRequest.totalDays} วัน</p>
+                        <p className="font-FontNoto"><span className="font-FontNoto">ประเภทการลา:</span> {currentRequest.leaveType}</p>
+                        <p className="font-FontNoto"><span className="font-FontNoto">ช่วงเวลา:</span> {currentRequest.timeType}</p>
+                        <p className="font-FontNoto"><span className="font-FontNoto">เนื่องจาก:</span> {currentRequest.reason}</p>
+                        <p className="font-FontNoto"><span className="font-FontNoto">วันที่เริ่มลา:</span> {formatDate(currentRequest.startDate)}</p>
+                        <p className="font-FontNoto"><span className="font-FontNoto">วันที่สิ้นสุด:</span> {formatDate(currentRequest.endDate)}</p>
+                        <p className="font-FontNoto"><span className="font-FontNoto">จำนวนวัน:</span> {currentRequest.totalDays} วัน</p>
                       </div>
                     </div>
                     <div className="bg-gray-50 p-4 rounded-lg">

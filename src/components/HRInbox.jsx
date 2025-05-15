@@ -128,20 +128,37 @@ const HRInbox = () => {
       alert("เกิดข้อผิดพลาดในการอนุมัติคำขอ");
     }
   };
-
   const sendBackToDocument = async () => {
     try {
+      const userId = currentRequest.userID;
+
+      const reverseMap = {
+        "ป่วย": "sick",
+        "กิจส่วนตัว": "personal",
+        "พักร้อน": "vacation",
+        "ลาคลอด": "maternity",
+        "ลาบวช": "ordain"
+      };
+      const rawThai = currentRequest.leaveType?.trim();
+      const category = reverseMap[rawThai] || "Others";
+      console.log("💬 ประเภทใบลาที่รับมา:", currentRequest.leaveType);
+      console.log("💬 ประเภทใบลาที่แปลงแล้ว:", category);
       const formData = new FormData();
-      formData.append("Category", "Leave");
-      formData.append("Description", `ใบลา ${currentRequest.leaveType} อนุมัติโดย HR`);
-      formData.append("UserID", currentRequest.userID);
-      formData.append("File", new Blob([JSON.stringify(currentRequest)], { type: 'application/json' }), "leave-details.json");
+      formData.append("Category", category);
+      formData.append("Description", currentRequest.reason || "ไม่ระบุเหตุผล");
+      formData.append("UserID", userId);
+      formData.append(
+        "File",
+        new Blob([JSON.stringify(currentRequest)], { type: "application/json" }),
+        "leave-details.json"
+      );
 
       await axios.post("https://localhost:7039/api/Files/Create", formData);
+
       console.log("📤 ส่งข้อมูลใบลาคืนพนักงานแล้ว");
     } catch (err) {
-      console.error("Upload failed", err);
-      throw new Error("เกิดข้อผิดพลาดในการส่งข้อมูลกลับพนักงาน");
+      console.error("❌ Upload failed", err);
+      alert("เกิดข้อผิดพลาดในการส่งใบลาคืนพนักงาน");
     }
   };
 

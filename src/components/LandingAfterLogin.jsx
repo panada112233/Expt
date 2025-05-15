@@ -28,14 +28,13 @@ const LandingAfterLogin = () => {
     const [showLeaveForm, setShowLeaveForm] = useState(false);
 
     const userID = sessionStorage.getItem('userId');
-    const LINE_CLIENT_ID = "2007354605"; // <-- ใส่ ID ของคุณ
-    const REDIRECT_URI = encodeURIComponent("http://localhost:5173/callback");
+    // const LINE_CLIENT_ID = "2007354605"; // <-- ใส่ ID ของคุณ
+    // const REDIRECT_URI = encodeURIComponent("http://localhost:5173/callback");
 
     const handleLineLogin = () => {
         const LINE_LOGIN_URL = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=random123&scope=profile%20openid%20email`;
         window.location.href = LINE_LOGIN_URL;
     };
-
 
     const generateLeaveDates = (start, end) => {
         const dates = [];
@@ -57,11 +56,18 @@ const LandingAfterLogin = () => {
     const getNextLeaveInfo = () => {
         // เรียงลำดับวันที่ลาตามวันที่
         const leaveKeywords = ['ป่วย', 'กิจส่วนตัว', 'บวช', 'พักร้อน', 'ลาคลอด'];
+        console.log("👤 userID:", userID);
+        console.log("📄 worktimes:", worktimes);
+        console.log("worktimes ของ user 1014:", worktimes.filter(item => item.userID === 1014));
+
 
         const sortedLeaveDates = worktimes
             .filter(item => {
-                return item.date && item.location &&
-                    leaveKeywords.some(keyword => item.location.includes(keyword));
+                return (
+                    item.userID === parseInt(userID) && // ✅ กรองเฉพาะของ user นี้เท่านั้น
+                    item.date && item.location &&
+                    leaveKeywords.some(keyword => item.location.includes(keyword))
+                );
             })
             .sort((a, b) => new Date(a.date) - new Date(b.date));
 
@@ -92,6 +98,7 @@ const LandingAfterLogin = () => {
 
         // หาช่วงวันลาที่ปัจจุบันหรืออนาคต
         const today = new Date().setHours(0, 0, 0, 0);
+        console.log("วันนี้ (today):", today);
         for (const range of leaveRanges) {
             const rangeEnd = new Date(range[range.length - 1].date).setHours(0, 0, 0, 0);
             if (rangeEnd >= today) {
@@ -206,28 +213,28 @@ const LandingAfterLogin = () => {
             setIsLineLinked(typeof userData.lineUserId === "string" && userData.lineUserId.trim() !== "");
 
             const today = new Date().toISOString().split("T")[0];
-            const worktimeRes = await axios.get("https://localhost:7039/api/Worktime");
-            const userWorktimes = worktimeRes.data.filter(item => item.userID === parseInt(userId));
 
-            setWorktimes(userWorktimes);
+            // ✅ โหลด worktimes ของทุก user
+            const worktimeRes = await axios.get("https://localhost:7039/api/Worktime");
+            setWorktimes(worktimeRes.data); // ✅ ใส่ทั้งหมด
+
+            const userWorktimes = worktimeRes.data.filter(item => item.userID === parseInt(userId));
 
             const userWork = userWorktimes.find(item =>
                 item.date.startsWith(today)
             );
             setTodayWorktime(userWork || {});
-
             // แก้ไขการตรวจสอบประเภทการลาในฟังก์ชัน fetchData
             const leaveKeywords = ['ป่วย', 'กิจส่วนตัว', 'บวช', 'พักร้อน', 'ลาคลอด'];
             const todayLeaveData = userWorktimes.find(item => {
                 if (item.date !== today) return false;
                 // ตรวจสอบว่า location มีคำที่เกี่ยวข้องกับการลาหรือไม่
-                return item.location && leaveKeywords.some(keyword =>
-                    item.location.includes(keyword)
+                const loc = item.location?.toLowerCase().replace(/\s/g, '') || '';
+                return leaveKeywords.some(keyword =>
+                    loc.includes(keyword.toLowerCase().replace(/\s/g, ''))
                 );
             });
             setTodayLeave(todayLeaveData || null);
-
-
         } catch (error) {
             console.error("โหลดข้อมูลล้มเหลว:", error);
         }
@@ -262,19 +269,20 @@ const LandingAfterLogin = () => {
 
     const leaveDates = worktimes
         .filter(item => {
-            // ตรวจสอบว่า location มีคำที่เกี่ยวข้องกับการลาหรือไม่
-            return item.date && item.location &&
-                leaveKeywords.some(keyword => item.location.includes(keyword));
+            if (!item.date || !item.location) return false;
+
+            const loc = item.location.toLowerCase().replace(/\s/g, ''); // 🔁 ตัดช่องว่างทั้งหมด
+            return leaveKeywords.some(keyword =>
+                loc.includes(keyword.toLowerCase().replace(/\s/g, ''))
+            );
         })
-        .map(item => item.date)
+        .map(item => new Date(item.date).toISOString().split("T")[0])
         .sort();
 
-    // ตรวจสอบว่าวันนี้เป็นวันลาไหม
     const isTodayLeave = () => {
         const todayISO = new Date().toISOString().split("T")[0];
         return leaveDates.includes(todayISO);
     };
-
 
     const handleCheckIn = () => {
         if (!location) {
@@ -409,67 +417,48 @@ const LandingAfterLogin = () => {
             year: 'numeric',
         });
 
-    const handleCheckOut = () => {
-        const now = new Date();
-        const hour = now.getHours();
-        const minute = now.getMinutes();
+    const handleCheckOut = async () => {
+        try {
+            // ส่งคำขอเพื่อทำการเช็คเอาท์
+            const formData = new FormData();
+            formData.append('userID', userID);
 
-        // ✅ แสดงป็อปอัปยืนยัน
-        const today = now.toLocaleDateString('th-TH', {
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric',
-        });
-        const message = (
-            <p className="font-FontNoto text-gray-700">
-                <span className="font-bold font-FontNoto">วันที่:</span> {today}<br />
-                <span className="font-bold font-FontNoto">เวลาเลิกงาน:</span> {now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })}<br /><br />
-                <span className="font-bold font-FontNoto">คุณต้องการเช็คเอาท์ใช่หรือไม่?</span>
-            </p>
-        );
+            // ส่งคำขอไปที่ API
+            const response = await axios.post('https://localhost:7039/api/Worktime/CheckOut', formData);
 
-        setModalMessage(message);
-        setModalConfirmAction(() => async () => {
-            try {
-                const formData = new FormData();
-                formData.append('userID', userID);
+            setModalMessage(
+                <div className="flex flex-col items-center justify-center text-center">
+                    <img src={imgPat} alt="clock1" className="w-8 h-8 mb-2" />
+                    <strong className="font-FontNoto">คุณเช็คเอาท์เรียบร้อยแล้ว</strong>
+                </div>
+            );
 
-                await axios.post('https://localhost:7039/api/Worktime/CheckOut', formData);
+            setSimpleModal(true);
+            setModalOpen(true);
 
-                setModalMessage(
-                    <div className="flex flex-col items-center justify-center text-center">
-                        <img src={imgPat} alt="clock1" className="w-8 h-8 mb-2" />
-                        <strong className="font-FontNoto">คุณลงเวลาเลิกงานเรียบร้อย</strong>
-                    </div>
-                );
-                setSimpleModal(true);
-                setModalOpen(true);
+            // ปิดอัตโนมัติใน 3 วินาที
+            setTimeout(() => {
+                setModalOpen(false);
+                setModalMessage('');
+                setModalConfirmAction(null);
+                setSimpleModal(false);
+            }, 3000);
 
-                await fetchData(userID);
-
-                setTimeout(() => {
-                    setModalOpen(false);
-                    setModalMessage('');
-                    setModalConfirmAction(null);
-                    setSimpleModal(false);
-                }, 3000);
-            } catch (error) {
-                if (error.response && error.response.status === 400) {
-                    setModalMessage(error.response.data);
-                } else if (error.response && error.response.status === 404) {
-                    setModalMessage("ยังไม่มีการเช็คอินวันนี้");
+            await fetchData(userID);
+        } catch (error) {
+            if (error.response && error.response.status === 400) {
+                const errorText = error.response.data;
+                if (errorText.includes("เช็คเอาท์ไปแล้ว")) {
+                    setModalMessage("คุณได้เช็คเอาท์ไปแล้ว");
                 } else {
-                    setModalMessage("เกิดข้อผิดพลาดขณะเช็คเอาท์");
+                    setModalMessage(errorText);
                 }
-
-                setSimpleModal(false); // fallback เป็น modal ปกติ
-                setModalOpen(true);
+            } else {
+                setModalMessage("เกิดข้อผิดพลาดขณะเช็คเอาท์");
             }
-
-            setModalConfirmAction(null);
-        });
-        setModalOpen(true);
+        }
     };
+
 
     return (
         <div className="flex flex-col min-h-screen bg-gradient-to-r from-blue-100 via-white to-blue-200">
@@ -566,12 +555,13 @@ const LandingAfterLogin = () => {
                             </div>
                         )}
                         {/* ส่วนที่แก้ไขทั้งหมด - ตรงส่วนการแสดงเนื้อหาใน Modal */}
-                        {modalMessage ? (
+                        {modalMessage && leaveType !== 'ครึ่งวันเช้า' ? (
                             <p className="text-gray-700 mb-4 whitespace-pre-wrap font-FontNoto">{modalMessage}</p>
                         ) : (
                             <>
                                 {(() => {
                                     const nextLeave = getNextLeaveInfo();
+                                    console.log("🚩 nextLeave:", nextLeave);
 
                                     if (todayLeave) {
                                         return (
@@ -585,8 +575,8 @@ const LandingAfterLogin = () => {
                                                 </span>
                                             </div>
                                         );
-                                    } else if (nextLeave && !nextLeave.location?.includes('ครึ่งวัน')) {
-                                        // ลาล่วงหน้า แบบเต็มวัน → return ทันที
+                                    } else if (nextLeave) {
+                                        // แสดงลางานล่วงหน้า ทั้งเต็มวันและครึ่งวัน
                                         return (
                                             <div className="text-red-600 font-FontNoto mb-4 font-bold">
                                                 <div className="font-FontNoto">
@@ -605,7 +595,7 @@ const LandingAfterLogin = () => {
                                                 <div className="text-blue-600 font-FontNoto mb-4 font-bold">
                                                     เช็คอินแล้ววันนี้: {todayWorktime.checkIn}
                                                     {todayWorktime?.checkOut && (
-                                                        <div className="text-red-700 mt-2">
+                                                        <div className="text-red-700 mt-2 font-FontNoto">
                                                             เช็คเอาท์แล้วเวลา {todayWorktime.checkOut}
                                                         </div>
                                                     )}
@@ -782,12 +772,9 @@ const LandingAfterLogin = () => {
                         <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                     </div>
                 </div>
-
             )}
         </div>
-
     );
-
 };
 
 export default LandingAfterLogin;

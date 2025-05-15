@@ -20,33 +20,31 @@ function Document() {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false); // เพิ่ม state สำหรับควบคุมการกดปุ่ม
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [hrdocument, sethrdocunet] = useState([]);
   const [deleteDocumentId, setDeleteDocumentId] = useState(null);
-  const [deleteType, setDeleteType] = useState(null); // แยกประเภทเอกสาร
+  const [deleteType, setDeleteType] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState(null);
-  const [activeTab, setActiveTab] = useState('leave'); // ตั้งค่าแท็บเริ่มต้นเป็น "leave"
+  const [activeTab, setActiveTab] = useState('approvedLeave');
   const [historyState, sethistoryState] = useState(null)
+  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [inputPassword, setInputPassword] = useState("");
+  const [errorPassword, setErrorPassword] = useState("");
 
   const categoryMapping = {
-    Certificate: 'ใบลาป่วย',
-    WorkContract: 'ใบลากิจ',
-    Identification: 'ใบลาพักร้อน',
-    Maternity: 'ใบลาคลอด',
-    Ordination: 'ใบลาบวช',
-    Doc: 'เอกสารส่วนตัว',
+    sick: "ใบลาป่วย",
+    personal: "ใบลากิจ",
+    vacation: "ใบลาพักร้อน",
+    maternity: "ใบลาคลอด",
+    ordain: "ใบลาบวช",
     Others: 'อื่นๆ',
+    Doc: 'เอกสารส่วนตัว',
   };
 
-  const leavedTypeMapping = {
-    sick: "ลาป่วย",
-    business: "ลากิจ",
-    vacation: "ลาพักร้อน",
-    maternity: "ลาคลอด",
-    other: "ลาอื่นๆ",
-  };
+
   const getCategoryName = (leaveTypeId) => {
-    return leavedTypeMapping[leaveTypeId.toUpperCase()] || "ไม่ระบุหมวดหมู่";
+    return categoryMapping[leaveTypeId.toUpperCase()] || "ไม่ระบุหมวดหมู่";
   };
 
   const userID = localStorage.getItem('userId') || sessionStorage.getItem('userId');
@@ -65,31 +63,57 @@ function Document() {
   const fetchHistory = async (documentid) => {
     try {
       const res = await axios.get(`https://localhost:7039/api/Document/GetDocumentWithHistory/${documentid}`);
-      console.log("fetchHistory", res.data.historyleave)
+      const historyRes = res.data;
 
-      const historyRes = res.data.historyleave;
-      sethistoryState(historyRes)
+      console.log("📄 document from backend:", historyRes);
 
+      sethistoryState(historyRes.Historyleave);
+      setSelectedDoc(historyRes); // ✅ ให้แน่ใจว่า form มี writtenDate
     } catch (e) {
-      console.log(e)
+      console.log("❌ fetchHistory error:", e);
     }
   }
- 
   useEffect(() => {
     fetchDocuments();
 
   }, []);
-
   const handleOpenModal = async (filePathOrDoc) => {
+    const doc = typeof filePathOrDoc === 'object' ? filePathOrDoc : null;
+
     setSelectedFilePath(typeof filePathOrDoc === 'string' ? filePathOrDoc : null);
-    setSelectedDocument(typeof filePathOrDoc === 'object' ? filePathOrDoc : null);
+    setSelectedDocument(doc);
+    setSelectedDoc(doc); // ✅ เพิ่มบรรทัดนี้
     setPassword('');
     setIsModalOpen(true);
 
-    if (hrdocument.length > 0 && typeof filePathOrDoc === 'object' && filePathOrDoc.documentId) {
-      await fetchHistory(filePathOrDoc.documentId);
-    } else if (hrdocument.length > 0) {
-      await fetchHistory(hrdocument[0].documentId);
+    if (doc?.documentId) {
+      await fetchHistory(doc.documentId); // ✅ ป้องกัน error ถ้าไม่มี documentId
+    }
+  };
+
+
+  const handlePasswordSubmit = async () => {
+    try {
+      const response = await axios.post('https://localhost:7039/api/Files/VerifyPassword', {
+        userID: selectedDoc.userID,
+        password: inputPassword
+      });
+      if (response.data.isValid) {
+        setShowPasswordPrompt(false);
+        setErrorPassword("");
+        setInputPassword("");
+        if (selectedDoc?.filePath) {
+          window.open(`https://localhost:7039${selectedDoc.filePath}`, '_blank');
+        } else {
+          console.log("📄 selectedDoc data before createPDF", selectedDoc);
+          console.log("🧾 selectedDoc for PDF", form);
+          createPDF(selectedDoc);
+        }
+      } else {
+        setErrorPassword("รหัสไม่ถูกต้อง");
+      }
+    } catch (error) {
+      setErrorPassword("เกิดข้อผิดพลาดในการตรวจสอบรหัสผ่าน");
     }
   };
 
@@ -99,44 +123,45 @@ function Document() {
       return;
     }
 
-    const verifyPassword = async (userID, password) => {
-      try {
-        const data = JSON.stringify({
-          userID: userID,
-          passwordHash: password,
-        });
+    const userIDToUse = selectedDocument?.userID || userID;
 
-        const config = {
-          method: 'post',
-          maxBodyLength: Infinity,
-          url: 'https://localhost:7039/api/Files/VerifyPassword',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          data: data,
-        };
+    try {
+      const data = JSON.stringify({
+        userID: userIDToUse,
+        passwordHash: password,
+      });
 
-        const response = await axios.request(config);
+      const config = {
+        method: 'post',
+        url: 'https://localhost:7039/api/Files/VerifyPassword',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        data: data,
+      };
 
-        if (response.data.isValid) {
-          if (selectedFilePath) {
-            // เปิดไฟล์เอกสารอัปโหลด
-            window.open('https://localhost:7039' + selectedFilePath, '_blank');
-          } else if (selectedDocument) {
-            // สร้าง PDF สำหรับเอกสารใบลา
-            createPDF(selectedDocument);
-          }
-          setIsModalOpen(false); // ปิด modal
-        } else {
-          alert('รหัสผ่านไม่ถูกต้อง');
+      const response = await axios.request(config);
+
+      if (response.data.isValid) {
+        const fileExt = selectedDocument?.filePath?.split('.').pop().toLowerCase();
+
+        if (selectedDocument?.filePath && fileExt !== 'json') {
+          // ✅ กรณีมีไฟล์จริง เช่น PDF
+          window.open('https://localhost:7039' + selectedDocument.filePath, '_blank');
+        } else if (selectedDocument) {
+          createPDF(selectedDocument);
         }
-      } catch (error) {
-        console.error('Error verifying password:', error);
-        alert('เกิดข้อผิดพลาดในการตรวจสอบรหัสผ่าน');
-      }
-    };
 
-    verifyPassword(userID, password);
+        setIsModalOpen(false);
+        setErrorPassword('');
+        setInputPassword('');
+      } else {
+        setErrorPassword('รหัสไม่ถูกต้อง');
+      }
+    } catch (error) {
+      console.error('Error verifying password:', error);
+      setErrorPassword('เกิดข้อผิดพลาดในการตรวจสอบรหัสผ่าน');
+    }
   };
 
   const handleAddDocument = async (e) => {
@@ -164,7 +189,6 @@ function Document() {
         setIsSuccessModalOpen(true); // เปิดโมเดลสำเร็จ
         await fetchDocuments(); // โหลดข้อมูลใหม่
 
-        // รีเซ็ตฟอร์มหลังอัปโหลดสำเร็จ
         setNewDocument({
           category: '',
           file: null,
@@ -180,7 +204,7 @@ function Document() {
       setModalMessage('เกิดข้อผิดพลาดในการสร้างเอกสาร');
       setIsErrorModalOpen(true); // เปิดโมเดลล้มเหลว
     } finally {
-      setIsSubmitting(false); // ตั้งค่า isSubmitting กลับเป็น false
+      setIsSubmitting(false);
     }
   };
 
@@ -188,25 +212,25 @@ function Document() {
     const lowerSearchTerm = searchTerm.trim().toLowerCase(); // ตัดช่องว่างออกก่อนค้นหา
 
     if (lowerSearchTerm === "") {
-      // รีเซ็ตค่ากลับไปเป็นข้อมูลทั้งหมดตามแท็บที่เลือก
-      if (activeTab === "leave") {
-        sethrdocunet([...hrdocument]); // ใช้ spread operator เพื่อให้ React รู้ว่ามีการเปลี่ยนแปลง
+
+      if (activeTab === "approvedLeave") {
+        sethrdocunet([...hrdocument]);
       } else {
         setFilteredDocuments([...documents]);
       }
       return;
     }
 
-    if (activeTab === "leave") {
-      // ค้นหาเฉพาะในเอกสารใบลา
+    if (activeTab === "approvedLeave") {
+
       const filteredLeaves = hrdocument.filter(
         (doc) =>
           (doc.category && doc.category.toLowerCase().includes(lowerSearchTerm)) ||
-          (doc.reason && doc.reason.toLowerCase().includes(lowerSearchTerm))
+          (doc.description && doc.description.toLowerCase().includes(lowerSearchTerm))
       );
       sethrdocunet(filteredLeaves);
     } else {
-      // ค้นหาเฉพาะในเอกสารอัปโหลด
+
       const filteredUploads = documents.filter(
         (doc) =>
           (doc.category && doc.category.toLowerCase().includes(lowerSearchTerm)) ||
@@ -217,11 +241,10 @@ function Document() {
   };
 
   useEffect(() => {
-    if (activeTab === "leave") {
+    if (activeTab === "approvedLeave") {
       sethrdocunet([...hrdocument]);
     }
-  }, [activeTab]); // เรียกเมื่อเปลี่ยนแท็บ
-
+  }, [activeTab]);
 
   const handleDeleteDocument = async () => {
     if (!deleteDocumentId || !deleteType) return;
@@ -266,35 +289,11 @@ function Document() {
     handleCloseDeleteModal();
   };
 
-  const createPDF = async (doc) => {
-    if (!doc) {
+
+  const createPDF = (form) => {
+    if (!form) {
       alert("ไม่พบข้อมูลเอกสาร");
       return;
-    }
-
-    const userID = localStorage.getItem("userId") || sessionStorage.getItem("userId");
-
-    let userData = {
-      firstName: "",
-      lastName: "",
-      departmentName: "",
-      positionName: "",
-      address: "",
-      phoneNumber: ""
-    };
-
-    try {
-      const userResponse = await axios.get(`https://localhost:7039/api/User/${userID}`);
-      userData = userResponse.data || userData;
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      const fullNameParts = doc.fullName?.split(" ") || [];
-      userData.firstName = fullNameParts[0] || "ไม่ระบุ";
-      userData.lastName = fullNameParts[1] || "";
-      userData.departmentName = doc.department || "ไม่ระบุแผนก";
-      userData.positionName = doc.position || "ไม่ระบุตำแหน่ง";
-      userData.address = "ไม่ระบุที่อยู่";
-      userData.phoneNumber = "ไม่ระบุเบอร์โทร";
     }
 
     const formatDate = (date) => {
@@ -306,93 +305,57 @@ function Document() {
       }).format(new Date(date));
     };
 
-    const safeConcat = (firstName, lastName) => {
-      if (firstName && lastName) return `${firstName} ${lastName}`;
-      if (firstName) return firstName;
-      if (lastName) return lastName;
-      return "ไม่ระบุชื่อ";
-    };
-
-    const docData = {
-      createdAt: doc.createdAt || doc.uploadDate || new Date(),
-      fullName: doc.fullName || safeConcat(userData.firstName, userData.lastName),
-      department: doc.department || userData.departmentName || "ไม่ระบุแผนก",
-      position: doc.position || userData.positionName || "ไม่ระบุตำแหน่ง",
-      startDate: doc.startDate || doc.createdAt || doc.uploadDate,
-      endDate: doc.endDate || doc.createdAt || doc.uploadDate,
-      totalDays: doc.totalDays || "1",
-      reason: doc.reason || doc.description || "ไม่ระบุเหตุผล",
-      contact: doc.contact || `${userData.address} / ${userData.phoneNumber}`
-    };
-
-    let address = "ไม่ระบุที่อยู่";
-    let phone = "ไม่ระบุเบอร์โทร";
-
-    if (docData.contact && docData.contact.includes(" / ")) {
-      [address, phone] = docData.contact.split(" / ");
-    }
-
-    const leavedTypeMapping = {
-      sick: "ลาป่วย",
-      business: "ลากิจ",
-      vacation: "ลาพักร้อน",
-      maternity: "ลาคลอด",
-      ordination: "ลาบวช",
-      other: "ลาอื่นๆ"
-    };
-
-    const isHRDocument = doc.leaveType || doc.leaveTypeId;
-    let leaveTypeText = "ไม่ระบุ";
-
-    if (isHRDocument) {
-      const leaveTypeId = (doc.leaveTypeId || "").toLowerCase();
-      const leaveType = (doc.leaveType || "").toLowerCase();
-      leaveTypeText = leavedTypeMapping[leaveTypeId] || leavedTypeMapping[leaveType] || "ไม่ระบุ";
-    } else if (doc.category === "Leave") {
-      const description = (doc.description || "").toLowerCase();
-      if (description.includes("ป่วย")) leaveTypeText = "ลาป่วย";
-      else if (description.includes("กิจ")) leaveTypeText = "ลากิจ";
-      else if (description.includes("พักร้อน")) leaveTypeText = "ลาพักร้อน";
-      else if (description.includes("คลอด")) leaveTypeText = "ลาคลอด";
-      else if (description.includes("บวช")) leaveTypeText = "ลาบวช";
-      else leaveTypeText = "ตามที่ระบุในเอกสาร";
-    } else {
-      leaveTypeText = "ตามที่ระบุในเอกสาร";
-    }
-
     const docDefinition = {
       content: [
         { text: "แบบฟอร์มใบลา", style: "header" },
+        { text: `วันที่ : ${formatDate(form.writtenDate)}`, alignment: "right", margin: [0, 0, 0, 10] },
+        { text: `เรื่อง : ขออนุญาติลา : ${form.leaveType || '-'}`, margin: [0, 0, 0, 10] },
+        { text: `เรียน หัวหน้าแผนก/ฝ่ายบุคคล`, margin: [0, 0, 0, 10] },
         {
-          text: `วันที่: ${new Date(docData.createdAt).toLocaleDateString("th-TH", {
-            day: "2-digit", month: "2-digit", year: "numeric"
-          })}`,
-          alignment: "right", margin: [0, 0, 0, 10]
+          table: {
+            widths: ["auto", "*"],
+            body: [
+              ["ข้าพเจ้า :", `${form.fullName || '-'} แผนก ${form.department || '-'}`],
+              ["ขอลา :", `${form.leaveType || '-'} เนื่องจาก ${form.reason || '-'}`],
+              ["ช่วงเวลา :", form.timeType || '-'],
+              ["ตั้งแต่วันที่ :", `${formatDate(form.startDate)} ถึงวันที่ : ${formatDate(form.endDate)} รวม ${form.totalDays || '0'} วัน`],
+              ["ข้าพเจ้าได้ลา :", `${form.lastLeaveType || '-'} ครั้งสุดท้าย ตั้งแต่วันที่ : ${formatDate(form.lastLeaveStart)} ถึงวันที่ : ${formatDate(form.lastLeaveEnd)} รวม ${form.lastLeaveDays || '0'} วัน`]
+            ]
+          },
+          layout: "noBorders",
+          margin: [0, 0, 0, 20]
         },
-
-
-        { text: `เรื่อง: ขออนุญาตลา ${leaveTypeText}`, margin: [0, 0, 0, 10] },
-        { text: "เรียน หัวหน้าแผนก/ฝ่ายบุคคล", margin: [0, 0, 0, 10] },
-        { text: `ข้าพเจ้า: ${docData.fullName}`, margin: [0, 0, 0, 5] },
-        { text: `แผนก: ${docData.department}`, margin: [0, 0, 0, 5] },
-        { text: `ตำแหน่ง: ${docData.position}`, margin: [0, 0, 0, 5] },
-        { text: `ขอลาในช่วงวันที่: ${formatDate(docData.startDate)} ถึง ${formatDate(docData.endDate)}`, margin: [0, 0, 0, 5] },
-        { text: `จำนวน: ${docData.totalDays} วัน`, margin: [0, 0, 0, 5] },
-        { text: `เนื่องจาก: ${docData.reason}`, margin: [0, 0, 0, 10] },
-        { text: "สามารถติดต่อข้าพเจ้าได้ที่:", bold: true, margin: [0, 10, 0, 5] },
-        { text: `ที่อยู่: ${address}`, margin: [0, 0, 0, 3] },
-        { text: `เบอร์โทรศัพท์: ${phone}`, margin: [0, 0, 0, 3] },
-        { text: "ขอแสดงความนับถือ", alignment: "right", margin: [0, 20, 0, 10] },
-        { text: "(ลงชื่อ) ...............................................", alignment: "right", margin: [0, 0, 0, 5] },
-        { text: `( ${docData.fullName} )`, alignment: "right" }
+        {
+          text: `ในระหว่างลา ติดต่อข้าพเจ้าได้ที่ : ${form.contactAddress || '-'}, เบอร์ติดต่อ ${form.contactPhone || '-'}`,
+          margin: [0, 0, 0, 20]
+        },
+        {
+          text: `สถิติการลาในปีนี้ (วันเริ่มงาน: ${formatDate(form.joinDate)})`, style: "subheader", margin: [0, 0, 0, 10]
+        },
+        {
+          table: {
+            widths: ["auto", "*", "*", "*"],
+            body: [
+              ["ประเภทลา", "ลามาแล้ว", "ลาครั้งนี้", "รวมเป็น"],
+              ...Object.entries(form.leaveStats || {}).map(([type, stats]) => [
+                type, stats.used || 0, stats.current || 0, stats.total || 0
+              ])
+            ]
+          },
+          margin: [0, 0, 0, 20]
+        },
+        { text: `ขอแสดงความนับถือ`, alignment: "right", margin: [0, 20, 0, 0] },
+        {
+          columns: [
+            { width: '50%', text: `ลงชื่อ ..................................................`, alignment: "center" },
+            { width: '50%', text: `(${form.fullName || '-'})`, alignment: "center" }
+          ],
+          margin: [0, 20, 0, 0]
+        }
       ],
       styles: {
-        header: {
-          fontSize: 20,
-          bold: true,
-          alignment: "center",
-          margin: [0, 0, 0, 10]
-        }
+        header: { fontSize: 18, bold: true, alignment: "center" },
+        subheader: { fontSize: 16, bold: true }
       },
       defaultStyle: {
         font: "THSarabunNew",
@@ -400,9 +363,10 @@ function Document() {
       }
     };
 
-    pdfMake.createPdf(docDefinition).download(`เอกสารใบลา_${leaveTypeText}.pdf`);
-    console.log("DOC:", doc);
-    console.log("createdAt:", doc.createdAt);
+    pdfMake.createPdf(docDefinition).download("ใบลาที่อนุมัติแล้ว.pdf");
+    console.log("📅 writtenDate:", form.writtenDate);
+    console.log("📅 formatted date:", formatDate(form.writtenDate));
+
   };
 
   const handleFileChange = (e) => {
@@ -424,7 +388,7 @@ function Document() {
       </div>
       <h2 className="text-2xl font-bold text-black font-FontNoto"></h2>
       <div className="max-w-screen-lg mx-auto bg-transparent rounded-lg p-3">
-
+        {/* Modal ใส่รหัสผ่าน */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-[400px] relative">
@@ -501,7 +465,7 @@ function Document() {
             </div>
           </div>
         )}
-
+        {/* Modal สำเร็จ */}
         {isSuccessModalOpen && (
           <dialog id="success_modal" className="modal" open>
             <div className="modal-box">
@@ -518,7 +482,61 @@ function Document() {
             </div>
           </dialog>
         )}
+        {showPasswordPrompt && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+              <h2 className="text-lg font-bold mb-4 font-FontNoto">ใส่รหัสเพื่อดูใบลา</h2>
+              <input
+                type={showPassword ? "text" : "password"}
+                className="input input-bordered w-full mb-4 font-FontNoto"
+                placeholder="ใส่รหัสผ่าน"
+                value={password}
+                onChange={(e) => {
+                  if (!/[ก-๙]/.test(e.target.value)) {
+                    setPassword(e.target.value);
+                  }
+                }}
+                onKeyPress={(e) => {
+                  if (/[ก-๙]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+              />
+              <div className="flex items-center gap-2 mb-4">
+                <input
+                  type="checkbox"
+                  checked={showPassword}
+                  onChange={() => setShowPassword(!showPassword)}
+                  className="checkbox"
+                />
+                <label className="font-FontNoto">แสดงรหัสผ่าน</label>
+              </div>
+              {errorPassword && (
+                <p className="text-red-500 text-sm mb-2 font-FontNoto">{errorPassword}</p>
+              )}
+              <div className="flex justify-end gap-2">
+                <button
+                  className="btn font-FontNoto"
+                  onClick={() => {
+                    setShowPasswordPrompt(false);
+                    setInputPassword("");
+                    setErrorPassword("");
+                  }}
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  className="btn btn-primary font-FontNoto"
+                  onClick={handlePasswordSubmit}
+                >
+                  ยืนยัน
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
+        {/* Modal ล้มเหลว */}
         {isErrorModalOpen && (
           <dialog id="error_modal" className="modal" open>
             <div className="modal-box">
@@ -536,6 +554,7 @@ function Document() {
           </dialog>
         )}
 
+        {/* Form อัปโหลดเอกสาร */}
         <form
           onSubmit={handleAddDocument}
           className="space-y-4 mb-8 bg-base-100 p-4 rounded-lg shadow"
@@ -577,17 +596,14 @@ function Document() {
               </label>
               <input
                 type="file"
-                className="file-input file-input-bordered font-FontNoto"
+                className="file-input file-input-sm file-input-bordered font-FontNoto"
                 onChange={handleFileChange}
               />
+
             </div>
           </div>
           <div className="relative mt-4 w-full">
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/337/337946.png"
-              alt="document cute"
-              className="w-8 h-8 absolute -top-3 -left-3 rotate-[-10deg]"
-            />
+
             <button
               className="btn btn-outline btn-primary w-full font-FontNoto relative"
               type="submit"
@@ -597,38 +613,46 @@ function Document() {
             </button>
           </div>
         </form>
-
-        <div className="bg-base-100 p-4 rounded-lg shadow mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex flex-col sm:flex-row w-full font-FontNoto text-base gap-2 sm:gap-2">
+        <div className="bg-base-100 p-4 rounded-lg shadow mb-8 font-FontNoto max-w-full overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full">
+            {/* ปุ่มแท็บ (2 ปุ่ม) */}
+            <div className="flex flex-col sm:flex-row w-full sm:w-2/3 gap-3">
               <button
-                className={`w-full sm:w-1/3 px-4 py-2 rounded-lg transition-all ${activeTab === 'uploaded'
-                  ? 'bg-[#87CEFA] text-white font-bold shadow'
-                  : 'bg-[#F2F9FC] text-[#6B7A8F] hover:bg-[#B0D6F1] hover:text-white'}`}
+                className={`flex-1 px-4 py-2 rounded-lg font-FontNoto transition-all text-center
+          ${activeTab === 'uploaded'
+                    ? 'bg-[#87CEFA] text-white font-bold shadow'
+                    : 'bg-[#F2F9FC] text-[#6B7A8F] hover:bg-[#B0D6F1] hover:text-white'
+                  }`}
                 onClick={() => setActiveTab('uploaded')}
               >
                 เอกสารอัปโหลด
               </button>
 
               <button
-                className={`w-full sm:w-1/3 px-4 py-2 rounded-lg transition-all ${activeTab === 'approvedLeave'
-                  ? 'bg-[#87CEFA] text-white font-bold shadow'
-                  : 'bg-[#F2F9FC] text-[#6B7A8F] hover:bg-[#B0D6F1] hover:text-white'}`}
+                className={`flex-1 px-4 py-2 rounded-lg font-FontNoto transition-all text-center
+          ${activeTab === 'approvedLeave'
+                    ? 'bg-[#87CEFA] text-white font-bold shadow'
+                    : 'bg-[#F2F9FC] text-[#6B7A8F] hover:bg-[#B0D6F1] hover:text-white'
+                  }`}
                 onClick={() => setActiveTab('approvedLeave')}
               >
                 เอกสารการลา
               </button>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            {/* ช่องค้นหาและปุ่มค้นหา */}
+            <div className="flex flex-row gap-2 w-full sm:w-1/3 items-center max-w-full min-w-0">
               <input
                 type="text"
-                className="input input-bordered flex-grow font-FontNoto max-w-sm"
+                className="input input-bordered flex-grow max-w-full min-w-0 font-FontNoto"
                 placeholder="ค้นหาชื่อเอกสาร..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className="btn btn-outline btn-success font-FontNoto" onClick={handleSearch}>
+              <button
+                className="btn btn-outline btn-success whitespace-nowrap max-w-[120px] shrink-0 font-FontNoto"
+                onClick={handleSearch}
+              >
                 ค้นหา
               </button>
             </div>
@@ -637,42 +661,52 @@ function Document() {
 
         {activeTab === 'approvedLeave' && (
           <div className="bg-base-100 p-6 rounded-lg shadow-lg font-FontNoto">
-            <h3
-              className="text-xl font-bold text-black mb-4 font-FontNoto cursor-pointer hover:text-blue-600 transition"
-              onClick={() => {
-                const approvedDoc = documents.find(doc => doc.category === 'Leave');
-                if (approvedDoc) {
-                  createPDF(approvedDoc);
-                } else {
-                  alert("ไม่พบเอกสารใบลาที่อนุมัติแล้ว");
-                }
-              }}
-            >
-              เอกสารการลา (อนุมัติแล้ว)
-            </h3>
-
-            {documents.filter(doc => doc.category === 'Leave').length > 0 ? (
+            <h3 className="text-xl font-bold text-black mb-4 font-FontNoto">เอกสารการลา (อนุมัติแล้ว)</h3>
+            {documents.filter(doc =>
+              ["sick", "personal", "vacation", "maternity", "ordain"].includes(doc.category)
+            ).length > 0 ? (
               <ul className="space-y-4">
                 {documents
-                  .filter(doc => doc.category === 'Leave')
+                  .filter(doc =>
+                    ["sick", "personal", "vacation", "maternity", "ordain"].includes(doc.category)
+                  ) // ✅ แก้ตรงนี้
                   .map((doc) => {
+                    const fileExtension = doc.filePath ? doc.filePath.split('.').pop().toLowerCase() : null;
                     const uploadDate = doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString('th-TH') : "-";
+
+                    const categoryMapping = {
+                      Ordination: 'ใบลาบวช',
+                      Doc: 'เอกสารส่วนตัว',
+                      sick: "ใบลาป่วย",
+                      personal: "ใบลากิจ",
+                      vacation: "ใบลาพักร้อน",
+                      maternity: "ใบลาคลอด",
+                      ordain: "ใบลาบวช",
+                      Others: 'อื่นๆ',
+                    };
+
+                    const displayCategory = categoryMapping[doc.category] || "ไม่ระบุหมวดหมู่";
+
                     return (
                       <li key={doc.fileID} className="p-4 bg-white rounded-lg shadow flex justify-between items-center">
                         <div>
-                          <h4 className="text-lg font-bold font-FontNoto">{doc.description || "ใบลา"}</h4>
-                          <p className="text-sm text-gray-600 font-FontNoto">วันที่อัปโหลด: {uploadDate}</p>
-                          <p className="text-sm text-gray-600 font-FontNoto">หมวดหมู่: ใบลา</p>
-                          <p className="text-sm text-gray-600 font-FontNoto">นามสกุลไฟล์: pdf</p>
+                          <h4 className="text-lg font-bold font-FontNoto">{doc.description}</h4>
+                          <p className="text-sm text-gray-600 font-FontNoto">หมวดหมู่เอกสาร: {displayCategory}</p>
+                           <p className="text-sm text-gray-600 font-FontNoto">วันที่อัปโหลด: {uploadDate}</p>
+                          <p className="text-sm text-gray-600 font-FontNoto">นามสกุลไฟล์: {fileExtension}</p>
                         </div>
-                        <div className="flex gap-2">
-                          <button
-                            className="btn btn-outline btn-success font-FontNoto"
-                            onClick={() => createPDF(doc)}
-                          >
-                            ดาวน์โหลด PDF
-                          </button>
-                        </div>
+                        <button
+                          className="btn btn-outline btn-info font-FontNoto"
+                          onClick={() => {
+                            setSelectedFilePath(null);
+                            setSelectedDocument(doc);
+                            setPassword('');
+                            setErrorPassword('');
+                            setIsModalOpen(true);
+                          }}
+                        >
+                          ดูใบลา
+                        </button>
                       </li>
                     );
                   })}
@@ -688,7 +722,7 @@ function Document() {
             <h3 className="text-xl font-bold text-black mb-4 font-FontNoto">เอกสารอัปโหลด</h3>
             <ul className="space-y-4 font-FontNoto">
               {filteredDocuments
-                .filter((doc) => doc.category !== 'Leave') // ✅ กรองออกใบลา
+                .filter(doc => ["Others", "Doc"].includes(doc.category))
                 .map((doc) => {
                   const fileExtension = doc.filePath ? doc.filePath.split('.').pop().toLowerCase() : "ไม่พบข้อมูล";
                   const uploadDate = doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString('th-TH') : "จาก HR";
@@ -709,14 +743,16 @@ function Document() {
                   );
                 })}
             </ul>
-            {filteredDocuments.filter((doc) => doc.category !== 'Leave').length === 0 && (
-              <p className="text-gray-500 text-center mt-4 font-FontNoto">ไม่มีเอกสารอัปโหลด</p>
-            )}
+
+            {filteredDocuments
+              .filter(doc => ["Others", "Doc"].includes(doc.category))
+              .length === 0 && (
+                <p className="text-gray-500 text-center mt-4 font-FontNoto">ไม่มีเอกสารอัปโหลด</p>
+              )}
           </div>
         )}
       </div>
     </div>
-
   );
 }
 

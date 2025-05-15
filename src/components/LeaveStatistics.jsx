@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Bar } from "react-chartjs-2";
-import { Link } from "react-router-dom";
 import axios from "axios";
-import { Icon } from "@iconify/react"; // ใช้ Icons8
-
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,241 +8,61 @@ import {
   Title,
   Tooltip,
   Legend,
+  ArcElement,
+  LineElement,
+  PointElement
 } from "chart.js";
+import { Bar, Pie, Line } from "react-chartjs-2";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const LeaveStatistics = () => {
-  const [employeeNames, setEmployeeNames] = useState([]);
-  const [fileData, setFileData] = useState({});
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const userId = sessionStorage.getItem("userId") || "";
+  const [leaveHistory, setLeaveHistory] = useState([]);
+  const [leaveTypes, setLeaveTypes] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [categoryCounts, setCategoryCounts] = useState({});
-  const [documentTypes, setDocumentTypes] = useState([]);
+  const [departmentStats, setDepartmentStats] = useState({});
+  const [monthlyStats, setMonthlyStats] = useState(Array(12).fill(0));
+  const [typeStats, setTypeStats] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState("all");
+  const [selectedDepartment, setSelectedDepartment] = useState("all");
 
-  const categoryMapping = {
-    Certificate: 'ลาป่วย',
-    WorkContract: 'ลากิจ',
-    Identification: 'ลาพักร้อน',
-    Maternity: 'ลาคลอด',
-    Ordination: 'ลาบวช',
+  // ตัวแปรสำหรับการแปลงค่าต่างๆ
+  const typeMap = {
+    "ป่วย": "sick",
+    "กิจส่วนตัว": "personal",
+    "พักร้อน": "vacation",
+    "บวช": "ordain",
+    "ลาคลอด": "maternity"
   };
-  const categoryMappingg = {
-    "A461E72F-B9A3-4F9D-BF69-1BBE6EA514EC": "ลาป่วย",
-    "6CF7C54A-F9BA-4151-A554-6487FDD7ED8D": "ลาพักร้อน",
-    "1799ABEB-158C-479E-A9DC-7D45E224E8ED": "ลากิจ",
-    "DAA14555-28E7-497E-B1D8-E0DA1F1BE283": "ลาคลอด",
-    "AE3C3A05-1FCB-4B8A-9044-67A83E781ED6": "ลาบวช",
+  
+  const labelMap = {
+    sick: "ป่วย",
+    personal: "กิจส่วนตัว",
+    vacation: "พักร้อน",
+    ordain: "บวช",
+    maternity: "ลาคลอด"
   };
-
-  const iconMapping = {
-    "ลาป่วย": "https://img.icons8.com/ios-filled/50/survival-bag.png",
-    "ลากิจ": "https://img.icons8.com/ios-filled/50/leave-house.png",
-    "ลาพักร้อน": "https://img.icons8.com/ios-filled/50/beach.png",
-    "ลาคลอด": "https://img.icons8.com/glyph-neue/64/mothers-health.png",
-    "ลาบวช": "https://img.icons8.com/external-ddara-fill-ddara/64/external-monk-religion-buddha-Buddhist-meditation-Buddhism-goodness-avatar-ddara-fill-ddara.png",
-  };
-
-  useEffect(() => {
-    const fetchFileData = async () => {
-      try {
-        const filesResponse = await axios.get("https://localhost:7039/api/Files");
-        const usersResponse = await axios.get("https://localhost:7039/api/Users");
-        const leaveResponse = await axios.get("https://localhost:7039/api/Document/GetAllCommitedDocuments");
-
-        console.log("📌 จำนวนพนักงานที่ดึงมา:", usersResponse.data.length);
-
-        const userMapping = usersResponse.data.reduce((acc, user) => {
-          acc[user.userID] = `${user.firstName} ${user.lastName}`;
-          return acc;
-        }, {});
-
-        const docTypes = Object.values(categoryMapping); // ใช้ชื่อไทยจาก categoryMapping
-        setDocumentTypes(docTypes);
-
-        const groupedData = {};
-        const categoryCountData = {}; // ตัวแปรสำหรับนับ category
-
-        usersResponse.data.forEach((user) => {
-          const userName = `${user.firstName} ${user.lastName}`;
-          groupedData[userName] = docTypes.reduce((typeCount, type) => {
-            typeCount[type] = 0;
-            return typeCount;
-          }, {});
-        });
-
-        leaveResponse.data.forEach((doc) => {
-          if (!doc || !doc.userId) {
-            console.warn("⚠️ พบข้อมูลเอกสารที่ไม่มี userId:", doc);
-            return;
-          }
-
-          const docDate = new Date(doc.startdate);
-          if (docDate.getMonth() === selectedMonth && docDate.getFullYear() === selectedYear) {
-            const leaveTypeKey = doc.leaveTypeId?.trim().toUpperCase();
-            console.log("🔍 ตรวจสอบ leaveTypeKey:", leaveTypeKey);
-            console.log("🛠️ categoryMappingg:", categoryMappingg);
-
-            if (!categoryMappingg.hasOwnProperty(leaveTypeKey)) {
-              console.warn("⚠️ ไม่มีค่าใน categoryMappingg สำหรับ leaveTypeKey:", leaveTypeKey);
-              return;
-            }
-
-            const leaveName = categoryMappingg[leaveTypeKey];
-            console.log("📌 leaveName ที่ได้:", leaveName);
-
-            if (!leaveName) {
-              console.warn("⚠️ ไม่พบประเภทใบลา:", leaveTypeKey);
-              return;
-            }
-
-            const userName = userMapping[doc.userId];
-
-            if (!userName || userName === "Unknown") {
-              console.warn("⚠️ ข้ามข้อมูลของพนักงานที่ไม่รู้จัก:", doc);
-              return;
-            }
-
-            console.log("👤 userName:", userName);
-
-            if (!groupedData[userName]) {
-              groupedData[userName] = {};
-            }
-
-            if (!groupedData[userName].hasOwnProperty(leaveName)) {
-              console.warn(`⚠️ ไม่พบประเภทใบลา '${leaveName}' ใน groupedData[${userName}]. กำหนดค่าเริ่มต้นเป็น 0`);
-              groupedData[userName][leaveName] = 0;
-            }
-
-            groupedData[userName][leaveName] += 1;
-            categoryCountData[leaveName] = (categoryCountData[leaveName] || 0) + 1;
-          }
-        });
-
-        filesResponse.data
-          .filter((file) => file.category !== "Others" && file.category !== "Doc")
-          .forEach((file) => {
-            if (!file || !file.userID) {
-              console.warn("⚠️ พบไฟล์ที่ไม่มี userID:", file);
-              return;
-            }
-
-            const fileDate = new Date(file.uploadDate);
-            if (fileDate.getMonth() === selectedMonth && fileDate.getFullYear() === selectedYear) {
-              const userName = userMapping[file.userID];
-
-              if (!userName || userName === "Unknown") {
-                console.warn("⚠️ ข้ามเอกสารของพนักงานที่ไม่รู้จัก:", file);
-                return;
-              }
-
-              const thaiCategory = categoryMapping[file.category];
-
-              if (thaiCategory) {
-                if (!groupedData[userName]) {
-                  groupedData[userName] = {};
-                }
-
-                groupedData[userName][thaiCategory] = (groupedData[userName][thaiCategory] || 0) + 1;
-                categoryCountData[thaiCategory] = (categoryCountData[thaiCategory] || 0) + 1;
-              }
-            }
-          });
-
-        setEmployeeNames(Object.keys(groupedData).filter(name => name !== "Unknown"));
-        setFileData(groupedData);
-        setCategoryCounts(categoryCountData);
-
-        console.log("📌 รายชื่อพนักงานที่ได้หลังอัปเดต:", Object.keys(groupedData));
-
-      } catch (error) {
-        console.error("❌ Error fetching file data:", error);
-      }
-    };
-
-    fetchFileData();
-  }, [selectedMonth, selectedYear]);
-
-
-  const createChartData = () => {
-    const totalDocuments = employeeNames.map((name) =>
-      documentTypes.reduce((sum, type) => sum + (fileData[name][type] || 0), 0)
-    );
-
-    const colors = [
-      "#81C784", // เขียวพาสเทลสดใส (ใบลาป่วย)
-      "#64B5F6", // ฟ้าพาสเทล (ใบลากิจ)
-      "#FF8A65", // ส้มพาสเทลสด (ใบลาพักร้อน)
-      "#F48FB1", // ชมพูพาสเทลชัด (ใบลาคลอด)
-      "#FFD54F", // เหลืองพาสเทลสด (ใบลาบวช)
-    ];
-
-    const datasets = [
-      ...documentTypes.map((type, index) => ({
-        label: type,
-        data: employeeNames.map((name) => fileData[name][type] || 0),
-        backgroundColor: colors[index % colors.length], // ใช้สีวนซ้ำหากจำนวนประเภทเอกสารเกินสีที่กำหนด
-      })),
-      {
-        label: "รวมใบลา",
-        data: totalDocuments,
-        backgroundColor: "#90A4AE", // สีสำหรับข้อมูลรวม
-      },
-    ];
-
-    return {
-      labels: employeeNames,
-      datasets: datasets,
-    };
-  };
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      tooltip: {
-        callbacks: {
-          label: (tooltipItem) => {
-            const datasetLabel = tooltipItem.dataset.label; // ชื่อประเภทเอกสาร
-            const value = tooltipItem.raw; // ค่าของข้อมูลในจุดนี้
-            return `${datasetLabel}: ${value}`; // แสดงชื่อเอกสารและจำนวน
-          },
-        },
-      },
-    },
-    scales: {
-      x: {
-        ticks: {
-          font: {
-            size: 12,
-          },
-        },
-      },
-      y: {
-        ticks: {
-          stepSize: 1,
-          callback: function (value) {
-            return Math.floor(value);
-          },
-        },
-        title: {
-          display: true,
-          text: "จำนวนการลา",
-          font: {
-            size: 14,
-          },
-        },
-      },
-    },
-    layout: {
-      padding: {
-        top: 20,
-        bottom: 20,
-      },
-    },
-    barThickness: 15, // ลดความหนาของแท่งกราฟ
+  
+  const roleMapping = {
+    Hr: "ทรัพยากรบุคคล",
+    GM: "ผู้จัดการทั่วไป",
+    Dev: "นักพัฒนาระบบ",
+    BA: "นักวิเคราะห์ธุรกิจ",
+    Employee: "พนักงาน",
   };
 
   const months = [
@@ -254,67 +70,471 @@ const LeaveStatistics = () => {
     "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
   ];
 
-  const years = Array.from({ length: 11 }, (_, i) => 2024 + i); // ปี 2024 ถึง 2034
+  const statusColors = {
+    Pending: "#FFD700",
+    ApprovedByHR: "#4CAF50",
+    Rejected: "#F44336"
+  };
+
+  const leaveTypeColors = {
+    "ป่วย": "#81C784", // เขียว
+    "กิจส่วนตัว": "#64B5F6", // ฟ้า
+    "พักร้อน": "#FF8A65", // ส้ม
+    "บวช": "#FFD54F", // เหลือง
+    "ลาคลอด": "#F48FB1", // ชมพู
+  };
+
+  // อาเรย์สำหรับปีที่แสดงในดรอปดาวน์
+  const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i);
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedYear, selectedUser, selectedDepartment]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      await Promise.all([
+        fetchLeaveTypes(),
+        fetchUsers(),
+        fetchLeaveHistory()
+      ]);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setLoading(false);
+    }
+  };
+
+  const fetchLeaveTypes = async () => {
+    try {
+      const res = await axios.get("https://localhost:7039/api/Document/GetLeaveTypes");
+      setLeaveTypes(res.data);
+    } catch (error) {
+      console.error("Error fetching leave types:", error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const res = await axios.get("https://localhost:7039/api/Users");
+      setUsers(res.data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  const fetchLeaveHistory = async () => {
+    try {
+      // เรียกข้อมูลการลาทั้งหมด
+      let url = "https://localhost:7039/api/LeaveRequest";
+      
+      // ถ้าเป็น HR หรือ GM ให้ดูข้อมูลรวมได้ แต่ถ้าเป็นพนักงานทั่วไปให้ดูได้เฉพาะของตัวเอง
+      // ในตัวอย่างนี้เราจะดึงข้อมูลทั้งหมดมาก่อน แล้วค่อยกรองทีหลัง
+      const res = await axios.get(url);
+      
+      if (res.status === 200) {
+        // กรองข้อมูลตามปีที่เลือก
+        const filteredData = res.data.filter(item => {
+          const leaveYear = new Date(item.startDate).getFullYear();
+          return leaveYear === selectedYear;
+        });
+        
+        // กรองตามพนักงานที่เลือก (ถ้าเลือกพนักงานเฉพาะ)
+        const userFiltered = selectedUser === "all" 
+          ? filteredData 
+          : filteredData.filter(item => item.userID === selectedUser);
+        
+        // กรองตามแผนกที่เลือก (ถ้าเลือกแผนกเฉพาะ)
+        let deptFiltered = userFiltered;
+        if (selectedDepartment !== "all") {
+          const usersByDept = users.filter(user => user.role === selectedDepartment).map(u => u.userID);
+          deptFiltered = userFiltered.filter(item => usersByDept.includes(item.userID));
+        }
+        
+        setLeaveHistory(deptFiltered);
+        
+        // ประมวลผลข้อมูลสำหรับกราฟต่างๆ
+        processLeaveData(deptFiltered);
+      }
+    } catch (error) {
+      console.error("Error fetching leave history:", error);
+    }
+  };
+
+  const processLeaveData = (data) => {
+    // ประมวลผลข้อมูลตามแผนก
+    const deptData = {};
+    // ประมวลผลข้อมูลตามประเภทการลา
+    const typeData = {};
+    // ประมวลผลข้อมูลตามเดือน
+    const monthData = Array(12).fill(0);
+    
+    // เตรียมข้อมูลเริ่มต้น
+    leaveTypes.forEach(type => {
+      typeData[type.leaveTypeTh] = 0;
+    });
+    
+    Object.keys(roleMapping).forEach(role => {
+      deptData[roleMapping[role]] = 0;
+    });
+    
+    // ประมวลผลข้อมูล
+    data.forEach(item => {
+      // นับข้อมูลตามประเภทการลา
+      if (typeData.hasOwnProperty(item.leaveType)) {
+        typeData[item.leaveType]++;
+      }
+      
+      // นับข้อมูลตามเดือน
+      const month = new Date(item.startDate).getMonth();
+      monthData[month]++;
+      
+      // นับข้อมูลตามแผนก (ต้องหาแผนกของผู้ใช้ก่อน)
+      const user = users.find(u => u.userID === item.userID);
+      if (user && deptData.hasOwnProperty(roleMapping[user.role])) {
+        deptData[roleMapping[user.role]]++;
+      }
+    });
+    
+    setDepartmentStats(deptData);
+    setTypeStats(typeData);
+    setMonthlyStats(monthData);
+  };
+
+  // สร้างข้อมูลสำหรับกราฟแท่งประเภทการลา
+  const createLeaveTypeData = () => {
+    return {
+      labels: Object.keys(typeStats),
+      datasets: [
+        {
+          label: 'จำนวนการลา',
+          data: Object.values(typeStats),
+          backgroundColor: Object.keys(typeStats).map(type => leaveTypeColors[type] || '#777'),
+          borderColor: Object.keys(typeStats).map(type => leaveTypeColors[type] || '#777'),
+          borderWidth: 1,
+        },
+      ],
+    };
+  };
+
+  // สร้างข้อมูลสำหรับกราฟแท่งแผนก
+  const createDepartmentData = () => {
+    return {
+      labels: Object.keys(departmentStats),
+      datasets: [
+        {
+          label: 'จำนวนการลา',
+          data: Object.values(departmentStats),
+          backgroundColor: [
+            '#FFB74D', // ส้มอ่อน
+            '#9575CD', // ม่วง
+            '#4FC3F7', // ฟ้า
+            '#AED581', // เขียวอ่อน
+            '#F06292', // ชมพู
+          ],
+          borderWidth: 1,
+        },
+      ],
+    };
+  };
+
+  // สร้างข้อมูลสำหรับกราฟเส้นรายเดือน
+  const createMonthlyData = () => {
+    return {
+      labels: months,
+      datasets: [
+        {
+          label: 'จำนวนการลารายเดือน',
+          data: monthlyStats,
+          fill: false,
+          borderColor: '#3F51B5',
+          backgroundColor: '#3F51B5',
+          tension: 0.1,
+          pointBackgroundColor: '#3F51B5',
+          pointRadius: 4,
+        },
+      ],
+    };
+  };
+
+  // สร้างข้อมูลสำหรับกราฟวงกลมประเภทการลา
+  const createPieData = () => {
+    return {
+      labels: Object.keys(typeStats),
+      datasets: [
+        {
+          data: Object.values(typeStats),
+          backgroundColor: Object.keys(typeStats).map(type => leaveTypeColors[type] || '#777'),
+        },
+      ],
+    };
+  };
+
+  // ตัวเลือกสำหรับกราฟแท่ง
+  const barOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'สถิติการลาแยกตามประเภท',
+        font: {
+          size: 16,
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+        },
+      },
+    },
+  };
+
+  // ตัวเลือกสำหรับกราฟเส้น
+  const lineOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'สถิติการลารายเดือน',
+        font: {
+          size: 16,
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+        },
+      },
+    },
+  };
+
+  // ตัวเลือกสำหรับกราฟวงกลม
+  const pieOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'right',
+      },
+      title: {
+        display: true,
+        text: 'สัดส่วนการลาแต่ละประเภท',
+        font: {
+          size: 16,
+        },
+      },
+    },
+  };
 
   return (
     <div className="flex flex-col w-full">
+      {/* ส่วนหัว */}
       <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
         <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
-          สถิติการลาพนักงาน
+          รายงานสถิติการลาพนักงาน
         </h1>
-        <p className="text-xs sm:text-sm mt-1 font-FontNoto">กราฟตรวจสอบข้อมูลการลาของพนักงาน</p>
+        <p className="text-xs sm:text-sm mt-1 font-FontNoto">
+          วิเคราะห์ข้อมูลการลาของพนักงานตามประเภท แผนก และช่วงเวลา
+        </p>
       </div>
-      <div className="p-3">
-        <div className="flex items-center justify-end space-x-4 mb-4">
-          <select
-            id="monthSelect"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-            className="select select-bordered w-40 text-black font-FontNoto"
-          >
-            {months.map((month, index) => (
-              <option className="font-FontNoto" key={index} value={index}>{month}</option>
-            ))}
-          </select>
-          <select
-            id="yearSelect"
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            className="select select-bordered w-40 text-black font-FontNoto"
-          >
-            {years.map((year) => (
-              <option className="font-FontNoto" key={year} value={year}>{year}</option>
-            ))}
-          </select>
-        </div>
-        {/* ข้อมูลประเภทเอกสาร */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
-          {Object.keys(categoryCounts).map((category) => (
-            <div key={category} className="bg-white border border-black p-4 rounded-lg shadow-md flex flex-col items-center">
-              <div className="flex flex-col items-center justify-center">
-                <h3 className="text-lg font-bold font-FontNoto mb-2">{category}</h3>
-                <div className="flex items-center space-x-2">
-                  <img src={iconMapping[category]} alt={category} className="w-7 h-7" />
-                  <p className="text-3xl font-FontNoto">{categoryCounts[category] || 0}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
 
-        <div className="w-full mt-6 md:mt-10 flex justify-center px-2">
-          <div className="bg-base-100 shadow-lg p-4 rounded-lg w-full max-w-screen-md min-h-[250px]">
-            <h3 className="text-lg font-bold text-black mb-4 font-FontNoto text-center">
-              สถิติการลาของพนักงาน
-            </h3>
-            <div className="relative w-full overflow-x-auto">
-              <div className="min-w-[600px] h-[350px] sm:h-[400px]">
-                <Bar className="font-FontNoto" data={createChartData()} options={chartOptions} />
-              </div>
-            </div>
+      {/* ตัวกรองข้อมูล */}
+      <div className="p-4 bg-white rounded-lg shadow-md mb-6">
+        <h2 className="text-lg font-bold font-FontNoto mb-4">ตัวกรองข้อมูล</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium font-FontNoto mb-1">ปี</label>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              className="select select-bordered w-full font-FontNoto"
+            >
+              {years.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium font-FontNoto mb-1">แผนก</label>
+            <select
+              value={selectedDepartment}
+              onChange={(e) => setSelectedDepartment(e.target.value)}
+              className="select select-bordered w-full font-FontNoto"
+            >
+              <option value="all">ทั้งหมด</option>
+              {Object.keys(roleMapping).map(role => (
+                <option key={role} value={role}>{roleMapping[role]}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium font-FontNoto mb-1">พนักงาน</label>
+            <select
+              value={selectedUser}
+              onChange={(e) => setSelectedUser(e.target.value)}
+              className="select select-bordered w-full font-FontNoto"
+            >
+              <option value="all">ทั้งหมด</option>
+              {users.map(user => (
+                <option key={user.userID} value={user.userID}>
+                  {user.firstName} {user.lastName}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
+
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="loading loading-spinner loading-lg"></div>
+        </div>
+      ) : (
+        <>
+          {/* บัตรแสดงภาพรวม */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <h3 className="text-lg font-bold font-FontNoto mb-2">การลาทั้งหมด</h3>
+              <div className="text-3xl font-bold text-cyan-600">
+                {leaveHistory.length}
+              </div>
+              <p className="text-sm text-gray-500 font-FontNoto">ครั้ง</p>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <h3 className="text-lg font-bold font-FontNoto mb-2">ประเภทที่ลามากที่สุด</h3>
+              <div className="text-3xl font-bold text-cyan-600">
+                {Object.entries(typeStats).sort((a, b) => b[1] - a[1])[0]?.[0] || "-"}
+              </div>
+              <p className="text-sm text-gray-500 font-FontNoto">
+                {Object.entries(typeStats).sort((a, b) => b[1] - a[1])[0]?.[1] || 0} ครั้ง
+              </p>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <h3 className="text-lg font-bold font-FontNoto mb-2">เดือนที่ลามากที่สุด</h3>
+              <div className="text-3xl font-bold text-cyan-600">
+                {months[monthlyStats.indexOf(Math.max(...monthlyStats))]}
+              </div>
+              <p className="text-sm text-gray-500 font-FontNoto">
+                {Math.max(...monthlyStats)} ครั้ง
+              </p>
+            </div>
+          </div>
+
+          {/* กราฟประเภทการลา */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <div className="h-64">
+                <Bar options={barOptions} data={createLeaveTypeData()} />
+              </div>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <div className="h-64">
+                <Pie options={pieOptions} data={createPieData()} />
+              </div>
+            </div>
+          </div>
+
+          {/* กราฟแสดงการลารายเดือน */}
+          <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+            <div className="h-64">
+              <Line options={lineOptions} data={createMonthlyData()} />
+            </div>
+          </div>
+
+          {/* กราฟแสดงการลาตามแผนก */}
+          <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+            <h3 className="text-lg font-bold font-FontNoto mb-4">สถิติการลาตามแผนก</h3>
+            <div className="h-64">
+              <Bar 
+                options={{
+                  ...barOptions,
+                  plugins: {
+                    ...barOptions.plugins,
+                    title: {
+                      ...barOptions.plugins.title,
+                      text: 'สถิติการลาแยกตามแผนก'
+                    }
+                  }
+                }} 
+                data={createDepartmentData()} 
+              />
+            </div>
+          </div>
+
+          {/* ตารางประวัติการลา */}
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-lg font-bold font-FontNoto mb-4">ประวัติการลาล่าสุด</h3>
+            <div className="overflow-x-auto">
+              <table className="table w-full">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="font-FontNoto">พนักงาน</th>
+                    <th className="font-FontNoto">แผนก</th>
+                    <th className="font-FontNoto">ประเภทการลา</th>
+                    <th className="font-FontNoto">ช่วงเวลา</th>
+                    <th className="font-FontNoto">วันที่เริ่ม</th>
+                    <th className="font-FontNoto">วันที่สิ้นสุด</th>
+                    <th className="font-FontNoto">สถานะ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leaveHistory.length > 0 ? (
+                    leaveHistory.slice(0, 10).map((leave, index) => {
+                      const user = users.find(u => u.userID === leave.userID);
+                      return (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="font-FontNoto">
+                            {user ? `${user.firstName} ${user.lastName}` : 'ไม่ระบุ'}
+                          </td>
+                          <td className="font-FontNoto">
+                            {user ? roleMapping[user.role] || 'ไม่ระบุ' : 'ไม่ระบุ'}
+                          </td>
+                          <td className="font-FontNoto">{leave.leaveType}</td>
+                          <td className="font-FontNoto">{leave.timeType}</td>
+                          <td className="font-FontNoto">
+                            {new Date(leave.startDate).toLocaleDateString('th-TH')}
+                          </td>
+                          <td className="font-FontNoto">
+                            {new Date(leave.endDate).toLocaleDateString('th-TH')}
+                          </td>
+                          <td>
+                            <span 
+                              className="px-2 py-1 rounded-full text-xs font-medium"
+                              style={{
+                                backgroundColor: statusColors[leave.status] || '#777',
+                                color: '#fff'
+                              }}
+                            >
+                              {leave.status === "ApprovedByHR" ? "อนุมัติ" : 
+                               leave.status === "Rejected" ? "ไม่อนุมัติ" : "รออนุมัติ"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="text-center py-4">ไม่พบข้อมูลการลา</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
