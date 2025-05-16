@@ -26,11 +26,27 @@ function Document() {
   const [deleteType, setDeleteType] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [activeTab, setActiveTab] = useState('approvedLeave');
-  const [historyState, sethistoryState] = useState(null)
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [inputPassword, setInputPassword] = useState("");
   const [errorPassword, setErrorPassword] = useState("");
+  const [allLeaveDocuments, setAllLeaveDocuments] = useState([]);
+
+  const roleMapping = {
+    Hr: "ทรัพยากรบุคคล",
+    GM: "ผู้จัดการทั่วไป",
+    Dev: "นักพัฒนาระบบ",
+    BA: "นักวิเคราะห์ธุรกิจ",
+    Employee: "พนักงาน",
+  };
+
+  const labelMap = {
+    sick: "ป่วย",
+    personal: "กิจส่วนตัว",
+    vacation: "พักร้อน",
+    ordain: "บวช",
+    maternity: "ลาคลอด"
+  };
 
   const categoryMapping = {
     sick: "ใบลาป่วย",
@@ -41,7 +57,6 @@ function Document() {
     Others: 'อื่นๆ',
     Doc: 'เอกสารส่วนตัว',
   };
-
 
   const getCategoryName = (leaveTypeId) => {
     return categoryMapping[leaveTypeId.toUpperCase()] || "ไม่ระบุหมวดหมู่";
@@ -56,41 +71,71 @@ function Document() {
       setDocuments(data);
       setFilteredDocuments(data);
     } catch (error) {
-      console.error("Error fetching documents:", error);
       alert("ไม่สามารถโหลดข้อมูลเอกสารได้");
     }
   };
-  const fetchHistory = async (documentid) => {
+  const loadLeaveJsonAndCreatePDF = async (filePath) => {
     try {
-      const res = await axios.get(`https://localhost:7039/api/Document/GetDocumentWithHistory/${documentid}`);
-      const historyRes = res.data;
+      const response = await axios.get(`https://localhost:7039${filePath}`);
+      const data = response.data;
 
-      console.log("📄 document from backend:", historyRes);
+      // 🔄 ดึงข้อมูลผู้ใช้เพิ่ม
+      const userRes = await axios.get(`https://localhost:7039/api/User/${data.userID}`);
+      const user = userRes.data;
 
-      sethistoryState(historyRes.Historyleave);
-      setSelectedDoc(historyRes); // ✅ ให้แน่ใจว่า form มี writtenDate
-    } catch (e) {
-      console.log("❌ fetchHistory error:", e);
+      // 🔄 ดึงข้อมูลสถิติการลา
+      const statRes = await axios.get(`https://localhost:7039/api/LeaveRequest/stats/${data.userID}`);
+      const leaveStats = statRes.data;
+
+      const [contactAddress, contactPhone] = (data.contact || "").split(" / ");
+
+      const enrichedForm = {
+        ...data,
+        writtenDate: data.createdAt,
+        fullName: `${user.firstName} ${user.lastName}`,
+        department: user.role || "-",
+        joinDate: user.jDate?.split("T")[0] || "-",
+        contactAddress: contactAddress || "-",
+        contactPhone: contactPhone || "-",
+        leaveStats
+      };
+
+      createPDF(enrichedForm);
+    } catch (error) {
+      console.error("❌ Error loading and enriching leave JSON:", error);
+      alert("ไม่สามารถโหลดข้อมูลใบลาจากไฟล์ได้");
     }
-  }
+  };
+
   useEffect(() => {
     fetchDocuments();
 
   }, []);
+
   const handleOpenModal = async (filePathOrDoc) => {
-    const doc = typeof filePathOrDoc === 'object' ? filePathOrDoc : null;
+    if (typeof filePathOrDoc === "object" && filePathOrDoc !== null) {
+      // กรณีส่ง doc object มา
+      setSelectedFilePath(null);
+      setSelectedDocument(filePathOrDoc);
+      setSelectedDoc(filePathOrDoc);
+      setPassword("");
+      setIsModalOpen(true);
 
-    setSelectedFilePath(typeof filePathOrDoc === 'string' ? filePathOrDoc : null);
-    setSelectedDocument(doc);
-    setSelectedDoc(doc); // ✅ เพิ่มบรรทัดนี้
-    setPassword('');
-    setIsModalOpen(true);
-
-    if (doc?.documentId) {
-      await fetchHistory(doc.documentId); // ✅ ป้องกัน error ถ้าไม่มี documentId
+      if (filePathOrDoc.documentId) {
+        await fetchHistory(filePathOrDoc.documentId);
+      }
+    } else if (typeof filePathOrDoc === "string") {
+      // กรณีส่งแค่ path string มา
+      setSelectedFilePath(filePathOrDoc);
+      setSelectedDocument(null);
+      setSelectedDoc(null);
+      setPassword("");
+      setIsModalOpen(true);
+    } else {
+      // กรณีข้อมูลไม่ถูกต้อง
+      alert("ไม่พบข้อมูลเอกสาร");
     }
   };
-
 
   const handlePasswordSubmit = async () => {
     try {
@@ -105,8 +150,7 @@ function Document() {
         if (selectedDoc?.filePath) {
           window.open(`https://localhost:7039${selectedDoc.filePath}`, '_blank');
         } else {
-          console.log("📄 selectedDoc data before createPDF", selectedDoc);
-          console.log("🧾 selectedDoc for PDF", form);
+
           createPDF(selectedDoc);
         }
       } else {
@@ -143,11 +187,14 @@ function Document() {
       const response = await axios.request(config);
 
       if (response.data.isValid) {
-        const fileExt = selectedDocument?.filePath?.split('.').pop().toLowerCase();
-
-        if (selectedDocument?.filePath && fileExt !== 'json') {
-          // ✅ กรณีมีไฟล์จริง เช่น PDF
-          window.open('https://localhost:7039' + selectedDocument.filePath, '_blank');
+        // ✅ แก้ตรงนี้
+        if (selectedDocument?.filePath) {
+          const fileExt = selectedDocument.filePath.split('.').pop().toLowerCase();
+          if (fileExt === "json") {
+            await loadLeaveJsonAndCreatePDF(selectedDocument.filePath); // 🔄 โหลด JSON + enrich + สร้าง PDF
+          } else {
+            window.open('https://localhost:7039' + selectedDocument.filePath, '_blank');
+          }
         } else if (selectedDocument) {
           createPDF(selectedDocument);
         }
@@ -209,12 +256,11 @@ function Document() {
   };
 
   const handleSearch = () => {
-    const lowerSearchTerm = searchTerm.trim().toLowerCase(); // ตัดช่องว่างออกก่อนค้นหา
+    const lowerSearchTerm = searchTerm.trim().toLowerCase();
 
     if (lowerSearchTerm === "") {
-
       if (activeTab === "approvedLeave") {
-        sethrdocunet([...hrdocument]);
+        sethrdocunet([...allLeaveDocuments]);
       } else {
         setFilteredDocuments([...documents]);
       }
@@ -222,15 +268,13 @@ function Document() {
     }
 
     if (activeTab === "approvedLeave") {
-
-      const filteredLeaves = hrdocument.filter(
+      const filteredLeaves = allLeaveDocuments.filter(
         (doc) =>
           (doc.category && doc.category.toLowerCase().includes(lowerSearchTerm)) ||
           (doc.description && doc.description.toLowerCase().includes(lowerSearchTerm))
       );
       sethrdocunet(filteredLeaves);
     } else {
-
       const filteredUploads = documents.filter(
         (doc) =>
           (doc.category && doc.category.toLowerCase().includes(lowerSearchTerm)) ||
@@ -241,10 +285,23 @@ function Document() {
   };
 
   useEffect(() => {
+    const fetchLeaveDocs = async () => {
+      const res = await axios.get("https://localhost:7039/api/Files/Document?userID=" + userID);
+      const data = res.data;
+
+      const leaveOnly = data.filter(doc =>
+        ["sick", "personal", "vacation", "maternity", "ordain"].includes(doc.category)
+      );
+
+      setAllLeaveDocuments(leaveOnly);
+      sethrdocunet(leaveOnly); // set ตัวกรองเริ่มต้น
+    };
+
     if (activeTab === "approvedLeave") {
-      sethrdocunet([...hrdocument]);
+      fetchLeaveDocs();
     }
   }, [activeTab]);
+
 
   const handleDeleteDocument = async () => {
     if (!deleteDocumentId || !deleteType) return;
@@ -267,14 +324,13 @@ function Document() {
         console.error("Error deleting document:", response.statusText);
       }
     } catch (error) {
-      console.error("Error deleting document:", error);
     } finally {
       handleCloseDeleteModal();
     }
   };
   const handleOpenDeleteModal = (id, type) => {
     setDeleteDocumentId(id);
-    setDeleteType(type); // "upload" หรือ "leave"
+    setDeleteType(type);
     setIsDeleteModalOpen(true);
   };
 
@@ -289,20 +345,24 @@ function Document() {
     handleCloseDeleteModal();
   };
 
-
   const createPDF = (form) => {
     if (!form) {
       alert("ไม่พบข้อมูลเอกสาร");
       return;
     }
-
     const formatDate = (date) => {
-      if (!date) return "-";
-      return new Intl.DateTimeFormat("th-TH", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit"
-      }).format(new Date(date));
+      try {
+        if (!date) return "-";
+        const d = new Date(date);
+        if (isNaN(d)) return "-";
+        return new Intl.DateTimeFormat("th-TH", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit"
+        }).format(d);
+      } catch {
+        return "-";
+      }
     };
 
     const docDefinition = {
@@ -315,10 +375,9 @@ function Document() {
           table: {
             widths: ["auto", "*"],
             body: [
-              ["ข้าพเจ้า :", `${form.fullName || '-'} แผนก ${form.department || '-'}`],
+              ["ข้าพเจ้า :", `${form.fullName || '-'} แผนก ${roleMapping[form.department] || '-'}`],
               ["ขอลา :", `${form.leaveType || '-'} เนื่องจาก ${form.reason || '-'}`],
-              ["ช่วงเวลา :", form.timeType || '-'],
-              ["ตั้งแต่วันที่ :", `${formatDate(form.startDate)} ถึงวันที่ : ${formatDate(form.endDate)} รวม ${form.totalDays || '0'} วัน`],
+              ["ตั้งแต่วันที่ :", ` ${formatDate(form.startDate)} ถึงวันที่ :${formatDate(form.endDate)} มีกำหนด : ${form.totalDays || '0'} วัน | ช่วงเวลา : ${form.timeType || '-'}`],
               ["ข้าพเจ้าได้ลา :", `${form.lastLeaveType || '-'} ครั้งสุดท้าย ตั้งแต่วันที่ : ${formatDate(form.lastLeaveStart)} ถึงวันที่ : ${formatDate(form.lastLeaveEnd)} รวม ${form.lastLeaveDays || '0'} วัน`]
             ]
           },
@@ -334,16 +393,26 @@ function Document() {
         },
         {
           table: {
-            widths: ["auto", "*", "*", "*"],
+            widths: ["*", "*", "*", "*"],
             body: [
-              ["ประเภทลา", "ลามาแล้ว", "ลาครั้งนี้", "รวมเป็น"],
+              [
+                { text: "ประเภทลา", style: "tableHeader" },
+                { text: "ลามาแล้ว", style: "tableHeader" },
+                { text: "ลาครั้งนี้", style: "tableHeader" },
+                { text: "รวมเป็น", style: "tableHeader" }
+              ],
               ...Object.entries(form.leaveStats || {}).map(([type, stats]) => [
-                type, stats.used || 0, stats.current || 0, stats.total || 0
+                labelMap[type] || type,
+                stats.used || 0,
+                stats.current || 0,
+                stats.total || 0
               ])
             ]
           },
+          layout: "lightHorizontalLines",
           margin: [0, 0, 0, 20]
         },
+
         { text: `ขอแสดงความนับถือ`, alignment: "right", margin: [0, 20, 0, 0] },
         {
           columns: [
@@ -364,8 +433,6 @@ function Document() {
     };
 
     pdfMake.createPdf(docDefinition).download("ใบลาที่อนุมัติแล้ว.pdf");
-    console.log("📅 writtenDate:", form.writtenDate);
-    console.log("📅 formatted date:", formatDate(form.writtenDate));
 
   };
 
@@ -662,18 +729,18 @@ function Document() {
         {activeTab === 'approvedLeave' && (
           <div className="bg-base-100 p-6 rounded-lg shadow-lg font-FontNoto">
             <h3 className="text-xl font-bold text-black mb-4 font-FontNoto">เอกสารการลา (อนุมัติแล้ว)</h3>
-            {documents.filter(doc =>
+            {hrdocument.filter(doc =>
               ["sick", "personal", "vacation", "maternity", "ordain"].includes(doc.category)
             ).length > 0 ? (
               <ul className="space-y-4">
-                {documents
+                {hrdocument
                   .filter(doc =>
                     ["sick", "personal", "vacation", "maternity", "ordain"].includes(doc.category)
-                  ) // ✅ แก้ตรงนี้
+                  )
+                  .sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate)) // 🔁 ใหม่อยู่บนสุด
                   .map((doc) => {
                     const fileExtension = doc.filePath ? doc.filePath.split('.').pop().toLowerCase() : null;
                     const uploadDate = doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString('th-TH') : "-";
-
                     const categoryMapping = {
                       Ordination: 'ใบลาบวช',
                       Doc: 'เอกสารส่วนตัว',
@@ -692,25 +759,21 @@ function Document() {
                         <div>
                           <h4 className="text-lg font-bold font-FontNoto">{doc.description}</h4>
                           <p className="text-sm text-gray-600 font-FontNoto">หมวดหมู่เอกสาร: {displayCategory}</p>
-                           <p className="text-sm text-gray-600 font-FontNoto">วันที่อัปโหลด: {uploadDate}</p>
-                          <p className="text-sm text-gray-600 font-FontNoto">นามสกุลไฟล์: {fileExtension}</p>
+                          <p className="text-sm text-gray-600 font-FontNoto">วันที่อัปโหลด: {uploadDate}</p>
+                          <p className="text-sm text-gray-600 font-FontNoto">นามสกุลไฟล์: pdf</p>
                         </div>
                         <button
                           className="btn btn-outline btn-info font-FontNoto"
-                          onClick={() => {
-                            setSelectedFilePath(null);
-                            setSelectedDocument(doc);
-                            setPassword('');
-                            setErrorPassword('');
-                            setIsModalOpen(true);
-                          }}
+                          onClick={() => handleOpenModal(doc)}
                         >
                           ดูใบลา
                         </button>
+
                       </li>
                     );
                   })}
               </ul>
+
             ) : (
               <p className="text-gray-500 text-center mt-4 font-FontNoto">ไม่มีเอกสารการลา</p>
             )}
@@ -723,10 +786,12 @@ function Document() {
             <ul className="space-y-4 font-FontNoto">
               {filteredDocuments
                 .filter(doc => ["Others", "Doc"].includes(doc.category))
+                .sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate)) // ✅ เรียงใหม่อยู่บนสุด
                 .map((doc) => {
                   const fileExtension = doc.filePath ? doc.filePath.split('.').pop().toLowerCase() : "ไม่พบข้อมูล";
                   const uploadDate = doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString('th-TH') : "จาก HR";
                   const fileCategory = doc.category || "ไม่ระบุหมวดหมู่";
+
                   return (
                     <li key={doc.fileID || Math.random()} className="p-4 bg-white rounded-lg shadow flex justify-between items-center">
                       <div>
@@ -736,14 +801,24 @@ function Document() {
                         <p className="text-sm text-gray-600 font-FontNoto">นามสกุลไฟล์: {fileExtension}</p>
                       </div>
                       <div className="flex gap-2">
-                        <button className="btn btn-outline btn-info font-FontNoto" onClick={() => handleOpenModal(doc.filePath)}>ดูไฟล์</button>
-                        <button className="btn btn-outline btn-error font-FontNoto" onClick={() => handleOpenDeleteModal(doc.fileID, "upload")}>ลบ</button>
+                        <button
+                          className="btn btn-outline btn-info font-FontNoto"
+                          onClick={() => handleOpenModal(doc)}
+                        >
+                          ดูไฟล์
+                        </button>
+
+                        <button
+                          className="btn btn-outline btn-error font-FontNoto"
+                          onClick={() => handleOpenDeleteModal(doc.fileID, "upload")}
+                        >
+                          ลบ
+                        </button>
                       </div>
                     </li>
                   );
                 })}
             </ul>
-
             {filteredDocuments
               .filter(doc => ["Others", "Doc"].includes(doc.category))
               .length === 0 && (

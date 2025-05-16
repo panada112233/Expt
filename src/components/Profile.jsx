@@ -385,24 +385,7 @@ function Profile() {
                       onChange={handleChange}
                     />
                   </div>
-                  {/* <div className="form-control font-FontNoto">
-                    <label className="label">
-                      <span className="label-text font-FontNoto">แผนก</span>
-                    </label>
-                    <select
-                      name="role"
-                      className="select select-bordered font-FontNoto"
-                      value={employee.role}
-                      onChange={handleChange}
-                    >
-                      <option className="font-FontNoto" value="">กรุณาเลือกแผนก</option>
-                      <option className="font-FontNoto" value="Hr">ทรัพยากรบุคคล</option>
-                      <option className="font-FontNoto" value="GM">ผู้จัดการทั่วไป</option>
-                      <option className="font-FontNoto" value="Dev">นักพัฒนาระบบ</option>
-                      <option className="font-FontNoto" value="BA">นักวิเคราะห์ธุรกิจ</option>
-                      <option className="font-FontNoto" value="Employee">พนักงาน</option>
-                    </select>
-                  </div> */}
+                  
                   <div className="form-control font-FontNoto">
                     <label className="label">
                       <span className="label-text font-FontNoto">แผนก</span>

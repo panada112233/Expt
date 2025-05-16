@@ -18,6 +18,8 @@ const LeaveRequestForm = () => {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [selectedLeave, setSelectedLeave] = useState(null);
     const [showLeaveDetailModal, setShowLeaveDetailModal] = useState(false);
+    const [selectedLeaveStats, setSelectedLeaveStats] = useState(null);
+
 
     const [form, setForm] = useState({
         userID: userId,
@@ -121,10 +123,64 @@ const LeaveRequestForm = () => {
         }
     }, [form.contact, form.startDate, form.endDate, form.leaveType, form.timeType]);
 
-    const showLeaveDetail = (leave) => {
-        setSelectedLeave(leave);
-        setShowLeaveDetailModal(true);
+    const showLeaveDetail = async (leave) => {
+        try {
+            const res = await axios.get(`https://localhost:7039/api/LeaveRequest/User/${leave.userID}`);
+            if (res.status === 200) {
+                const stats = {
+                    sick: { used: 0, current: 0, total: 0 },
+                    personal: { used: 0, current: 0, total: 0 },
+                    vacation: { used: 0, current: 0, total: 0 },
+                    ordain: { used: 0, current: 0, total: 0 },
+                    maternity: { used: 0, current: 0, total: 0 },
+                };
+
+                const currentYear = new Date().getFullYear();
+
+                res.data.forEach(item => {
+                    const year = new Date(item.startDate).getFullYear();
+                    const isHalfDay = item.timeType === "ครึ่งวันเช้า" || item.timeType === "ครึ่งวันบ่าย";
+                    const days = isHalfDay
+                        ? 0.5
+                        : Math.floor((new Date(item.endDate) - new Date(item.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+
+                    // ✅ เฉพาะใบที่อนุมัติ ปีเดียวกัน และ user คนเดียวกัน
+                    if (
+                        item.status === "ApprovedByHR" &&
+                        year === currentYear &&
+                        String(item.userID) === String(leave.userID)
+                    ) {
+                        const type = typeMap[item.leaveType];
+                        if (!type || !stats[type]) return;
+
+                        const isSameLeave = String(item.id) === String(leave.id);
+                        const isBeforeCurrentLeave = new Date(item.createdAt) < new Date(leave.createdAt);
+
+                        if (isSameLeave) {
+                            stats[type].current = days;
+                        } else if (isBeforeCurrentLeave) {
+                            stats[type].used += days;
+                        }
+
+                        stats[type].total = stats[type].used + stats[type].current;
+                    }
+                });
+
+                Object.keys(stats).forEach(type => {
+                    stats[type].total = stats[type].used + stats[type].current;
+                });
+
+                setSelectedLeaveStats(stats);
+                setSelectedLeave(leave);
+                setShowLeaveDetailModal(true); // ✅ เปิด modal หลังโหลดเสร็จ
+            }
+        } catch (error) {
+            console.error("โหลดสถิติล้มเหลว", error);
+            setSelectedLeaveStats(null);
+        }
     };
+
+
     const fetchLeaveTypes = async () => {
         const res = await axios.get("https://localhost:7039/api/Document/GetLeaveTypes");
         setLeaveTypes(res.data);
@@ -138,10 +194,13 @@ const LeaveRequestForm = () => {
                 ...prev,
                 fullName: `${user.firstName} ${user.lastName}`,
                 department: user.role,
-                joinDate: user.jDate?.split("T")[0] || "" // ✅ ตั้งชื่อใหม่เป็น joinDate
+                joinDate: user.jDate?.split("T")[0] || "",
+                contactPhone: user.contact || "", // ✅ ดึงจาก user
+                contact: `${prev.contactAddress || ""} / ${user.contact || ""}`, // ✅ อัปเดต contact รวม
             }));
         }
     };
+
 
     const fetchLeaveHistory = async () => {
         try {
@@ -205,10 +264,8 @@ const LeaveRequestForm = () => {
                     leaveStats: stats
                 }));
             } else {
-                console.error(`Failed to fetch leave history: ${res.statusText}`);
             }
         } catch (error) {
-            console.error("Error fetching leave history:", error);
         }
     };
 
@@ -218,7 +275,6 @@ const LeaveRequestForm = () => {
     };
 
     const handleSubmit = async () => {
-        console.log("Form Data: ", form); // ตรวจสอบค่าของ form ก่อนการตรวจสอบ
 
         if (!form.userID || !form.leaveType || !form.timeType || !form.startDate || !form.endDate || !form.reason) {
             alert("กรุณากรอกข้อมูลให้ครบถ้วน");
@@ -237,18 +293,12 @@ const LeaveRequestForm = () => {
 
         try {
             const res = await axios.post("https://localhost:7039/api/LeaveRequest", payload);
-            console.log("📤 payload:", payload);
-
             fetchLeaveHistory(); // โหลดใหม่หลังส่ง
             setShowSuccessModal(true); // ✅ เปิด modal popup สำเร็จ
         } catch (err) {
             alert("เกิดข้อผิดพลาดในการส่งฟอร์ม");
-            console.error("🛑 POST ERROR:", err.response?.data || err.message);
-            console.log("❌ Validation errors:", err.response?.data?.errors);
         }
     };
-
-
     return (
         <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-xl p-4 sm:p-8 mt-4 sm:mt-10 space-y-4 sm:space-y-6 font-sans">
             <h1 className="text-xl sm:text-2xl font-bold text-center font-FontNoto">แบบฟอร์มใบลา</h1>
@@ -451,27 +501,17 @@ const LeaveRequestForm = () => {
                     />
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                    <label className="font-FontNoto whitespace-nowrap flex-shrink-0 w-full sm:w-44">เบอร์ติดต่อ :</label>
+                    <label className="font-FontNoto whitespace-nowrap flex-shrink-0 w-full sm:w-44">
+                        เบอร์ติดต่อ :
+                    </label>
                     <input
                         type="text"
-                        value={form.contactPhone || ""}
-                        onChange={(e) => {
-                            const onlyNumbers = e.target.value.replace(/\D/g, "");
-                            const trimmed = onlyNumbers.slice(0, 10);
-
-                            const contact = `${form.contactAddress || ""} / ${trimmed}`;
-                            setForm(prev => ({
-                                ...prev,
-                                contact,
-                                contactPhone: trimmed
-                            }));
-                        }}
-                        className="input input-bordered flex-grow font-FontNoto w-full"
-                        maxLength={10}
-                        inputMode="numeric"
-                        pattern="[0-9]*"
+                        value={form.contactPhone || "-"}
+                        readOnly
+                        className="input input-bordered flex-grow font-FontNoto w-full bg-gray-100 cursor-not-allowed"
                     />
                 </div>
+
             </div>
 
             <div className="mt-6 sm:mt-10">
@@ -559,80 +599,85 @@ const LeaveRequestForm = () => {
                     </table>
                 </div>
             </div>
+
             {showLeaveDetailModal && selectedLeave && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 overflow-y-auto font-FontNoto">
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6 space-y-4">
-                        <h3 className="text-xl font-bold text-center mb-2 font-FontNoto flex flex-col sm:flex-row items-center justify-center gap-2">
-                            แบบฟอร์มใบลา
-                            <span className="text-base font-normal text-gray-600 font-FontNoto">
-                                ({new Date(selectedLeave.createdAt).toLocaleDateString("th-TH", {
-                                    day: "2-digit",
-                                    month: "2-digit",
-                                    year: "numeric"
-                                })})
-                            </span>
-                        </h3>
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl p-6 space-y-4">
+                        <div className="flex justify-center items-center gap-4 mb-4 font-FontNoto text-lg font-bold">
+                            <span className="font-FontNoto">แบบฟอร์มใบลา {new Date(selectedLeave.createdAt).toLocaleDateString("th-TH")}</span>
+                        </div>
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <p className="font-FontNoto"><span className="font-bold font-FontNoto">ประเภทการลา:</span> {selectedLeave.leaveType}</p>
-                            </div>
-                            <div>
-                                <p className="font-FontNoto"><span className="font-bold font-FontNoto">ช่วงเวลา:</span> {selectedLeave.timeType}</p>
-                            </div>
-                            <div>
-                                <p className="font-FontNoto"><span className="font-bold font-FontNoto">ตั้งแต่วันที่:</span> {new Date(selectedLeave.startDate).toLocaleDateString("th-TH", {
-                                    day: "2-digit",
-                                    month: "2-digit",
-                                    year: "numeric"
-                                })}</p>
-                            </div>
-                            <div>
-                                <p className="font-FontNoto"><span className="font-bold font-FontNoto">ถึงวันที่:</span> {new Date(selectedLeave.endDate).toLocaleDateString("th-TH", {
-                                    day: "2-digit",
-                                    month: "2-digit",
-                                    year: "numeric"
-                                })}</p>
-                            </div>
-                            <div>
-                                <p className="font-FontNoto"><span className="font-bold font-FontNoto">เนื่องจาก:</span> {selectedLeave.reason}</p>
-                            </div>
+
+                            <p className="font-FontNoto"><span className="font-bold font-FontNoto">ประเภทการลา:</span> {selectedLeave.leaveType}</p>
+                            <p className="font-FontNoto"><span className="font-bold font-FontNoto">ช่วงเวลา:</span> {selectedLeave.timeType}</p>
+                            <p className="font-FontNoto"><span className="font-bold font-FontNoto">ตั้งแต่:</span> {new Date(selectedLeave.startDate).toLocaleDateString("th-TH")}</p>
+                            <p className="font-FontNoto"><span className="font-bold font-FontNoto">ถึง:</span> {new Date(selectedLeave.endDate).toLocaleDateString("th-TH")}</p>
+                            <p className="font-FontNoto">
+                                <span className="font-bold font-FontNoto">เนื่องจาก :</span> {selectedLeave.reason}</p>
+                            <p className="font-FontNoto">
+                                <span className="font-bold font-FontNoto">จำนวนวันลา :</span> {selectedLeave.timeType.includes("ครึ่ง") ? "0.5" : Math.floor((new Date(selectedLeave.endDate) - new Date(selectedLeave.startDate)) / (1000 * 60 * 60 * 24)) + 1} วัน</p>
                             {(() => {
                                 const [address, phone] = (selectedLeave.contact || "").split(" / ");
                                 return (
                                     <>
-                                        <div>
-                                            <p className="font-FontNoto"><span className="font-bold font-FontNoto">ที่อยู่:</span> {address || "-"}</p>
-                                        </div>
-                                        <div>
-                                            <p className="font-FontNoto"><span className="font-bold font-FontNoto">เบอร์ติดต่อ:</span> {phone || "-"}</p>
-                                        </div>
+                                        <p className="font-FontNoto"><span className="font-bold font-FontNoto">ติดต่อได้ที่ :</span> {address || "-"}</p>
+                                        <p className="font-FontNoto"><span className="font-bold font-FontNoto">เบอร์ :</span> {phone || "-"}</p>
                                     </>
                                 );
                             })()}
-                            <div className="sm:col-span-2 font-FontNoto">
-                                <p className="font-FontNoto">
-                                    <span className="font-bold font-FontNoto">สถานะ:</span>
-                                    <span className={`ml-2 font-bold font-FontNoto ${selectedLeave.status === "Rejected"
+
+                            <p className="sm:col-span-2">
+                                <span className="font-bold font-FontNoto">สถานะ:</span>{" "}
+                                <span className={`font-bold ml-2 font-FontNoto ${selectedLeave.status === "ApprovedByHR"
+                                    ? "text-green-600"
+                                    : selectedLeave.status === "Rejected"
                                         ? "text-red-600"
-                                        : selectedLeave.status === "ApprovedByHR"
-                                            ? "text-green-600"
-                                            : "text-yellow-600"
-                                        }`}>
-                                        {selectedLeave.status === "ApprovedByHR"
-                                            ? "อนุมัติแล้ว"
-                                            : selectedLeave.status === "Rejected"
-                                                ? "ไม่อนุมัติ"
-                                                : "รอดำเนินการ"}
-                                    </span>
-                                </p>
-                            </div>
+                                        : "text-yellow-600"
+                                    }`}>
+                                    {selectedLeave.status === "ApprovedByHR"
+                                        ? "อนุมัติแล้ว"
+                                        : selectedLeave.status === "Rejected"
+                                            ? "ไม่อนุมัติ"
+                                            : "รอดำเนินการ"}
+                                </span>
+                            </p>
 
                             {selectedLeave.status === "Rejected" && (
-                                <div className="sm:col-span-2">
-                                    <p className="font-FontNoto"><span className="font-bold font-FontNoto">เหตุผลที่ไม่อนุมัติ:</span> {selectedLeave.hrComment || selectedLeave.gmComment || "-"}</p>
-                                </div>
+                                <p className="sm:col-span-2">
+                                    <span className="font-bold font-FontNoto">เหตุผลที่ไม่อนุมัติ:</span> {selectedLeave.hrComment || selectedLeave.gmComment || "-"}
+                                </p>
                             )}
                         </div>
+
+                        {/* ✅ ตารางสถิติจาก selectedLeaveStats */}
+                        {selectedLeaveStats && (
+                            <div className="mt-6">
+                                <h4 className="text-lg font-bold mb-2 font-FontNoto">สถิติการลาในปีนี้</h4>
+                                <div className="overflow-x-auto">
+                                    <table className="table w-full text-sm text-center">
+                                        <thead className="bg-gray-100">
+                                            <tr>
+                                                <th className="font-FontNoto">ประเภทการลา</th>
+                                                <th className="font-FontNoto">ลามาแล้ว (วัน)</th>
+                                                <th className="font-FontNoto">ลาครั้งนี้ (วัน)</th>
+                                                <th className="font-FontNoto">รวม (วัน)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {Object.entries(selectedLeaveStats).map(([type, stats]) => (
+                                                <tr key={type}>
+                                                    <td className="font-FontNoto">{labelMap[type]}</td>
+                                                    <td>{stats.used}</td>
+                                                    <td>{stats.current}</td>
+                                                    <td>{stats.total}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="text-center mt-6">
                             <button
@@ -645,6 +690,7 @@ const LeaveRequestForm = () => {
                     </div>
                 </div>
             )}
+
 
             {isModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 p-4">
