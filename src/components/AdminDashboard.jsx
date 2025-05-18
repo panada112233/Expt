@@ -44,23 +44,14 @@ const AdminDashboard = () => {
   const [userinfostate, setuserinfoState] = useState(0);
   const [leaveData, setLeaveData] = useState([]); // ✅ เพิ่มตัวแปรเก็บข้อมูลใบลา
 
-
   const categoryMapping = {
-    Certificate: 'ใบลาป่วย',
-    WorkContract: 'ใบลากิจ',
-    Identification: 'ใบลาพักร้อน',
-    Maternity: 'ใบลาคลอด',
-    Ordination: 'ใบลาบวช',
-    Doc: 'เอกสารส่วนตัว',
-    Others: 'อื่นๆ',
-  };
-
-  const categoryMappingg = {
-    "A461E72F-B9A3-4F9D-BF69-1BBE6EA514EC": "ใบลาป่วย",
-    "6CF7C54A-F9BA-4151-A554-6487FDD7ED8D": "ใบลาพักร้อน",
-    "1799ABEB-158C-479E-A9DC-7D45E224E8ED": "ใบลากิจ",
-    "DAA14555-28E7-497E-B1D8-E0DA1F1BE283": "ใบลาคลอด",
-    "AE3C3A05-1FCB-4B8A-9044-67A83E781ED6": "ใบลาบวช",
+    sick: "ใบลาป่วย",
+    personal: "ใบลากิจ",
+    vacation: "ใบลาพักร้อน",
+    maternity: "ใบลาคลอด",
+    ordain: "ใบลาบวช",
+    Doc: "เอกสารส่วนตัว",
+    Others: "อื่นๆ",
   };
 
   const iconMapping = {
@@ -78,21 +69,13 @@ const AdminDashboard = () => {
     const fetchDocuments = async () => {
       try {
         const response = await axios.get("https://localhost:7039/api/Files");
-        const leaveResponse = await axios.get("https://localhost:7039/api/Document/GetAllCommitedDocuments");
 
-        // ✅ กรองข้อมูลเฉพาะปีที่เลือก
         const filteredFiles = response.data.filter(doc =>
           new Date(doc.uploadDate).getFullYear() === selectedYear
         );
 
-        const filteredLeaves = leaveResponse.data.filter(doc =>
-          new Date(doc.startdate).getFullYear() === selectedYear
-        );
-
         setFilesData(filteredFiles);
-        setLeaveData(filteredLeaves);
 
-        // ✅ คำนวณ `categoryCounts` ให้ตรงกับปีที่เลือก
         const counts = {
           'ใบลาป่วย': 0,
           'ใบลากิจ': 0,
@@ -108,15 +91,10 @@ const AdminDashboard = () => {
           counts[category] = (counts[category] || 0) + 1;
         });
 
-        filteredLeaves.forEach((doc) => {
-          const category = categoryMappingg[doc.leaveTypeId.toUpperCase()] || "อื่นๆ";
-          counts[category] = (counts[category] || 0) + 1;
-        });
-
         setCategoryCounts(counts);
         setStatistics(prevStats => ({
           ...prevStats,
-          totalDocuments: filteredFiles.length + filteredLeaves.length,
+          totalDocuments: filteredFiles.length,
         }));
       } catch (error) {
         console.error("Error fetching document data:", error);
@@ -124,9 +102,8 @@ const AdminDashboard = () => {
     };
 
     fetchDocuments();
-  }, [selectedYear]); // ✅ โหลดใหม่เมื่อปีเปลี่ยน
+  }, [selectedYear]);
 
-  // ✅ โหลดข้อมูลโปรไฟล์แค่ครั้งเดียวตอนเปิดหน้า
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
@@ -178,8 +155,6 @@ const AdminDashboard = () => {
 
     fetchData();
   }, []); // ✅ โหลดข้อมูลพนักงานครั้งเดียวตอนเปิดหน้า
-
-
 
   const handleProfilePicChange = (event) => {
     const file = event.target.files[0]; // เลือกไฟล์แรกจากไฟล์ที่เลือก
@@ -326,46 +301,25 @@ const AdminDashboard = () => {
 
   const createDocumentsChartData = () => {
     const months = Array.from({ length: 12 }, (_, i) => `เดือน ${i + 1}`);
-    const categories = Object.values(categoryMapping);
-
-    // ✅ รวม `categoryMapping` กับ `categoryMappingg`
-    const mergedCategoryMapping = {
-      ...categoryMapping,
-      ...categoryMappingg,
-    };
-
-    console.log("📊 Merged Category Mapping:", mergedCategoryMapping);
+    const categories = Object.values(categoryMapping); // เช่น ใบลาป่วย, ใบลากิจ...
 
     // ✅ เตรียมข้อมูลแต่ละหมวดหมู่สำหรับแต่ละเดือน
     const categoryData = categories.map(category => {
       return Array.from({ length: 12 }, (_, i) => {
-        // ✅ นับจำนวนเอกสารอัปโหลด
-        const uploadCount = filesData.filter(
+        return filesData.filter(
           f =>
             new Date(f.uploadDate).getFullYear() === selectedYear &&
             new Date(f.uploadDate).getMonth() === i &&
             categoryMapping[f.category] === category
         ).length;
-
-        // ✅ นับจำนวนใบลา
-        const leaveCount = leaveData.filter(
-          f =>
-            new Date(f.startdate).getFullYear() === selectedYear &&
-            new Date(f.startdate).getMonth() === i &&
-            categoryMappingg[f.leaveTypeId.toUpperCase()] === category
-        ).length;
-
-        return uploadCount + leaveCount; // ✅ รวมค่าทั้งสอง
       });
     });
 
-    console.log("📊 categoryData:", categoryData);
-
     return {
-      labels: months, // ✅ ใช้ชื่อเดือนเป็นแกน X
+      labels: months,
       datasets: categories.map((category, index) => ({
-        label: category, // ✅ ชื่อประเภทเอกสาร
-        data: categoryData[index], // ✅ จำนวนเอกสารในแต่ละเดือน
+        label: category,
+        data: categoryData[index],
         backgroundColor: [
           'rgba(102, 204, 153, 1)',  // Soft Green
           'rgba(100, 181, 246, 1)',  // Soft Blue
@@ -385,14 +339,14 @@ const AdminDashboard = () => {
           x: {
             ticks: {
               font: {
-                family: 'Noto Sans Thai, sans-serif', // ใช้ฟอนต์ Noto Sans Thai
+                family: 'font-FontNoto',
               }
             }
           },
           y: {
             ticks: {
               font: {
-                family: 'Noto Sans Thai, sans-serif', // ใช้ฟอนต์ Noto Sans Thai
+                family: 'font-FontNoto',
               }
             }
           }
@@ -400,6 +354,7 @@ const AdminDashboard = () => {
       }
     };
   };
+
 
   const trendsChartOptions = {
     responsive: true,

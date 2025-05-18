@@ -26,22 +26,15 @@ const EmpHome = () => {
 
   const years = Array.from({ length: 11 }, (_, i) => 2024 + i); // 2024-2034
   const categoryMapping = {
-    Certificate: 'ใบลาป่วย',
-    WorkContract: 'ใบลากิจ',
-    Identification: 'ใบลาพักร้อน',
-    Maternity: 'ใบลาคลอด',
-    Ordination: 'ใบลาบวช',
-    Doc: 'เอกสารส่วนตัว',
-    Others: 'อื่นๆ',
+    sick: "ใบลาป่วย",
+    personal: "ใบลากิจ",
+    vacation: "ใบลาพักร้อน",
+    maternity: "ใบลาคลอด",
+    ordain: "ใบลาบวช",
+    Doc: "เอกสารส่วนตัว",
+    Others: "อื่นๆ",
   };
 
-  const categoryMappingg = {
-    "A461E72F-B9A3-4F9D-BF69-1BBE6EA514EC": "ใบลาป่วย",
-    "6CF7C54A-F9BA-4151-A554-6487FDD7ED8D": "ใบลาพักร้อน",
-    "1799ABEB-158C-479E-A9DC-7D45E224E8ED": "ใบลากิจ",
-    "DAA14555-28E7-497E-B1D8-E0DA1F1BE283": "ใบลาคลอด",
-    "AE3C3A05-1FCB-4B8A-9044-67A83E781ED6": "ใบลาบวช",
-  };
 
   const iconMapping = {
     "ใบลาป่วย": "https://img.icons8.com/ios-filled/50/survival-bag.png",
@@ -64,43 +57,25 @@ const EmpHome = () => {
           return;
         }
 
-        // เรียก API สำหรับผู้ใช้คนเดียว
         const userRequest = axios.get(`https://localhost:7039/api/Users/Getbyid/${id}`);
         const documentsRequest = axios.get('https://localhost:7039/api/Files/Document', {
           params: { userID: id }
         });
-        const leaveDocumentsRequest = axios.get(`https://localhost:7039/api/Document/GetCommitedDocumentsByUser/${id}`)
-          .catch((error) => {
-            if (error.response?.status === 404) {
-              console.warn("ไม่มีเอกสารใบลา (API คืน 404)");
-              return { data: [] }; // คืนค่า array ว่าง ป้องกันข้อผิดพลาด
-            }
-            throw error; // หากเป็นข้อผิดพลาดอื่นๆ ให้โยนออกไป
-          });
-
         const educationsRequest = axios.get(`https://localhost:7039/api/Educations/Getbyid/${id}`);
         const experiencesRequest = axios.get(`https://localhost:7039/api/WorkExperiences/Getbyid/${id}`);
-        const [userResponse, documentsResponse, educationsResponse, experiencesResponse, leaveDocumentsResponse] = await Promise.all([
+
+        const [userResponse, documentsResponse, educationsResponse, experiencesResponse] = await Promise.all([
           userRequest,
           documentsRequest,
           educationsRequest,
-          experiencesRequest,
-          leaveDocumentsRequest
+          experiencesRequest
         ]);
-        const leaveDocumentsResponseSafe = leaveDocumentsResponse.data || [];
-        const counts = {}; // กำหนดค่าเริ่มต้นของ counts
-        leaveDocumentsResponseSafe.forEach((doc) => {
-          const category = categoryMappingg[doc.leaveTypeId?.toUpperCase()] || "ไม่ระบุหมวดหมู่";
-          counts[category] = (counts[category] || 0) + 1;
-        });
 
-        // ตั้งชื่อผู้ใช้จาก API
         if (userResponse.status === 200) {
           const userData = userResponse.data;
-          setUserName(`${userData.firstName} ${userData.lastName}`); // รวมชื่อและนามสกุล
+          setUserName(`${userData.firstName} ${userData.lastName}`);
         }
 
-        // ตั้งค่าข้อมูลสถิติ
         if (
           documentsResponse.status === 200 &&
           educationsResponse.status === 200 &&
@@ -112,7 +87,7 @@ const EmpHome = () => {
             totalExperience: experiencesResponse.data.length,
           });
 
-          // กรองเอกสารทั่วไป
+          // กรองเอกสารตามเดือน/ปีที่เลือก
           let filteredDocuments = documentsResponse.data;
           if (selectedMonth && selectedYear) {
             filteredDocuments = filteredDocuments.filter(doc => {
@@ -124,30 +99,13 @@ const EmpHome = () => {
             });
           }
 
-          // กรองเอกสารใบลา
-          let filteredLeaves = leaveDocumentsResponse.data || [];
-          if (selectedMonth && selectedYear) {
-            filteredLeaves = filteredLeaves.filter(doc => {
-              const date = new Date(doc.sentToHrdate);
-              return (
-                date.getMonth() + 1 === parseInt(selectedMonth) &&
-                date.getFullYear() === parseInt(selectedYear)
-              );
-            });
-          }
-
-          // ✅ แล้วค่อยเริ่มนับ
+          // นับจำนวนแต่ละประเภท
           const counts = filteredDocuments.reduce((acc, doc) => {
             const category = categoryMapping[doc.category] || 'อื่นๆ';
             acc[category] = (acc[category] || 0) + 1;
             return acc;
           }, {});
 
-          // ✅ แล้วตามด้วยนับใบลา
-          filteredLeaves.forEach((doc) => {
-            const category = categoryMappingg[doc.leaveTypeId.toUpperCase()] || "ไม่ระบุหมวดหมู่";
-            counts[category] = (counts[category] || 0) + 1;
-          });
           setCategoryCounts(counts);
         }
       } catch (error) {
@@ -158,7 +116,8 @@ const EmpHome = () => {
     };
     fetchData();
   }, [selectedMonth, selectedYear]);
-  // กำหนดลำดับของประเภทเอกสารที่คุณต้องการ
+
+
   const customOrder = [
     'ใบลาป่วย', // เอกสารที่ต้องการให้แสดงแรก
     'ใบลากิจ',
@@ -168,7 +127,7 @@ const EmpHome = () => {
     'เอกสารส่วนตัว',
     'อื่นๆ',
   ];
-  // สร้าง array ของสีที่จะใช้ในกราฟ
+
   const colors = [
     "#66E2A0", // เขียวมิ้นต์สดขึ้น
     "#66D1D1", // ฟ้าอมเขียวพาสเทลเข้ม
@@ -280,7 +239,7 @@ const EmpHome = () => {
     <div className="">
       <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
         <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
-        จำนวนเอกสารของฉัน
+          จำนวนเอกสารของฉัน
         </h1>
         <p className="text-xs sm:text-sm mt-1 font-FontNoto">กราฟแสดงข้อมูลเอกสาร ใบลาและเอกสารอัปโหลด</p>
       </div>

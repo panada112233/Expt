@@ -76,17 +76,23 @@ function Document() {
   };
   const loadLeaveJsonAndCreatePDF = async (filePath) => {
     try {
+      // 👉 โหลด JSON ไฟล์ก่อน
       const response = await axios.get(`https://localhost:7039${filePath}`);
       const data = response.data;
 
-      // 🔄 ดึงข้อมูลผู้ใช้เพิ่ม
+      // 👉 ดึงข้อมูลล่าสุดจาก backend ด้วย userID และ id จาก JSON
+      const latestReq = await axios.get(`https://localhost:7039/api/LeaveRequest/User/${data.userID}`);
+      const updated = latestReq.data.find(r => r.id === data.id);
+      if (updated) {
+        Object.assign(data, updated); // ผสมข้อมูลใหม่ใส่ data เดิม
+      }
+
       const userRes = await axios.get(`https://localhost:7039/api/User/${data.userID}`);
       const user = userRes.data;
 
-      // 🔄 ดึงข้อมูลสถิติการลา
-      const statRes = await axios.get(`https://localhost:7039/api/LeaveRequest/stats/${data.userID}`);
-      const leaveStats = statRes.data;
-
+      const statRes = await axios.get(`https://localhost:7039/api/LeaveRequest/stats/${data.userID}?excludeId=${data.id}`);
+      const leaveStats = statRes.data.stats || {};
+      const lastLeave = statRes.data.lastLeave;
       const [contactAddress, contactPhone] = (data.contact || "").split(" / ");
 
       const enrichedForm = {
@@ -97,7 +103,13 @@ function Document() {
         joinDate: user.jDate?.split("T")[0] || "-",
         contactAddress: contactAddress || "-",
         contactPhone: contactPhone || "-",
-        leaveStats
+        leaveStats,
+        lastLeaveType: lastLeave?.leaveType || "-",
+        lastLeaveStart: lastLeave?.startDate || "-",
+        lastLeaveEnd: lastLeave?.endDate || "-",
+        lastLeaveDays: lastLeave?.totalDays || 0,
+        gmComment: data.gmComment || "-",
+        hrComment: data.hrComment || "-" // ✅ ใช้ของล่าสุด
       };
 
       createPDF(enrichedForm);
@@ -413,14 +425,34 @@ function Document() {
           margin: [0, 0, 0, 20]
         },
 
-        { text: `ขอแสดงความนับถือ`, alignment: "right", margin: [0, 20, 0, 0] },
+        { text: `ขอแสดงความนับถือ          .`, alignment: "right", margin: [0, 20, 0, 0] },
+
         {
           columns: [
-            { width: '50%', text: `ลงชื่อ ..................................................`, alignment: "center" },
-            { width: '50%', text: `(${form.fullName || '-'})`, alignment: "center" }
+            { width: '33%', text: `ลงชื่อ ....${form.fullName || '-'}.....`, alignment: "center" },
+            { width: '33%', text: `ลงชื่อ ....${form.gmComment || '-'}.....`, alignment: "center" },
+            { width: '33%', text: `ลงชื่อ ....${(form.hrComment && form.hrComment !== "-" ? form.hrComment : '-')}.....`, alignment: "center" },
           ],
-          margin: [0, 20, 0, 0]
+          margin: [0, 10, 0, 0]
+        },
+        {
+          columns: [
+            { width: '33%', text: `(${form.fullName || '-'})`, alignment: "center" },
+            { width: '33%', text: `(${form.gmComment || '-'})`, alignment: "center" },
+            { width: '33%', text: (form.hrComment && form.hrComment !== "-" ? `(${form.hrComment})` : ""), alignment: "center" }
+          ],
+          margin: [0, 0, 0, 0]
+        },
+
+        {
+          columns: [
+            { width: '33%', text: "พนักงาน", alignment: "center" },
+            { width: '33%', text: "ผู้จัดการทั่วไป", alignment: "center" },
+            { width: '33%', text: (form.hrComment && form.hrComment !== "-" ? "ทรัพยากรบุคคล" : ""), alignment: "center" }
+          ],
+          margin: [0, 5, 0, 0]
         }
+
       ],
       styles: {
         header: { fontSize: 18, bold: true, alignment: "center" },
