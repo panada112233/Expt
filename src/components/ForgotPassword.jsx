@@ -7,6 +7,7 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isThaiInput, setIsThaiInput] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -22,7 +23,7 @@ const ForgotPassword = () => {
 
     try {
       const response = await axios.post(
-        'https://localhost:7039/api/PasswordResets/reset-request',
+        'http://192.168.1.188/hrwebapi/api/PasswordResets/reset-request',
         { email },
         { headers: { 'Content-Type': 'application/json' } }
       );
@@ -35,7 +36,7 @@ const ForgotPassword = () => {
       }
     } catch (error) {
       console.error('Error:', error);
-      setMessage('ไม่สามารถติดต่อเซิร์ฟเวอร์ได้');
+      setMessage('กรุณาระบุอีเมลให้ถูกต้อง');
     } finally {
       setIsLoading(false);
     }
@@ -47,7 +48,7 @@ const ForgotPassword = () => {
       <h1 className="text-3xl md:text-4xl text-blue-700 font-FontInter p-6">
         THE EXPERTISE CO,LTD.
       </h1>
-      
+
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg space-y-6 text-center">
         {/* หัวข้อฟอร์ม */}
         <h2 className="text-2xl md:text-3xl font-bold text-blue-700 font-FontNoto">
@@ -57,16 +58,24 @@ const ForgotPassword = () => {
         {/* ฟอร์ม */}
         <form onSubmit={handleSubmit} className="space-y-4 text-left">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 font-FontNoto">อีเมลที่ใช้สมัคร</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1 font-FontNoto">อีเมล</label>
             <input
               type="email"
-              className="input input-bordered w-full text-black bg-white font-FontNoto"
-              placeholder="กรอกอีเมลของคุณ"
+              className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiInput ? 'placeholder-red-500' : ''}`}
+              placeholder={isThaiInput ? 'กรุณากรอกเป็นภาษาอังกฤษเท่านั้น' : 'กรอกอีเมลของคุณ'}
               value={email}
               onChange={(e) => {
                 const value = e.target.value;
                 if (/^[^\u0E00-\u0E7F]*$/.test(value)) {
                   setEmail(value);
+                  setIsThaiInput(false);
+                }
+              }}
+              onBeforeInput={(e) => {
+                const char = e.data;
+                if (char && /[ก-๙]/.test(char)) {
+                  e.preventDefault();
+                  setIsThaiInput(true);
                 }
               }}
               required
@@ -83,10 +92,10 @@ const ForgotPassword = () => {
 
           <button
             type="submit"
-            className="btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold font-FontNoto"
+            className="btn w-full !bg-blue-500 hover:bg-blue-700 !text-white font-bold font-FontNoto"
             disabled={isLoading}
           >
-            {isLoading ? 'กำลังส่งลิงก์...' : 'ส่งลิงก์รีเซ็ตรหัสผ่าน'}
+            {isLoading ? 'กำลังส่งรหัสยืนยัน...' : 'ขอรหัสยืนยัน'}
           </button>
         </form>
       </div>

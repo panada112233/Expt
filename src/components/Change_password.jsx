@@ -13,6 +13,10 @@ function ChangePassword() {
   const [showNewPassword2, setShowNewPassword2] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [popupVisible, setPopupVisible] = useState(false);
+  const [isThaiOldPassword, setIsThaiOldPassword] = useState(false);
+  const [isThaiNewPassword1, setIsThaiNewPassword1] = useState(false);
+  const [isThaiNewPassword2, setIsThaiNewPassword2] = useState(false);
+
 
   const navigate = useNavigate();
 
@@ -33,7 +37,7 @@ function ChangePassword() {
 
     try {
       const response = await axios.post(
-        "https://localhost:7039/api/Users/ChangePassword",
+        "http://192.168.1.188/hrwebapi/api/Users/ChangePassword",
         resetData,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -77,13 +81,24 @@ function ChangePassword() {
             <div className="relative">
               <input
                 type={showOldPassword ? "text" : "password"}
-                className="input input-bordered w-full text-black bg-white font-FontNoto"
-                placeholder="รหัสยืนยัน"
+                className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiOldPassword ? "placeholder-red-500" : ""
+                  }`}
+                placeholder={
+                  isThaiOldPassword ? "กรุณากรอกเป็นภาษาอังกฤษเท่านั้น" : "รหัสยืนยัน"
+                }
                 value={oldPassword}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (/^[^\u0E00-\u0E7F]*$/.test(value)) {
                     setOldPassword(value);
+                    setIsThaiOldPassword(false);
+                  }
+                }}
+                onBeforeInput={(e) => {
+                  const char = e.data;
+                  if (char && /[ก-๙]/.test(char)) {
+                    e.preventDefault();
+                    setIsThaiOldPassword(true);
                   }
                 }}
                 required
@@ -110,13 +125,24 @@ function ChangePassword() {
             <div className="relative">
               <input
                 type={showNewPassword1 ? "text" : "password"}
-                className="input input-bordered w-full text-black bg-white font-FontNoto"
-                placeholder="รหัสผ่านใหม่"
+                className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiNewPassword1 ? "placeholder-red-500" : ""
+                  }`}
+                placeholder={
+                  isThaiNewPassword1 ? "กรุณากรอกเป็นภาษาอังกฤษเท่านั้น" : "รหัสผ่านใหม่"
+                }
                 value={newPassword1}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (/^[^\u0E00-\u0E7F]*$/.test(value)) {
                     setNewPassword1(value);
+                    setIsThaiNewPassword1(false);
+                  }
+                }}
+                onBeforeInput={(e) => {
+                  const char = e.data;
+                  if (char && /[ก-๙]/.test(char)) {
+                    e.preventDefault();
+                    setIsThaiNewPassword1(true);
                   }
                 }}
                 required
@@ -143,13 +169,24 @@ function ChangePassword() {
             <div className="relative">
               <input
                 type={showNewPassword2 ? "text" : "password"}
-                className="input input-bordered w-full text-black bg-white font-FontNoto"
-                placeholder="ยืนยันรหัสผ่านใหม่"
+                className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiNewPassword2 ? "placeholder-red-500" : ""
+                  }`}
+                placeholder={
+                  isThaiNewPassword2 ? "กรุณากรอกเป็นภาษาอังกฤษเท่านั้น" : "ยืนยันรหัสผ่านใหม่"
+                }
                 value={newPassword2}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (/^[^\u0E00-\u0E7F]*$/.test(value)) {
                     setNewPassword2(value);
+                    setIsThaiNewPassword2(false);
+                  }
+                }}
+                onBeforeInput={(e) => {
+                  const char = e.data;
+                  if (char && /[ก-๙]/.test(char)) {
+                    e.preventDefault();
+                    setIsThaiNewPassword2(true);
                   }
                 }}
                 required
@@ -170,10 +207,10 @@ function ChangePassword() {
 
           <button
             type="submit"
-            className="btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold font-FontNoto"
+            className="btn w-full !bg-blue-500 hover:bg-blue-700 !text-white font-bold font-FontNoto"
             disabled={loading}
           >
-            {loading ? "กำลังบันทึก..." : "ยืนยัน"}
+            {loading ? "กำลังบันทึก..." : "เปลี่ยนรหัสผ่าน"}
           </button>
         </form>
       </div>

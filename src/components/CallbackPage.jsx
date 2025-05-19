@@ -17,13 +17,13 @@ const CallbackPage = () => {
         return;
       }
 
-      fetch("https://localhost:7039/api/Users/Callback", {
+      fetch("http://192.168.1.188/hrwebapi/api/Users/Callback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           code,
           userID,
-          redirectUri: "http://localhost:5173/callback"
+          redirectUri: "http://192.168.1.188/callback"
         }),
       })
         .then((response) => response.json())

@@ -64,17 +64,17 @@ const EmpBase = () => {
     try {
       // ✅ ดึงข้อมูลโปรไฟล์รูปภาพ
       const profileResponse = await axios.get(
-        `https://localhost:7039/api/Files/GetProfileImage?userID=${id}`
+        `http://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${id}`
       );
 
       if (profileResponse.status === 200) {
-        const fullImageUrl = `https://localhost:7039/api/Files/GetProfileImage?userID=${id}`;
+        const fullImageUrl = `http://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${id}`;
         setCurrentProfileImage(fullImageUrl);
       }
 
       // ✅ ดึงข้อมูลผู้ใช้งาน
       const userResponse = await axios.get(
-        `https://localhost:7039/api/Users/Getbyid/${id}`
+        `http://192.168.1.188/hrwebapi/api/Users/Getbyid/${id}`
       );
       if (userResponse.status === 200) {
         const userData = userResponse.data;

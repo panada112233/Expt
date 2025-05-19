@@ -80,7 +80,7 @@ function Profile() {
   // ดึงข้อมูลโปรไฟล์เมื่อ Component ถูกโหลด
   useEffect(() => {
     if (userID) {
-      fetch(`https://localhost:7039/api/Users/Profile/${userID}`, {
+      fetch(`http://192.168.1.188/hrwebapi/api/Users/Profile/${userID}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -103,7 +103,7 @@ function Profile() {
         });
       const fetchProfileImage = async () => {
         try {
-          const imageUrl = `https://localhost:7039/api/Files/GetProfileImage?userID=${userID}`;
+          const imageUrl = `http://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${userID}`;
           const base64Image = await convertToBase64(imageUrl); // แปลง URL เป็น Base64
 
           if (base64Image) {
@@ -154,7 +154,7 @@ function Profile() {
       return;
     }
 
-    fetch(`https://localhost:7039/api/Users/Update`, {
+    fetch(`http://192.168.1.188/hrwebapi/api/Users/Update`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -195,13 +195,13 @@ function Profile() {
     formData.append("file", profilePicture);
 
     try {
-      const response = await axios.post(`https://localhost:7039/api/Files/UploadProfile?userID=${userID}`, formData, {
+      const response = await axios.post(`http://192.168.1.188/hrwebapi/api/Files/UploadProfile?userID=${userID}`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
 
       if (response.status === 200) {
         setMessages([{ tags: "success", text: "อัปโหลดรูปโปรไฟล์สำเร็จ!", className: "font-FontNoto" }]);
-        setCurrentProfileImage(`https://localhost:7039${response.data.filePath}`);
+        setCurrentProfileImage(`http://192.168.1.188/hrwebapi${response.data.filePath}`);
         setProfilePicture(null);
       }
     } catch (error) {

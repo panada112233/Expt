@@ -20,7 +20,7 @@ const ChatPage = ({ currentUserId, popupMode = false }) => {
     const [text, setText] = useState('');
 
     const api = axios.create({
-        baseURL: "https://localhost:7039/api",
+        baseURL: "http://192.168.1.188/hrwebapi/api",
         headers: {
             'Content-Type': 'application/json'
         }

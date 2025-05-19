@@ -126,10 +126,10 @@ const LandingAfterLogin = () => {
 
     const fetchData = async (userId) => {
         try {
-            const profileImgUrl = `https://localhost:7039/api/Files/GetProfileImage?userID=${userId}`;
+            const profileImgUrl = `http://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${userId}`;
             setProfileImage(profileImgUrl);
 
-            const userRes = await axios.get(`https://localhost:7039/api/Users/Getbyid/${userId}`);
+            const userRes = await axios.get(`http://192.168.1.188/hrwebapi/api/Users/Getbyid/${userId}`);
             const userData = userRes.data;
             setUserName(`${userData.firstName} ${userData.lastName}`);
             setIsLineLinked(typeof userData.lineUserId === "string" && userData.lineUserId.trim() !== "");
@@ -137,7 +137,7 @@ const LandingAfterLogin = () => {
             const today = new Date().toISOString().split("T")[0];
 
             // ✅ โหลด worktimes ของทุก user
-            const worktimeRes = await axios.get("https://localhost:7039/api/Worktime");
+            const worktimeRes = await axios.get("http://192.168.1.188/hrwebapi/api/Worktime");
             setWorktimes(worktimeRes.data); // ✅ ใส่ทั้งหมด
 
             const userWorktimes = worktimeRes.data.filter(item => item.userID === parseInt(userId));
@@ -282,7 +282,7 @@ const LandingAfterLogin = () => {
                         formData.append('longitude', longitude);
                         formData.append('address', address);
 
-                        await axios.post('https://localhost:7039/api/Worktime/CheckIn', formData);
+                        await axios.post('http://192.168.1.188/hrwebapi/api/Worktime/CheckIn', formData);
 
                         setModalMessage(
                             <div className="flex flex-col items-center justify-center text-center">
@@ -353,7 +353,7 @@ const LandingAfterLogin = () => {
             formData.append('userID', userID);
 
             // ส่งคำขอไปที่ API
-            const response = await axios.post('https://localhost:7039/api/Worktime/CheckOut', formData);
+            const response = await axios.post('http://192.168.1.188/hrwebapi/api/Worktime/CheckOut', formData);
 
             setModalMessage(
                 <div className="flex flex-col items-center justify-center text-center">
@@ -614,7 +614,7 @@ before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
                                             <option className="font-FontNoto" value="" disabled>-- กรุณาเลือก --</option>
                                             {[
                                                 'Office', 'Work from home', 'Off-site (เข้าหน่วยงาน)', 'เช้า Work from home บ่าย Office',
-                                                'ลาป่วย', 'ลากิจส่วนตัว', 'ลาพักร้อน', 'ลาคลอด', 'ลาบวช'
+                                                'ลาป่วย', 'ลากิจส่วนตัว'
                                             ].map(place => (
                                                 <option className="font-FontNoto" key={place} value={place}>{place}</option>
                                             ))}
@@ -630,7 +630,7 @@ before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
                                                 onChange={(e) => setLeaveType(e.target.value)}
                                             >
                                                 <option className="font-FontNoto" value="" disabled>-- เลือกช่วงเวลา --</option>
-                                                <option className="font-FontNoto" value="เต็มวัน">เต็มวัน</option>
+                                                {/* <option className="font-FontNoto" value="เต็มวัน">เต็มวัน</option> */}
                                                 <option className="font-FontNoto" value="ครึ่งวันเช้า">ครึ่งวันเช้า</option>
                                                 <option className="font-FontNoto" value="ครึ่งวันบ่าย">ครึ่งวันบ่าย</option>
                                             </select>

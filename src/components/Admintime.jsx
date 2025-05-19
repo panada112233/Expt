@@ -22,8 +22,8 @@ const Admintime = () => {
         const fetchAll = async () => {
             try {
                 const [wtRes, userRes] = await Promise.all([
-                    axios.get("https://localhost:7039/api/Worktime"),
-                    axios.get("https://localhost:7039/api/Users")
+                    axios.get("http://192.168.1.188/hrwebapi/api/Worktime"),
+                    axios.get("http://192.168.1.188/hrwebapi/api/Users")
                 ]);
                 setWorktimes(wtRes.data);
                 setUsers(userRes.data);
@@ -36,7 +36,7 @@ const Admintime = () => {
 
     useEffect(() => {
         axios
-            .get("https://localhost:7039/api/Admin/Users")
+            .get("http://192.168.1.188/hrwebapi/api/Admin/Users")
             .then((response) => {
                 if (Array.isArray(response.data)) {
                     setUsers(response.data);
@@ -62,8 +62,8 @@ const Admintime = () => {
                 setAdminName(response.name || "ไม่มีชื่อแอดมิน");
                 setProfilePic(
                     response.profilePictureUrl
-                        ? `https://localhost:7039${response.profilePictureUrl}`
-                        : "https://localhost:7039/uploads/admin/default-profile.jpg"
+                        ? `http://192.168.1.188/hrwebapi${response.profilePictureUrl}`
+                        : "http://192.168.1.188/hrwebapi/uploads/admin/default-profile.jpg"
                 );
 
             } catch (error) {
@@ -132,7 +132,7 @@ const Admintime = () => {
 
         try {
             const response = await axios.post(
-                "https://localhost:7039/api/Admin/UpdateAdminInfo",
+                "http://192.168.1.188/hrwebapi/api/Admin/UpdateAdminInfo",
                 formData,
                 { headers: { "Content-Type": "multipart/form-data" } }
             );
@@ -163,7 +163,7 @@ const Admintime = () => {
         formData.append("id", objUser.userid);
         console.log(formData)
         try {
-            const response = await axios.post("https://localhost:7039/api/Admin/UpdateAdminInfo", formData,
+            const response = await axios.post("http://192.168.1.188/hrwebapi/api/Admin/UpdateAdminInfo", formData,
                 {
                     headers: { "Content-Type": "multipart/form-data" },
                 }
@@ -171,8 +171,8 @@ const Admintime = () => {
 
             if (response.data && response.data.profilePictureUrl) {
                 const profilePictureUrl = response.data.profilePictureUrl
-                    ? `https://localhost:7039${response.data.profilePictureUrl}`
-                    : "https://localhost:7039/uploads/users/default-profile.jpg";
+                    ? `http://192.168.1.188/hrwebapi${response.data.profilePictureUrl}`
+                    : "http://192.168.1.188/hrwebapi/uploads/users/default-profile.jpg";
 
                 setProfilePic(profilePictureUrl);
                 setUploadMessage(
@@ -233,7 +233,7 @@ const Admintime = () => {
                                     src={`${profilePic}?t=${new Date().getTime()}`} // ✅ ป้องกันการแคช
                                     alt="Admin Profile"
                                     className="rounded-full border-4 border-cyan-700 object-cover w-32 h-32"
-                                    onError={(e) => { e.target.src = "https://localhost:7039/uploads/admin/default-profile.jpg"; }} // ✅ ถ้าโหลดรูปไม่ได้ ให้ใช้รูป default
+                                    onError={(e) => { e.target.src = "http://192.168.1.188/hrwebapi/uploads/admin/default-profile.jpg"; }} // ✅ ถ้าโหลดรูปไม่ได้ ให้ใช้รูป default
                                 />
                             ) : (
                                 <p className="text-red-500 font-FontNoto"></p> // ✅ แสดงข้อความถ้าไม่มีรูป

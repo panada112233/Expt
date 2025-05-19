@@ -23,8 +23,8 @@ const WorktimeEmp = () => {
     const fetchAll = async () => {
         try {
             const [wtRes, userRes] = await Promise.all([
-                axios.get("https://localhost:7039/api/Worktime"),
-                axios.get("https://localhost:7039/api/Users")
+                axios.get("http://192.168.1.188/hrwebapi/api/Worktime"),
+                axios.get("http://192.168.1.188/hrwebapi/api/Users")
             ]);
             setWorktimes(wtRes.data);
             setUsers(userRes.data);
@@ -48,7 +48,7 @@ const WorktimeEmp = () => {
 
     const handleEditSubmit = async () => {
         try {
-            await axios.put(`https://localhost:7039/api/Worktime/${editingRecord.worktimeID}`, editForm);
+            await axios.put(`http://192.168.1.188/hrwebapi/api/Worktime/${editingRecord.worktimeID}`, editForm);
             setEditingRecord(null);
             fetchAll();
         } catch (err) {
@@ -60,7 +60,7 @@ const WorktimeEmp = () => {
     const handleDelete = async () => {
         try {
             await axios.delete(
-                `https://localhost:7039/api/Worktime/${deleteRecordID}`,
+                `http://192.168.1.188/hrwebapi/api/Worktime/${deleteRecordID}`,
                 { headers: { "Content-Type": "application/json" } }
             );
             setDeleteRecordID(null);

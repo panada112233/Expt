@@ -6,9 +6,10 @@ import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 const Login = ({ setIsLoggedIn }) => {
     const [identifier, setIdentifier] = useState(() => localStorage.getItem('savedEmail') || '');
+    const [isThaiInput, setIsThaiInput] = useState(false);
+    const [isThaiPassword, setIsThaiPassword] = useState(false);
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(!!localStorage.getItem('savedEmail'));
-
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -22,8 +23,8 @@ const Login = ({ setIsLoggedIn }) => {
         const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
 
         const url = isEmail
-            ? "https://localhost:7039/api/Users/Login"
-            : "https://localhost:7039/api/Admin/login";
+            ? "http://192.168.1.188/hrwebapi/api/Users/Login"
+            : "http://192.168.1.188/hrwebapi/api/Admin/login";
 
         const data = isEmail
             ? { email: identifier, passwordHash: password }
@@ -81,15 +82,26 @@ const Login = ({ setIsLoggedIn }) => {
 
                 <form onSubmit={handleSubmit} className="space-y-4 font-FontNoto">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1 font-FontNoto">อีเมลที่ใช้สมัคร</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1 font-FontNoto">อีเมล</label>
                         <input
                             type="text"
-                            className="input input-bordered w-full text-black bg-white font-FontNoto"
-                            placeholder="กรอกอีเมลที่ใช้สมัคร"
+                            className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiInput ? 'placeholder-red-500' : ''
+                                }`}
+                            placeholder={isThaiInput ? 'กรุณากรอกเป็นภาษาอังกฤษเท่านั้น' : 'กรอกอีเมลที่ใช้สมัคร'}
                             value={identifier}
-                            onChange={(e) =>
-                                /^[a-zA-Z0-9@._-]*$/.test(e.target.value) && setIdentifier(e.target.value)
-                            }
+                            onChange={(e) => {
+                                if (/^[a-zA-Z0-9@._-]*$/.test(e.target.value)) {
+                                    setIdentifier(e.target.value);
+                                    setIsThaiInput(false);
+                                }
+                            }}
+                            onBeforeInput={(e) => {
+                                const char = e.data;
+                                if (char && /[ก-๙]/.test(char)) {
+                                    e.preventDefault();
+                                    setIsThaiInput(true);
+                                }
+                            }}
                             required
                         />
                     </div>
@@ -99,12 +111,23 @@ const Login = ({ setIsLoggedIn }) => {
                         <div className="relative">
                             <input
                                 type={showPassword ? 'text' : 'password'}
-                                className="input input-bordered w-full text-black bg-white font-FontNoto"
-                                placeholder="รหัสผ่าน"
+                                className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiPassword ? 'placeholder-red-500' : ''
+                                    }`}
+                                placeholder={isThaiPassword ? 'กรุณากรอกเป็นภาษาอังกฤษเท่านั้น' : 'รหัสผ่าน'}
                                 value={password}
-                                onChange={(e) =>
-                                    /^[a-zA-Z0-9]*$/.test(e.target.value) && setPassword(e.target.value)
-                                }
+                                onChange={(e) => {
+                                    if (/^[a-zA-Z0-9]*$/.test(e.target.value)) {
+                                        setPassword(e.target.value);
+                                        setIsThaiPassword(false);
+                                    }
+                                }}
+                                onBeforeInput={(e) => {
+                                    const char = e.data;
+                                    if (char && /[ก-๙]/.test(char)) {
+                                        e.preventDefault();
+                                        setIsThaiPassword(true);
+                                    }
+                                }}
                                 required
                             />
                             <button
@@ -130,11 +153,11 @@ const Login = ({ setIsLoggedIn }) => {
                         </label>
                     </div>
 
-                    {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+                    {error && <p className="text-red-500 text-sm text-center font-FontNoto">{error}</p>}
 
                     <button
                         type="submit"
-                        className="btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold"
+                        className="btn w-full !bg-blue-500 hover:bg-blue-700 !text-white font-bold"
                         disabled={isLoading}
                     >
                         {isLoading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}

@@ -125,7 +125,7 @@ const LeaveRequestForm = () => {
 
     const showLeaveDetail = async (leave) => {
         try {
-            const res = await axios.get(`https://localhost:7039/api/LeaveRequest/User/${leave.userID}`);
+            const res = await axios.get(`http://192.168.1.188/hrwebapi/api/LeaveRequest/User/${leave.userID}`);
             if (res.status === 200) {
                 const stats = {
                     sick: { used: 0, current: 0, total: 0 },
@@ -182,12 +182,12 @@ const LeaveRequestForm = () => {
 
 
     const fetchLeaveTypes = async () => {
-        const res = await axios.get("https://localhost:7039/api/Document/GetLeaveTypes");
+        const res = await axios.get("http://192.168.1.188/hrwebapi/api/Document/GetLeaveTypes");
         setLeaveTypes(res.data);
     };
 
     const fetchProfile = async () => {
-        const res = await axios.get(`https://localhost:7039/api/Users/Profile/${userId}`);
+        const res = await axios.get(`http://192.168.1.188/hrwebapi/api/Users/Profile/${userId}`);
         if (res.data) {
             const user = res.data;
             setForm(prev => ({
@@ -204,7 +204,7 @@ const LeaveRequestForm = () => {
 
     const fetchLeaveHistory = async () => {
         try {
-            const res = await axios.get(`https://localhost:7039/api/LeaveRequest/User/${userId}`);
+            const res = await axios.get(`http://192.168.1.188/hrwebapi/api/LeaveRequest/User/${userId}`);
 
             if (res.status === 200) {
                 if (res.data.length === 0) {
@@ -292,7 +292,7 @@ const LeaveRequestForm = () => {
         };
 
         try {
-            const res = await axios.post("https://localhost:7039/api/LeaveRequest", payload);
+            const res = await axios.post("http://192.168.1.188/hrwebapi/api/LeaveRequest", payload);
             fetchLeaveHistory(); // โหลดใหม่หลังส่ง
             setShowSuccessModal(true); // ✅ เปิด modal popup สำเร็จ
         } catch (err) {

@@ -30,7 +30,7 @@ const GMInbox = () => {
 
   const fetchHistory = async () => {
     try {
-      const res = await axios.get("https://localhost:7039/api/LeaveRequest/gm/history");
+      const res = await axios.get("http://192.168.1.188/hrwebapi/api/LeaveRequest/gm/history");
       setHistory(res.data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -39,7 +39,7 @@ const GMInbox = () => {
   const fetchRequests = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get("https://localhost:7039/api/LeaveRequest/gm/pending");
+      const res = await axios.get("http://192.168.1.188/hrwebapi/api/LeaveRequest/gm/pending");
       console.log("📥 API กลับมาว่า:", res.data);
       setRequests(res.data);
     } catch (error) {
@@ -63,7 +63,7 @@ const GMInbox = () => {
       const userId = request.userID || request.user?.id;
       if (!userId) throw new Error("ไม่พบ userId");
 
-      const res = await axios.get(`https://localhost:7039/api/LeaveRequest/stats/${userId}`);
+      const res = await axios.get(`http://192.168.1.188/hrwebapi/api/LeaveRequest/stats/${userId}`);
 
       const enrichedRequest = {
         ...request,
@@ -91,7 +91,7 @@ const GMInbox = () => {
       setIsModalOpen(false);
 
       await axios.post(
-        `https://localhost:7039/api/LeaveRequest/gm/approve/${id}`,
+        `http://192.168.1.188/hrwebapi/api/LeaveRequest/gm/approve/${id}`,
         {
           Comment: ` ${signature.trim()}`,
           Signature: signature.trim()  // Add Signature here if needed
@@ -129,7 +129,7 @@ const GMInbox = () => {
     try {
       setIsModalOpen(false);
       await axios.post(
-        `https://localhost:7039/api/LeaveRequest/gm/reject/${id}`,
+        `http://192.168.1.188/hrwebapi/api/LeaveRequest/gm/reject/${id}`,
         { Comment: rejectionReason },
         {
           headers: {

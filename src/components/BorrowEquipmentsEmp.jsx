@@ -14,21 +14,21 @@ const BorrowEquipmentsEmp = () => {
 
   const fetchData = async () => {
     const [eqRes, brRes] = await Promise.all([
-      axios.get("https://localhost:7039/api/Equipment/AllEquipments"),
-      axios.get("https://localhost:7039/api/Equipment/BorrowRecords")
+      axios.get("http://192.168.1.188/hrwebapi/api/Equipment/AllEquipments"),
+      axios.get("http://192.168.1.188/hrwebapi/api/Equipment/BorrowRecords")
     ]);
     setEquipments(eqRes.data);
     setBorrows(brRes.data.filter(b => b.userID === userId));
   };
 
   const handleBorrow = async (equipmentId) => {
-    await axios.post("https://localhost:7039/api/Equipment/Borrow", { equipmentId, userId });
+    await axios.post("http://192.168.1.188/hrwebapi/api/Equipment/Borrow", { equipmentId, userId });
     fetchData();
   };
 
   const handleReturn = async (borrowId) => {
     try {
-      await axios.post("https://localhost:7039/api/Equipment/Return", {
+      await axios.post("http://192.168.1.188/hrwebapi/api/Equipment/Return", {
         borrowId: borrowId,
       });
       fetchData(); // โหลดข้อมูลใหม่

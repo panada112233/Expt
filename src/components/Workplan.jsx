@@ -249,9 +249,9 @@ const Workplan = () => {
 
             try {
                 // 🔹 โหลดข้อมูลผู้ใช้
-                const userRes = await axios.get(`https://localhost:7039/api/Users/Getbyid/${id}`);
+                const userRes = await axios.get(`http://192.168.1.188/hrwebapi/api/Users/Getbyid/${id}`);
                 if (userRes.status === 200) {
-                    const userData = userRes.data;
+                    const userData = userRes.data; 
                     setUserName(`${userData.firstName} ${userData.lastName}`);
 
                     const role = userData.role;
@@ -260,7 +260,7 @@ const Workplan = () => {
                 }
 
                 // 🔹 โหลดแผนงานทั้งหมดของผู้ใช้
-                const planRes = await axios.get(`https://localhost:7039/api/Workplan/${id}`);
+                const planRes = await axios.get(`http://192.168.1.188/hrwebapi/api/Workplan/${id}`);
                 const loadedTasks = {};
                 const today = new Date();
                 const todayKey = `${id}-${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
@@ -292,7 +292,7 @@ const Workplan = () => {
                 setTasks(loadedTasks);
 
                 // 🔹 โหลดข้อมูลเวลาเข้า-ออกทั้งหมดของผู้ใช้
-                const worktimeRes = await axios.get("https://localhost:7039/api/Worktime");
+                const worktimeRes = await axios.get("http://192.168.1.188/hrwebapi/api/Worktime");
                 const allWorktimes = worktimeRes.data.filter(item => item.userID === id);
 
                 // แปลงเป็น map: key = userID-year-month-day
@@ -330,7 +330,7 @@ const Workplan = () => {
 
     const clearPrivateNoteFromDatabase = async (dateToClear) => {
         try {
-            const res = await axios.get(`https://localhost:7039/api/Workplan/${userId}`);
+            const res = await axios.get(`http://192.168.1.188/hrwebapi/api/Workplan/${userId}`);
 
             const taskForTheDay = res.data.find(t =>
                 new Date(t.date).toDateString() === new Date(dateToClear).toDateString()
@@ -342,7 +342,7 @@ const Workplan = () => {
                     privateNote: "", // ✅ ล้างโน้ตส่วนตัว
                 };
 
-                await axios.put(`https://localhost:7039/api/Workplan/${taskForTheDay.id}`, updatedTask);
+                await axios.put(`http://192.168.1.188/hrwebapi/api/Workplan/${taskForTheDay.id}`, updatedTask);
 
             } else {
             }
@@ -352,7 +352,7 @@ const Workplan = () => {
 
     const deleteTaskFromDatabase = async (dateToDelete) => {
         try {
-            const res = await axios.get(`https://localhost:7039/api/Workplan/${userId}`);
+            const res = await axios.get(`http://192.168.1.188/hrwebapi/api/Workplan/${userId}`);
 
             const taskForTheDay = res.data.find(t =>
                 new Date(t.date).toDateString() === new Date(dateToDelete).toDateString()
@@ -368,7 +368,7 @@ const Workplan = () => {
                     noteType: taskForTheDay.noteType || "public",
                 };
 
-                await axios.put(`https://localhost:7039/api/Workplan/${taskForTheDay.id}`, updatedTask);
+                await axios.put(`http://192.168.1.188/hrwebapi/api/Workplan/${taskForTheDay.id}`, updatedTask);
             } else {
             }
         } catch (error) {
@@ -433,24 +433,24 @@ const Workplan = () => {
             };
 
             // ดึงข้อมูลแผนในวันเดียวกัน
-            const res = await axios.get(`https://localhost:7039/api/Workplan/${task.userID}`);
+            const res = await axios.get(`http://192.168.1.188/hrwebapi/api/Workplan/${task.userID}`);
             const sameDayTasks = res.data.filter(t =>
                 new Date(t.date).toDateString() === new Date(task.date).toDateString()
             );
 
             if (sameDayTasks.length > 0) {
                 // แก้ไขตัวแรก และลบตัวอื่น
-                await axios.put(`https://localhost:7039/api/Workplan/${sameDayTasks[0].id}`, {
+                await axios.put(`http://192.168.1.188/hrwebapi/api/Workplan/${sameDayTasks[0].id}`, {
                     ...mappedTask,
                     id: sameDayTasks[0].id
                 });
 
                 for (let i = 1; i < sameDayTasks.length; i++) {
-                    await axios.delete(`https://localhost:7039/api/Workplan/${sameDayTasks[i].id}`);
+                    await axios.delete(`http://192.168.1.188/hrwebapi/api/Workplan/${sameDayTasks[i].id}`);
                 }
             } else {
                 // บันทึกใหม่
-                await axios.post('https://localhost:7039/api/Workplan', mappedTask);
+                await axios.post('http://192.168.1.188/hrwebapi/api/Workplan', mappedTask);
             }
         } catch (error) {
         }

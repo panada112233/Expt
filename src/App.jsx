@@ -23,8 +23,6 @@ import TrendStatistics from './components/TrendStatistics';
 import LeaveStatistics from './components/LeaveStatistics';
 import Allemployee from './components/Allemployee';
 import Alldocuments from './components/Alldocuments';
-import ManagerView from './components/ManagerView';
-import HRView from './components/HRView';
 import EmployeeView from './components/EmployeeView';
 
 import EmpHome from './components/EmpHome';
@@ -45,7 +43,6 @@ import MyEducation from './components/My_education';
 import MyExperience from './components/My_experience';
 import ChangeProfile from './components/Change_profile';
 import ForgotPassword from './components/ForgotPassword';
-import LeaveForm from './components/LeaveForm';
 import Allcreate from './components/Allcreate';
 
 import AdminDashboard from "./components/AdminDashboard";
@@ -114,8 +111,6 @@ function App() {
                   />
                 }
               />
-
-              <Route path="LeaveForm" element={<LeaveForm />} />
               <Route path="Change_password" element={<ChangePassword />} />
               <Route path="Document" element={<Document />} />
               <Route path="My_education" element={<MyEducation />} />
@@ -126,8 +121,6 @@ function App() {
               <Route path="LeaveStatistics" element={<LeaveStatistics />} />
               <Route path="Allemployee" element={<Allemployee />} />
               <Route path="Alldocuments" element={<Alldocuments />} />
-              <Route path="ManagerView" element={<ManagerView />} />
-              <Route path="HRView" element={<HRView />} />
               <Route path="EmployeeView" element={<EmployeeView />} />
               <Route path="Allcreate" element={<Allcreate />} />
               <Route path="BorrowEquipmentsEmp" element={<BorrowEquipmentsEmp />} />
