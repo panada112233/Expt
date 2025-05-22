@@ -15,6 +15,7 @@ const EmpBase = () => {
   // ✅ ใช้ useState แทนการดึงทันที
   const [currentUserId, setCurrentUserId] = useState("");
   const [userID, setUserID] = useState("");
+  const [roleText, setRoleText] = useState("กำลังโหลด...");
 
   // ✅ ดึงข้อมูลจาก sessionStorage หลังจาก component mount
   useEffect(() => {
@@ -61,8 +62,9 @@ const EmpBase = () => {
   };
 
   const fetchProfileImageAndUserData = async (id) => {
+    // แยกการดึงข้อมูลรูปภาพและข้อมูลผู้ใช้ออกจากกัน
+    // ดึงข้อมูลรูปภาพ
     try {
-      // ✅ ดึงข้อมูลโปรไฟล์รูปภาพ
       const profileResponse = await axios.get(
         `http://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${id}`
       );
@@ -71,20 +73,33 @@ const EmpBase = () => {
         const fullImageUrl = `http://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${id}`;
         setCurrentProfileImage(fullImageUrl);
       }
+    } catch (error) {
+      console.error("Error fetching profile image:", error);
+      // กำหนดรูปภาพเริ่มต้น
+      setCurrentProfileImage("http://192.168.1.188/hrwebapi/api/Files/GetDefaultProfileImage");
+    }
 
-      // ✅ ดึงข้อมูลผู้ใช้งาน
+    // ดึงข้อมูลผู้ใช้งานแยกต่างหาก
+    try {
       const userResponse = await axios.get(
         `http://192.168.1.188/hrwebapi/api/Users/Getbyid/${id}`
       );
       if (userResponse.status === 200) {
         const userData = userResponse.data;
-        setUserName(`${userData.firstName} ${userData.lastName}` || "ไม่ทราบชื่อ");
+        if (userData && (userData.firstName || userData.lastName)) {
+          setUserName(`${userData.firstName || ""} ${userData.lastName || ""}`.trim());
+        } else {
+          setUserName("ผู้ใช้งานใหม่");
+        }
+        const position = userData.designation || "ไม่ระบุตำแหน่ง";
+        setRoleText(position);
+
       }
     } catch (error) {
-      console.error("Error fetching profile image or user data:", error);
+      console.error("Error fetching user data:", error);
+      setUserName("ผู้ใช้งานใหม่");
     }
   };
-
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -137,7 +152,7 @@ const EmpBase = () => {
 
 
       {/* Navbar */}
-      <div className="navbar fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-slate-50 via-blue-100 to-cyan-50 justify-between items-center px-4 py-2 h-[64px]">
+      <div className="navbar fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-100 via-blue-50 to-cyan-50 justify-between items-center px-4 py-2 h-[64px]">
         <div className="flex items-center">
           <div className="font-bold text-blue-950 text-lg">
             <h1>THE EXPERTISE CO,LTD.</h1>
@@ -167,9 +182,10 @@ const EmpBase = () => {
       <div className="flex flex-col md:flex-row flex-1 py-2">
         {/* Sidebar */}
         <aside
-          className={`bg-white shadow-md text-black fixed top-[64px] left-0 h-[calc(100vh-64px)] w-[280px] md:w-[280px] p-4 z-50 transform transition-transform overflow-y-auto
-${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+          className={`bg-gradient-to-r from-blue-100 via-blue-50 to-cyan-50 shadow-md text-black fixed top-[64px] left-0 h-[calc(100vh-64px)] w-[280px] md:w-[280px] p-4 z-50 transform transition-transform overflow-y-auto
+  ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
         >
+
           <div className="text-center my-4">
             {/* Avatar */}
             <div className="avatar mb-4 mx-auto">
@@ -180,7 +196,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                 <img
                   src={currentProfileImage}
                   alt="โปรไฟล์พนักงาน"
-                  className="object-cover w-full h-full"
+                  className="object-cover w-full h-full font-FontNoto"
                 />
               </div>
             </div>
@@ -188,7 +204,11 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
               <h4 className="text-base font-bold text-black font-FontNoto whitespace-nowrap truncate px-2">
                 {userName}
               </h4>
+              <p className="text-sm text-gray-600 font-FontNoto px-2 truncate">
+                {roleText}
+              </p>
             </div>
+
             {/* Modal รูปภาพขยาย */}
             {isModalOpen && (
               <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
@@ -211,46 +231,36 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
           {/* Sidebar Links */}
           <div className="overflow-y-auto max-h-[calc(100vh-64px)]">
             <ul className="space-y-2 w-full text-sm font-FontNoto">
-              <details className="group ">
-                <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden">
-                  Dashboard
-                  <svg
-                    className="w-4 h-4 transition-transform group-open:rotate-180 flex-shrink-0 ml-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </summary>
-
-                <ul className="mt-2 ml-3 space-y-1 text-sm">
-                  <li>
-                    <Link
-                      to="/EmpHome/Workplan"
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                    >
-                      ปฏิทินการทำงาน
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/EmpHome/WorkplanEmp"
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                    >
-                      แผนงานพนักงาน
-                    </Link>
-                  </li>
-                </ul>
-              </details>
-
+              <Link
+                to="/EmpHome/Workplan"
+                className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
+              >
+                ปฏิทินการทำงาน
+              </Link>
+              <Link
+                to="/EmpHome/Worktime"
+                className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
+              >
+                ระบบบันทึกเข้าออกงาน
+              </Link>
+              <Link
+                to="/EmpHome/Document"
+                className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
+              >
+                จัดการเอกสาร
+              </Link>
+              <Link
+                to="/EmpHome/LeaveRequestForm"
+                className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
+              >
+                ระบบลางาน
+              </Link>
+              <Link
+                to="/EmpHome/BorrowEquipmentsEmp"
+                className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
+              >
+                ยืม-คืนอุปกรณ์
+              </Link>
               <details className="group ">
                 <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden">
                   จัดการเอกสาร
@@ -270,24 +280,6 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                 </summary>
 
                 <ul className="mt-2 ml-3 space-y-1 text-sm">
-                  <li>
-                    <Link
-                      to="/EmpHome/LeaveRequestForm"
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                    >
-                      แบบฟอร์มใบลา
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/EmpHome/Document"
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                    >
-                      เอกสารของฉัน
-                    </Link>
-                  </li>
                   <li>
                     <Link
                       to="/EmpHome"
@@ -317,15 +309,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                   </svg>
                 </summary>
                 <ul className="mt-2 ml-3 space-y-1 text-sm">
-                  <li>
-                    <Link
-                      to="/EmpHome/Worktime"
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                    >
-                      การเข้า-ออกงาน
-                    </Link>
-                  </li>
+
                   <li>
                     <Link
                       to="/EmpHome/Profile"
@@ -353,15 +337,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                       การศึกษา
                     </Link>
                   </li>
-                  <li>
-                    <Link
-                      to="/EmpHome/BorrowEquipmentsEmp"
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                    >
-                      ยืม-คืนอุปกรณ์
-                    </Link>
-                  </li>
+
                 </ul>
               </details>
               {role === "Hr" ? (
@@ -369,7 +345,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                   <Link
                     to="/EmpHome/HRInbox"
                     onClick={() => setIsSidebarOpen(false)}
-                    className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 text-sm whitespace-nowrap overflow-hidden text-ellipsis"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
                   >
                     ใบลาพนักงาน
                   </Link>
@@ -381,7 +357,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                     <Link
                       to="/EmpHome/GMInbox"
                       onClick={() => setIsSidebarOpen(false)}
-                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 text-sm whitespace-nowrap overflow-hidden text-ellipsis"
+                      className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
                     >
                       ใบลาพนักงาน
                     </Link>
@@ -502,7 +478,7 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
                 <Link
                   to="/EmpHome/Logout"
                   onClick={() => setIsSidebarOpen(false)}
-                  className="cursor-pointer block px-4 py-2 rounded-md bg-white text-red-500 shadow hover:shadow-lg hover:bg-blue-900 hover:text-red-500 font-FontNoto font-bold transition duration-200"
+                  className="cursor-pointer block px-4 py-2 rounded-md bg-slate-500 text-white shadow hover:shadow-lg hover:bg-red-400 hover:text-cyan-950 font-FontNoto font-bold transition duration-200"
                 >
                   ออกจากระบบ
                 </Link>
@@ -517,8 +493,8 @@ ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
           />
         )}
         {/* Main Content */}
-        <div className="md:ml-[280px] mt-[64px] p-4 w-full min-h-[calc(100vh-64px)] overflow-auto bg-gradient-to-br">
-          <div className="w-full max-w-screen-xl mx-auto rounded-2xl shadow-xl p-6 bg-white backdrop-blur-md min-h-full">
+        <div className="md:ml-[280px] mt-[64px] p-2 w-full min-h-[calc(100vh-64px)] overflow-auto bg-gradient-to-br">
+          <div className="max-w-[1550px] mx-auto px-6 rounded-2xl shadow-xl py-4 bg-white backdrop-blur-md min-h-full">
             <Outlet />
           </div>
         </div>

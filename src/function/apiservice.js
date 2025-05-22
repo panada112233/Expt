@@ -13,7 +13,7 @@ export const GetUser = async () => {
         throw new Error("User ID is missing in localStorage data");
     }
 
-    const endpoint = `https://localhost:7039/api/Admin/GetAdminInfo?adminid=${jsondata.userid}`;
+    const endpoint = `http://192.168.1.188/hrwebapi/api/Admin/GetAdminInfo?adminid=${jsondata.userid}`;
 
     try {
         const response = await axios.get(endpoint);
