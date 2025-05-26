@@ -23,8 +23,8 @@ const WorkplanEmp = () => {
     const fetchAll = async () => {
         try {
             const [planRes, userRes] = await Promise.all([
-                axios.get("https://localhost:7039/api/Workplan"),
-                axios.get("https://localhost:7039/api/Users")
+                axios.get("https://192.168.1.188/hrwebapi/api/Workplan"),
+                axios.get("https://192.168.1.188/hrwebapi/api/Users")
             ]);
             setPlans(planRes.data);
             setUsers(userRes.data);

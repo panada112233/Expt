@@ -67,7 +67,7 @@ const Allcreate = () => {
         if (id) {
             setLoading(true);
             axios
-                .get(`https://localhost:7039/api/Admin/user/${id}`)
+                .get(`https://192.168.1.188/hrwebapi/api/Admin/user/${id}`)
                 .then((response) => {
                     setUser(response.data);
                     setLoading(false);
@@ -118,8 +118,8 @@ const Allcreate = () => {
         }
 
         const apiCall = id
-            ? axios.put(`https://localhost:7039/api/Admin/Users/${id}`, user)
-            : axios.post("https://localhost:7039/api/Admin/Users", user);
+            ? axios.put(`https://192.168.1.188/hrwebapi/api/Admin/Users/${id}`, user)
+            : axios.post("https://192.168.1.188/hrwebapi/api/Admin/Users", user);
 
         apiCall
             .then((response) => navigate(`/EmpHome/Allemployee`))

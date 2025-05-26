@@ -39,7 +39,7 @@ const Allemployee = () => {
 
     useEffect(() => {
         axios
-            .get("https://localhost:7039/api/Admin/Users")
+            .get("https://192.168.1.188/hrwebapi/api/Admin/Users")
             .then((response) => {
                 if (Array.isArray(response.data)) {
                     setUsers(response.data);
@@ -138,7 +138,7 @@ const Allemployee = () => {
                             <tbody className="text-center">
                                 {(searchTerm ? filteredUsers : users).length > 0 ? (
                                     (searchTerm ? filteredUsers : users).map((user) => {
-                                        const profileImageUrl = `https://localhost:7039/api/Files/GetProfileImage?userID=${user.userID}`;
+                                        const profileImageUrl = `https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${user.userID}`;
                                         return (
                                             <tr key={user.userID} className="hover:bg-blue-100 transition">
                                                 <td className="py-2">

@@ -22,8 +22,8 @@ const Alldocuments = () => {
                 return;
             }
             const [eduResponse, expResponse] = await Promise.all([
-                axios.get(`https://localhost:7039/api/Admin/educations/user/${user.userID}`),
-                axios.get(`https://localhost:7039/api/Admin/WorkExperiences/user/${user.userID}`)
+                axios.get(`https://192.168.1.188/hrwebapi/api/Admin/educations/user/${user.userID}`),
+                axios.get(`https://192.168.1.188/hrwebapi/api/Admin/WorkExperiences/user/${user.userID}`)
             ]);
 
             setEducations(eduResponse.data || []);

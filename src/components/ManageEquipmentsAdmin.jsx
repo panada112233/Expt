@@ -31,7 +31,7 @@ const ManageEquipmentsAdmin = () => {
 
   const handleDeleteConfirm = async () => {
     try {
-      await axios.delete(`https://localhost:7039/api/Equipment/Delete/${deleteTargetId}`);
+      await axios.delete(`https://192.168.1.188/hrwebapi/api/Equipment/Delete/${deleteTargetId}`);
       fetchData();
       document.getElementById("delete_confirm_modal").checked = false;
       setDeleteTargetId(null);
@@ -51,7 +51,7 @@ const ManageEquipmentsAdmin = () => {
     }
 
     try {
-      await axios.post("https://localhost:7039/api/Equipment/UpdateCount", {
+      await axios.post("https://192.168.1.188/hrwebapi/api/Equipment/UpdateCount", {
         equipmentId: selectedEquipment.equipmentID,
         adjustAmount: amount,
       });
@@ -68,9 +68,9 @@ const ManageEquipmentsAdmin = () => {
   const fetchData = async () => {
     try {
       const [eqRes, brRes, userRes] = await Promise.all([
-        axios.get("https://localhost:7039/api/Equipment/AllEquipments"),
-        axios.get("https://localhost:7039/api/Equipment/BorrowRecords"),
-        axios.get("https://localhost:7039/api/Admin/users")
+        axios.get("https://192.168.1.188/hrwebapi/api/Equipment/AllEquipments"),
+        axios.get("https://192.168.1.188/hrwebapi/api/Equipment/BorrowRecords"),
+        axios.get("https://192.168.1.188/hrwebapi/api/Admin/users")
       ]);
       setEquipments(eqRes.data);
       setBorrows(brRes.data);
@@ -86,7 +86,7 @@ const ManageEquipmentsAdmin = () => {
       alert("กรุณากรอกจำนวนอุปกรณ์ที่ถูกต้อง");
       return;
     }
-    await axios.post("https://localhost:7039/api/Equipment/Add", newEq);
+    await axios.post("https://192.168.1.188/hrwebapi/api/Equipment/Add", newEq);
     setNewEq({ name: '', description: '', totalCount: 0 });
     fetchData();
   };
@@ -117,7 +117,7 @@ const ManageEquipmentsAdmin = () => {
     }
 
     try {
-      await axios.post("https://localhost:7039/api/Equipment/Borrow", {
+      await axios.post("https://192.168.1.188/hrwebapi/api/Equipment/Borrow", {
         equipmentId: parseInt(selectedEquipment.equipmentID),
         userId: parseInt(selectedUserId)
       });

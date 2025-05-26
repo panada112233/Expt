@@ -59,7 +59,7 @@ const TrendStatistics = () => {
     useEffect(() => {
         const fetchDocuments = async () => {
             try {
-                const response = await axios.get("https://localhost:7039/api/Files");
+                const response = await axios.get("https://192.168.1.188/hrwebapi/api/Files");
 
                 const filteredFiles = response.data.filter(doc =>
                     new Date(doc.uploadDate).getFullYear() === selectedYear
@@ -98,8 +98,8 @@ const TrendStatistics = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const employeeResponse = await axios.get("https://localhost:7039/api/Users");
-                const experienceResponse = await axios.get("https://localhost:7039/api/WorkExperiences");
+                const employeeResponse = await axios.get("https://192.168.1.188/hrwebapi/api/Users");
+                const experienceResponse = await axios.get("https://192.168.1.188/hrwebapi/api/WorkExperiences");
 
                 if (employeeResponse.status === 200) {
                     setEmployeeData(employeeResponse.data);

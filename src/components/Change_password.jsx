@@ -37,7 +37,7 @@ function ChangePassword() {
 
     try {
       const response = await axios.post(
-        "https://localhost:7039/api/Users/ChangePassword",
+        "https://192.168.1.188/hrwebapi/api/Users/ChangePassword",
         resetData,
         { headers: { "Content-Type": "application/json" } }
       );

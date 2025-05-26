@@ -167,7 +167,7 @@ function Profile() {
 
   useEffect(() => {
     if (userID) {
-      fetch(`https://localhost:7039/api/Users/Profile/${userID}`, {
+      fetch(`https://192.168.1.188/hrwebapi/api/Users/Profile/${userID}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -190,7 +190,7 @@ function Profile() {
         });
       const fetchProfileImage = async () => {
         try {
-          const imageUrl = `https://localhost:7039/api/Files/GetProfileImage?userID=${userID}`;
+          const imageUrl = `https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${userID}`;
           const base64Image = await convertToBase64(imageUrl); // แปลง URL เป็น Base64
 
           if (base64Image) {
@@ -215,7 +215,7 @@ function Profile() {
   const fetchEducations = async () => {
     if (!userID) return;
     try {
-      const response = await axios.get(`https://localhost:7039/api/Educations/GetById/${userID}`);
+      const response = await axios.get(`https://192.168.1.188/hrwebapi/api/Educations/GetById/${userID}`);
       if (response.status === 200) {
         setEducations(response.data);
       }
@@ -227,7 +227,7 @@ function Profile() {
   const fetchExperiences = async () => {
     if (!userID) return;
     try {
-      const res = await axios.get(`https://localhost:7039/api/WorkExperiences/GetById/${userID}`);
+      const res = await axios.get(`https://192.168.1.188/hrwebapi/api/WorkExperiences/GetById/${userID}`);
       setExperiences(res.data);
     } catch (err) {
       console.error("โหลดประสบการณ์ล้มเหลว", err);
@@ -269,7 +269,7 @@ function Profile() {
       return;
     }
 
-    fetch(`https://localhost:7039/api/Users/Update`, {
+    fetch(`https://192.168.1.188/hrwebapi/api/Users/Update`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -315,13 +315,13 @@ function Profile() {
     formData.append("file", profilePicture);
 
     try {
-      const response = await axios.post(`https://localhost:7039/api/Files/UploadProfile?userID=${userID}`, formData, {
+      const response = await axios.post(`https://192.168.1.188/hrwebapi/api/Files/UploadProfile?userID=${userID}`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
 
       if (response.status === 200) {
         setMessages([{ tags: "success", text: "อัปโหลดรูปโปรไฟล์สำเร็จ!", className: "font-FontNoto" }]);
-        setCurrentProfileImage(`https://localhost:7039/api/Files/GetProfileImage?userID=${userID}`);
+        setCurrentProfileImage(`https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${userID}`);
         setProfilePicture(null);
       }
     } catch (error) {
@@ -373,13 +373,13 @@ function Profile() {
       if (isEditing) {
         const updated = { ...educations[editIndex], ...newEducation };
         const res = await axios.put(
-          `https://localhost:7039/api/Educations/Update/${updated.educationID}`,
+          `https://192.168.1.188/hrwebapi/api/Educations/Update/${updated.educationID}`,
           updated
         );
         const updatedList = educations.map((edu, i) => i === editIndex ? res.data : edu);
         setEducations(updatedList);
       } else {
-        await axios.post("https://localhost:7039/api/Educations/Insert", {
+        await axios.post("https://192.168.1.188/hrwebapi/api/Educations/Insert", {
           ...newEducation,
           userID,
         });
@@ -412,7 +412,7 @@ function Profile() {
 
     setModalConfirmAction(() => async () => {
       try {
-        await axios.delete(`https://localhost:7039/api/Educations/Delete/${edu.educationID}`);
+        await axios.delete(`https://192.168.1.188/hrwebapi/api/Educations/Delete/${edu.educationID}`);
         const updatedList = educations.filter((_, i) => i !== index);
         setEducations(updatedList);
         setIsModalOpen(false);
@@ -436,10 +436,10 @@ function Profile() {
     try {
       if (isEditing) {
         const updated = { ...experiences[editIndex], ...newExperience };
-        await axios.put(`https://localhost:7039/api/WorkExperiences/Update/${updated.experienceID}`, updated);
+        await axios.put(`https://192.168.1.188/hrwebapi/api/WorkExperiences/Update/${updated.experienceID}`, updated);
         fetchExperiences();
       } else {
-        await axios.post(`https://localhost:7039/api/WorkExperiences/Insert`, {
+        await axios.post(`https://192.168.1.188/hrwebapi/api/WorkExperiences/Insert`, {
           userID,
           jobTitle: newExperience.jobTitle,
           companyName: newExperience.companyName,
@@ -466,7 +466,7 @@ function Profile() {
 
   const handleDeleteExperience = async (experience) => {
     try {
-      await axios.delete(`https://localhost:7039/api/WorkExperiences/Delete/${experience.experienceID}`);
+      await axios.delete(`https://192.168.1.188/hrwebapi/api/WorkExperiences/Delete/${experience.experienceID}`);
       fetchExperiences();
     } catch (err) {
       console.error("ลบประสบการณ์ล้มเหลว", err);
