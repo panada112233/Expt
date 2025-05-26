@@ -23,7 +23,7 @@ const ForgotPassword = () => {
 
     try {
       const response = await axios.post(
-        'http://192.168.1.188/hrwebapi/api/PasswordResets/reset-request',
+        'https://localhost:7039/api/PasswordResets/reset-request',
         { email },
         { headers: { 'Content-Type': 'application/json' } }
       );

@@ -66,7 +66,7 @@ function Document() {
 
   const fetchDocuments = async () => {
     try {
-      const response = await fetch(`http://192.168.1.188/hrwebapi/api/Files/Document?userID=${userID}`);
+      const response = await fetch(`https://localhost:7039/api/Files/Document?userID=${userID}`);
       const data = await response.json();
       setDocuments(data);
       setFilteredDocuments(data);
@@ -77,20 +77,20 @@ function Document() {
   const loadLeaveJsonAndCreatePDF = async (filePath) => {
     try {
       // 👉 โหลด JSON ไฟล์ก่อน
-      const response = await axios.get(`http://192.168.1.188/hrwebapi${filePath}`);
+      const response = await axios.get(`https://localhost:7039/api/Files${filePath}`);
       const data = response.data;
 
       // 👉 ดึงข้อมูลล่าสุดจาก backend ด้วย userID และ id จาก JSON
-      const latestReq = await axios.get(`http://192.168.1.188/hrwebapi/api/LeaveRequest/User/${data.userID}`);
+      const latestReq = await axios.get(`https://localhost:7039/api/LeaveRequest/User/${data.userID}`);
       const updated = latestReq.data.find(r => r.id === data.id);
       if (updated) {
         Object.assign(data, updated); // ผสมข้อมูลใหม่ใส่ data เดิม
       }
 
-      const userRes = await axios.get(`http://192.168.1.188/hrwebapi/api/User/${data.userID}`);
+      const userRes = await axios.get(`https://localhost:7039/api/User/${data.userID}`);
       const user = userRes.data;
 
-      const statRes = await axios.get(`http://192.168.1.188/hrwebapi/api/LeaveRequest/stats/${data.userID}?excludeId=${data.id}`);
+      const statRes = await axios.get(`https://localhost:7039/api/LeaveRequest/stats/${data.userID}?excludeId=${data.id}`);
       const leaveStats = statRes.data.stats || {};
       const lastLeave = statRes.data.lastLeave;
       const [contactAddress, contactPhone] = (data.contact || "").split(" / ");
@@ -151,7 +151,7 @@ function Document() {
 
   const handlePasswordSubmit = async () => {
     try {
-      const response = await axios.post('http://192.168.1.188/hrwebapi/api/Files/VerifyPassword', {
+      const response = await axios.post('https://localhost:7039/api/Files/VerifyPassword', {
         userID: selectedDoc.userID,
         password: inputPassword
       });
@@ -160,7 +160,7 @@ function Document() {
         setErrorPassword("");
         setInputPassword("");
         if (selectedDoc?.filePath) {
-          window.open(`http://192.168.1.188/hrwebapi${selectedDoc.filePath}`, '_blank');
+          window.open(`https://localhost:7039/api/Files${selectedDoc.filePath}`, '_blank');
         } else {
 
           createPDF(selectedDoc);
@@ -189,7 +189,7 @@ function Document() {
 
       const config = {
         method: 'post',
-        url: 'http://192.168.1.188/hrwebapi/api/Files/VerifyPassword',
+        url: 'https://localhost:7039/api/Files/VerifyPassword',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -205,7 +205,7 @@ function Document() {
           if (fileExt === "json") {
             await loadLeaveJsonAndCreatePDF(selectedDocument.filePath); // 🔄 โหลด JSON + enrich + สร้าง PDF
           } else {
-            window.open('http://192.168.1.188/hrwebapi' + selectedDocument.filePath, '_blank');
+            window.open('https://localhost:7039/api/Files' + selectedDocument.filePath, '_blank');
           }
         } else if (selectedDocument) {
           createPDF(selectedDocument);
@@ -236,7 +236,7 @@ function Document() {
     formData.append('UserID', userID);
 
     try {
-      const response = await fetch('http://192.168.1.188/hrwebapi/api/Files/Create', {
+      const response = await fetch('https://localhost:7039/api/Files/Create', {
         method: 'POST',
         body: formData,
       });
@@ -298,7 +298,7 @@ function Document() {
 
   useEffect(() => {
     const fetchLeaveDocs = async () => {
-      const res = await axios.get("http://192.168.1.188/hrwebapi/api/Files/Document?userID=" + userID);
+      const res = await axios.get("https://localhost:7039/api/Files/Document?userID=" + userID);
       const data = res.data;
 
       const leaveOnly = data.filter(doc =>
@@ -319,8 +319,8 @@ function Document() {
     if (!deleteDocumentId || !deleteType) return;
 
     let apiUrl = deleteType === "upload"
-      ? `http://192.168.1.188/hrwebapi/api/Files/${deleteDocumentId}` // ลบเอกสารที่อัปโหลด
-      : `http://192.168.1.188/hrwebapi/api/Document/DeleteDocument/${deleteDocumentId}`; // ลบเอกสารใบลา
+      ? `https://localhost:7039/api/Files/${deleteDocumentId}` // ลบเอกสารที่อัปโหลด
+      : `https://localhost:7039/api/Document/DeleteDocument/${deleteDocumentId}`; // ลบเอกสารใบลา
 
     try {
       const response = await fetch(apiUrl, { method: "DELETE" });

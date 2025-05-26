@@ -32,8 +32,8 @@ const LeaveStatistics = () => {
     const fetchData = async () => {
       try {
         const [usersRes, filesRes] = await Promise.all([
-          axios.get("http://192.168.1.188/hrwebapi/api/Users"),
-          axios.get("http://192.168.1.188/hrwebapi/api/Files"),
+          axios.get("https://localhost:7039/api/Users"),
+          axios.get("https://localhost:7039/api/Files"),
         ]);
 
         const userMap = usersRes.data.reduce((acc, user) => {

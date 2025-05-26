@@ -37,7 +37,7 @@ function MyEducation() {
     }
     try {
       const response = await axios.get(
-        `http://192.168.1.188/hrwebapi/api/Educations/GetById/${userID}`
+        `https://localhost:7039/api/Educations/GetById/${userID}`
       );
       if (response.status === 200) {
         setEducations(response.data);
@@ -105,7 +105,7 @@ function MyEducation() {
       if (isEditing) {
         const updatedEducation = { ...educations[editIndex], ...newEducation };
         const response = await axios.put(
-          `http://192.168.1.188/hrwebapi/api/Educations/Update/${updatedEducation.educationID}`,
+          `https://localhost:7039/api/Educations/Update/${updatedEducation.educationID}`,
           updatedEducation
         );
         const updatedEducations = educations.map((edu, index) =>
@@ -117,7 +117,7 @@ function MyEducation() {
         fetchEducations();
       } else {
         const response = await axios.post(
-          "http://192.168.1.188/hrwebapi/api/Educations/Insert",
+          "https://localhost:7039/api/Educations/Insert",
           { ...newEducation, userID }
         );
 
@@ -183,7 +183,7 @@ function MyEducation() {
       try {
         // เรียก API เพื่อลบข้อมูล
         await axios.delete(
-          `http://192.168.1.188/hrwebapi/api/Educations/Delete/${educationToDelete.educationID}`
+          `https://localhost:7039/api/Educations/Delete/${educationToDelete.educationID}`
         );
 
         // อัปเดตรายการการศึกษาหลังจากลบสำเร็จ
@@ -307,12 +307,6 @@ function MyEducation() {
             data-aos-duration="500"
             data-aos-easing="ease-in-out"
           >
-            {/* 🎀 รูปการ์ตูน */}
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/3712/3712092.png" // สามารถเปลี่ยนลิงก์รูปได้ตามใจ
-              alt="cute alert"
-              className="w-12 h-12 absolute -top-6 left-4 rounded-full border-4 border-white shadow-lg bg-pink-100"
-            />
 
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-pink-600 font-FontNoto">
@@ -438,11 +432,6 @@ function MyEducation() {
 
           </div>
           <div className="relative mt-4 w-full">
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/3377/3377467.png"
-              alt="cute icon"
-              className="w-8 h-8 absolute -top-3 -left-3 rotate-[-10deg]"
-            />
             <button
               type="submit"
               className="btn btn-outline btn-primary w-full font-FontNoto relative"

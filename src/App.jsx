@@ -32,7 +32,7 @@ import WorktimeEmp from './components/WorktimeEmp';
 import Workplan from './components/Workplan';
 import WorkplanEmp from './components/WorkplanEmp';
 import WorkplanGM from './components/WorkplanGM';
-import ChatPage from './components/ChatPage';
+
 import CallbackPage from './components/CallbackPage';
 
 import Profile from './components/Profile';
@@ -103,14 +103,7 @@ function App() {
               <Route path="Workplan" element={<Workplan />} />
               <Route path="WorkplanEmp" element={<WorkplanEmp />} />
               <Route path="WorkplanGM" element={<WorkplanGM />} />
-              <Route
-                path="ChatPage"
-                element={
-                  <ChatPage
-                    currentUserId={parseInt(localStorage.getItem("userID") || "0", 10)}
-                  />
-                }
-              />
+              
               <Route path="Change_password" element={<ChangePassword />} />
               <Route path="Document" element={<Document />} />
               <Route path="My_education" element={<MyEducation />} />

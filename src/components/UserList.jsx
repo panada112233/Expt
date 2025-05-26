@@ -21,7 +21,7 @@ const UserList = () => {
 
   useEffect(() => {
     axios
-      .get("http://192.168.1.188/hrwebapi/api/Admin/Users")
+      .get("https://localhost:7039/api/Admin/Users")
       .then((response) => {
         if (Array.isArray(response.data)) {
           setUsers(response.data);
@@ -42,7 +42,7 @@ const UserList = () => {
 
   const handleDelete = (id) => {
     axios
-      .delete(`http://192.168.1.188/hrwebapi/api/Admin/users/${id}`)
+      .delete(`https://localhost:7039/api/Admin/users/${id}`)
       .then(() => {
         setUsers(users.filter((user) => user.userID !== id));
         // ลบข้อมูลสำเร็จโดยไม่มีการแสดง alert
@@ -72,8 +72,8 @@ const UserList = () => {
         setAdminName(response.name || "ไม่มีชื่อแอดมิน");
         setProfilePic(
           response.profilePictureUrl
-            ? `http://192.168.1.188/hrwebapi${response.profilePictureUrl}`
-            : "http://192.168.1.188/hrwebapi/uploads/admin/default-profile.jpg"
+            ? `https://localhost:7039/hrwebapi${response.profilePictureUrl}`
+            : "https://localhost:7039/hrwebapi/uploads/admin/default-profile.jpg"
         );
 
       } catch (error) {
@@ -119,7 +119,7 @@ const UserList = () => {
 
     try {
       const response = await axios.post(
-        "http://192.168.1.188/hrwebapi/api/Admin/UpdateAdminInfo",
+        "https://localhost:7039/api/Admin/UpdateAdminInfo",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -151,7 +151,7 @@ const UserList = () => {
     formData.append("id", objUser.userid);
     console.log(formData)
     try {
-      const response = await axios.post("http://192.168.1.188/hrwebapi/api/Admin/UpdateAdminInfo", formData,
+      const response = await axios.post("https://localhost:7039/api/Admin/UpdateAdminInfo", formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
         }
@@ -159,8 +159,8 @@ const UserList = () => {
 
       if (response.data && response.data.profilePictureUrl) {
         const profilePictureUrl = response.data.profilePictureUrl
-          ? `http://192.168.1.188/hrwebapi${response.data.profilePictureUrl}`
-          : "http://192.168.1.188/hrwebapi/uploads/users/default-profile.jpg";
+          ? `https://localhost:7039/hrwebapi${response.data.profilePictureUrl}`
+          : "https://localhost:7039/hrwebapi/uploads/users/default-profile.jpg";
 
         setProfilePic(profilePictureUrl);
         setUploadMessage(
@@ -221,7 +221,7 @@ const UserList = () => {
                   src={`${profilePic}?t=${new Date().getTime()}`} // ✅ ป้องกันการแคช
                   alt="Admin Profile"
                   className="rounded-full border-4 border-cyan-700 object-cover w-32 h-32"
-                  onError={(e) => { e.target.src = "http://192.168.1.188/hrwebapi/uploads/admin/default-profile.jpg"; }} // ✅ ถ้าโหลดรูปไม่ได้ ให้ใช้รูป default
+                  onError={(e) => { e.target.src = "https://localhost:7039/hrwebapi/uploads/admin/default-profile.jpg"; }} // ✅ ถ้าโหลดรูปไม่ได้ ให้ใช้รูป default
                 />
               ) : (
                 <p className="text-red-500 font-FontNoto"></p> // ✅ แสดงข้อความถ้าไม่มีรูป

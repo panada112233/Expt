@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import axios from "axios";
-import ChatPage from "../components/ChatPage"; // ขึ้นอยู่กับตำแหน่งที่เก็บไฟล์
 
 const EmpBase = () => {
   const [currentProfileImage, setCurrentProfileImage] = useState("");
   const [userName, setUserName] = useState("กำลังโหลด...");
   const [role, setRole] = useState(null); // state สำหรับ role
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [showChat, setShowChat] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -66,23 +64,23 @@ const EmpBase = () => {
     // ดึงข้อมูลรูปภาพ
     try {
       const profileResponse = await axios.get(
-        `http://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${id}`
+        `https://localhost:7039/api/Files/GetProfileImage?userID=${id}`
       );
 
       if (profileResponse.status === 200) {
-        const fullImageUrl = `http://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${id}`;
+        const fullImageUrl = `https://localhost:7039/api/Files/GetProfileImage?userID=${id}`;
         setCurrentProfileImage(fullImageUrl);
       }
     } catch (error) {
       console.error("Error fetching profile image:", error);
       // กำหนดรูปภาพเริ่มต้น
-      setCurrentProfileImage("http://192.168.1.188/hrwebapi/api/Files/GetDefaultProfileImage");
+      setCurrentProfileImage("https://localhost:7039/api/Files/GetDefaultProfileImage");
     }
 
     // ดึงข้อมูลผู้ใช้งานแยกต่างหาก
     try {
       const userResponse = await axios.get(
-        `http://192.168.1.188/hrwebapi/api/Users/Getbyid/${id}`
+        `https://localhost:7039/api/Users/Getbyid/${id}`
       );
       if (userResponse.status === 200) {
         const userData = userResponse.data;
@@ -103,54 +101,6 @@ const EmpBase = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* ✅ ปุ่มลอย: เปิด/ปิดแชท */}
-      <button
-        onClick={() => setShowChat(prev => !prev)}
-        className="fixed bottom-24 right-6 z-50 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 hover:scale-105 transform transition duration-300 text-white rounded-full p-4 shadow-lg"
-        title={showChat ? "ปิดแชท" : "เปิดแชท"}
-      >
-        {showChat ? (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4.23-.93L3 20l1.23-3.23A8.97 8.97 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-        )}
-      </button>
-
-
-      {/* ✅ แสดง ChatPage เป็น popup เมื่อเปิด */}
-      {showChat && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm">
-          <div className="relative w-full max-w-4xl h-full max-h-[80vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-
-            {/* ปุ่มปิด */}
-            <button
-              onClick={() => setShowChat(false)}
-              className="absolute top-2 right-3 text-gray-500 hover:text-red-500 text-2xl font-bold z-50"
-              title="ปิดแชท"
-            >
-              ×
-            </button>
-
-            {/* เนื้อหา ChatPage */}
-            <div className="flex-1 p-4">
-              {currentUserId ? (
-                <ChatPage currentUserId={currentUserId} popupMode={true} />
-              ) : (
-                <div className="flex justify-center items-center h-full text-gray-500 font-FontNoto text-lg">
-                  กำลังโหลดข้อมูลผู้ใช้...
-                </div>
-              )}
-            </div>
-
-          </div>
-        </div>
-      )}
-
-
       {/* Navbar */}
       <div className="navbar fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-100 via-blue-50 to-cyan-50 justify-between items-center px-4 py-2 h-[64px]">
         <div className="flex items-center">
@@ -179,7 +129,7 @@ const EmpBase = () => {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row flex-1 py-2">
+     <div className="flex flex-col md:flex-row flex-1 py-2 bg-gradient-to-br from-blue-50 via-blue-50 to-slate-50">
         {/* Sidebar */}
         <aside
           className={`bg-gradient-to-r from-blue-100 via-blue-50 to-cyan-50 shadow-md text-black fixed top-[64px] left-0 h-[calc(100vh-64px)] w-[280px] md:w-[280px] p-4 z-50 transform transition-transform overflow-y-auto
@@ -207,6 +157,15 @@ const EmpBase = () => {
               <p className="text-sm text-gray-600 font-FontNoto px-2 truncate">
                 {roleText}
               </p>
+              <div className="px-2 mt-1 flex justify-center">
+                <Link
+                  to="/EmpHome/Profile"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="px-5 py-1.5 bg-white text-blue-700 border border-blue-300 rounded-full font-FontNoto font-semibold shadow-sm hover:shadow-md hover:bg-blue-50 transition duration-150 text-sm"
+                >
+                  Portfolio
+                </Link>
+              </div>
             </div>
 
             {/* Modal รูปภาพขยาย */}
@@ -493,8 +452,8 @@ const EmpBase = () => {
           />
         )}
         {/* Main Content */}
-        <div className="md:ml-[280px] mt-[64px] p-2 w-full min-h-[calc(100vh-64px)] overflow-auto bg-gradient-to-br">
-          <div className="max-w-[1550px] mx-auto px-6 rounded-2xl shadow-xl py-4 bg-white backdrop-blur-md min-h-full">
+        <div className="md:ml-[280px] mt-[64px] p-2 w-full min-h-[calc(100vh-64px)] overflow-auto bg-gradient-to-br from-blue-50 via-blue-50 to-slate-50">
+          <div className="max-w-[1550px] mx-auto px-6 rounded-2xl shadow-xl py-4 bg-gradient-to-r from-blue-50 via-blue-50 to-slate-50 backdrop-blur-md min-h-full">
             <Outlet />
           </div>
         </div>

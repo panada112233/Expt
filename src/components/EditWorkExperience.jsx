@@ -29,7 +29,7 @@ const EditWorkExperience = () => {
       try {
         console.log(experienceID)
         console.log(userid)
-        const response = await axios.get(`http://192.168.1.188/hrwebapi/api/Admin/WorkExperiences/${experienceID}`);
+        const response = await axios.get(`https://localhost:7039/api/Admin/WorkExperiences/${experienceID}`);
         setWorkExperience(response.data);
       } catch (error) {
         setModalMessage("ไม่สามารถโหลดข้อมูลประสบการณ์ทำงานได้");
@@ -68,8 +68,8 @@ const EditWorkExperience = () => {
       setAdminName(response.name || "ไม่มีชื่อแอดมิน");
       setProfilePic(
         response.profilePictureUrl
-          ? `http://192.168.1.188/hrwebapi${response.profilePictureUrl}`
-          : "http://192.168.1.188/hrwebapi/uploads/admin/default-profile.jpg"
+          ? `https://localhost:7039/api${response.profilePictureUrl}`
+          : "https://localhost:7039/api/uploads/admin/default-profile.jpg"
       );
     } catch (error) {
       console.error("Error fetching admin data:", error);
@@ -109,7 +109,7 @@ const EditWorkExperience = () => {
 
     try {
       const response = await axios.post(
-        "http://192.168.1.188/hrwebapi/api/Admin/UpdateAdminInfo",
+        "https://localhost:7039/api/Admin/UpdateAdminInfo",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -140,7 +140,7 @@ const EditWorkExperience = () => {
     formData.append("id", objUser.userid);
     console.log(formData)
     try {
-      const response = await axios.post("http://192.168.1.188/hrwebapi/api/Admin/UpdateAdminInfo", formData,
+      const response = await axios.post("https://localhost:7039/api/Admin/UpdateAdminInfo", formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
         }
@@ -148,8 +148,8 @@ const EditWorkExperience = () => {
 
       if (response.data && response.data.profilePictureUrl) {
         const profilePictureUrl = response.data.profilePictureUrl
-          ? `http://192.168.1.188/hrwebapi${response.data.profilePictureUrl}`
-          : "http://192.168.1.188/hrwebapi/uploads/users/default-profile.jpg";
+          ? `https://localhost:7039/api${response.data.profilePictureUrl}`
+          : "https://localhost:7039/api/uploads/users/default-profile.jpg";
 
         setProfilePic(profilePictureUrl);
         setUploadMessage(
@@ -197,7 +197,7 @@ const EditWorkExperience = () => {
 
       // บันทึกข้อมูล
       await axios.put(
-        `http://192.168.1.188/hrwebapi/api/Admin/WorkExperiences/${experienceID}`,
+        `https://localhost:7039/api/Admin/WorkExperiences/${experienceID}`,
         workExperience
       );
 
@@ -257,7 +257,7 @@ const EditWorkExperience = () => {
                   src={`${profilePic}?t=${new Date().getTime()}`} // ✅ ป้องกันการแคช
                   alt="Admin Profile"
                   className="rounded-full border-4 border-cyan-700 object-cover w-32 h-32"
-                  onError={(e) => { e.target.src = "http://192.168.1.188/hrwebapi/uploads/admin/default-profile.jpg"; }} // ✅ ถ้าโหลดรูปไม่ได้ ให้ใช้รูป default
+                  onError={(e) => { e.target.src = "https://localhost:7039/api/uploads/admin/default-profile.jpg"; }} // ✅ ถ้าโหลดรูปไม่ได้ ให้ใช้รูป default
                 />
               ) : (
                 <p className="text-red-500 font-FontNoto"></p> // ✅ แสดงข้อความถ้าไม่มีรูป

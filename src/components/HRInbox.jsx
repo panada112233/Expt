@@ -28,7 +28,7 @@ const HRInbox = () => {
 
   const fetchHistory = async () => {
     try {
-      const res = await axios.get("http://192.168.1.188/hrwebapi/api/LeaveRequest/hr/history");
+      const res = await axios.get("https://localhost:7039/api/LeaveRequest/hr/history");
       setHistory(res.data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -38,7 +38,7 @@ const HRInbox = () => {
   const fetchRequests = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get("http://192.168.1.188/hrwebapi/api/LeaveRequest/hr/pending");
+      const res = await axios.get("https://localhost:7039/api/LeaveRequest/hr/pending");
       console.log("📥 API กลับมาว่า:", res.data);
       setRequests(res.data);
     } catch (error) {
@@ -63,7 +63,7 @@ const HRInbox = () => {
       const userId = request.userID || request.user?.id;
       if (!userId) throw new Error("ไม่พบ userId");
 
-      const res = await axios.get(`http://192.168.1.188/hrwebapi/api/LeaveRequest/stats/${userId}`);
+      const res = await axios.get(`https://localhost:7039/api/LeaveRequest/stats/${userId}`);
 
       const enrichedRequest = {
         ...request,
@@ -104,7 +104,7 @@ const HRInbox = () => {
     try {
       setIsModalOpen(false);
       await axios.post(
-        `http://192.168.1.188/hrwebapi/api/LeaveRequest/hr/approve/${currentRequest.id}`,
+        `https://localhost:7039/api/LeaveRequest/hr/approve/${currentRequest.id}`,
         {
           Comment: signature.trim()
         },
@@ -153,7 +153,7 @@ const HRInbox = () => {
         "leave-details.json"
       );
 
-      await axios.post("http://192.168.1.188/hrwebapi/api/Files/Create", formData);
+      await axios.post("https://localhost:7039/api/Files/Create", formData);
 
       console.log("📤 ส่งข้อมูลใบลาคืนพนักงานแล้ว");
     } catch (err) {

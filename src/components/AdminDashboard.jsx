@@ -68,7 +68,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const response = await axios.get("http://192.168.1.188/hrwebapi/api/Files");
+        const response = await axios.get("https://192.168.1.188/hrwebapi/api/Files");
 
         const filteredFiles = response.data.filter(doc =>
           new Date(doc.uploadDate).getFullYear() === selectedYear
@@ -118,8 +118,8 @@ const AdminDashboard = () => {
         setAdminName(responseUser.name || "ไม่มีชื่อแอดมิน");
         setProfilePic(
           responseUser.profilePictureUrl
-            ? `http://192.168.1.188/hrwebapi${responseUser.profilePictureUrl}`
-            : "http://192.168.1.188/hrwebapi/uploads/admin/default-profile.jpg"
+            ? `https://192.168.1.188/hrwebapi${responseUser.profilePictureUrl}`
+            : "https://192.168.1.188/hrwebapi/uploads/admin/default-profile.jpg"
         );
 
       } catch (e) {
@@ -135,8 +135,8 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const employeeResponse = await axios.get("http://192.168.1.188/hrwebapi/api/Users");
-        const experienceResponse = await axios.get("http://192.168.1.188/hrwebapi/api/WorkExperiences");
+        const employeeResponse = await axios.get("https://192.168.1.188/hrwebapi/api/Users");
+        const experienceResponse = await axios.get("https://192.168.1.188/hrwebapi/api/WorkExperiences");
 
         if (employeeResponse.status === 200) {
           setEmployeeData(employeeResponse.data);
@@ -181,7 +181,7 @@ const AdminDashboard = () => {
 
     try {
       const response = await axios.post(
-        "http://192.168.1.188/hrwebapi/api/Admin/UpdateAdminInfo",
+        "https://192.168.1.188/hrwebapi/api/Admin/UpdateAdminInfo",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -212,7 +212,7 @@ const AdminDashboard = () => {
     formData.append("id", objUser.userid);
     console.log(formData)
     try {
-      const response = await axios.post("http://192.168.1.188/hrwebapi/api/Admin/UpdateAdminInfo", formData,
+      const response = await axios.post("https://192.168.1.188/hrwebapi/api/Admin/UpdateAdminInfo", formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
         }
@@ -220,8 +220,8 @@ const AdminDashboard = () => {
 
       if (response.data && response.data.profilePictureUrl) {
         const profilePictureUrl = response.data.profilePictureUrl
-          ? `http://192.168.1.188/hrwebapi${response.data.profilePictureUrl}`
-          : "http://192.168.1.188/hrwebapi/uploads/users/default-profile.jpg";
+          ? `https://192.168.1.188/hrwebapi${response.data.profilePictureUrl}`
+          : "https://192.168.1.188/hrwebapi/uploads/users/default-profile.jpg";
         setProfilePic(profilePictureUrl);
         setUploadMessage(
           <p className="font-FontNoto text-green-500">อัปโหลดสำเร็จ!</p>
@@ -404,7 +404,7 @@ const AdminDashboard = () => {
                   onError={(e) => {
                     console.error("❌ โหลดรูปโปรไฟล์ไม่สำเร็จ:", e.target.src);
                     e.target.onerror = null; // ป้องกัน Loop Error
-                    e.target.src = "http://192.168.1.188/hrwebapi/uploads/admin/default-profile.jpg";
+                    e.target.src = "https://192.168.1.188/hrwebapi/uploads/admin/default-profile.jpg";
                   }}
                 />
 

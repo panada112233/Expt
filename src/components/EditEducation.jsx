@@ -39,7 +39,7 @@ const EditEducation = () => {
   useEffect(() => {
     const fetchEducation = async () => {
       try {
-        const response = await axios.get(`http://192.168.1.188/hrwebapi/api/Admin/educations/${id}`);
+        const response = await axios.get(`https://localhost:7039/api/Admin/educations/${id}`);
         setEducation(response.data);
       } catch (error) {
         setModalMessage("ไม่สามารถโหลดข้อมูลการศึกษาได้");
@@ -63,7 +63,7 @@ const EditEducation = () => {
       return;
     }
     try {
-      await axios.put(`http://192.168.1.188/hrwebapi/api/Admin/educations/${id}`, education);
+      await axios.put(`https://localhost:7039/api/Admin/educations/${id}`, education);
       setModalMessage("บันทึกข้อมูลสำเร็จ");
       setIsSuccess(true);
       document.getElementById("success_modal").showModal();
@@ -80,8 +80,8 @@ const EditEducation = () => {
         setAdminName(response.name || "ไม่มีชื่อแอดมิน");
         setProfilePic(
           response.profilePictureUrl
-            ? `http://192.168.1.188/hrwebapi${response.profilePictureUrl}`
-            : "http://192.168.1.188/hrwebapi/uploads/admin/default-profile.jpg"
+            ? `https://localhost:7039/api${response.profilePictureUrl}`
+            : "https://localhost:7039/api/uploads/admin/default-profile.jpg"
         );
       } catch (error) {
         console.error("Error fetching admin data:", error);
@@ -126,7 +126,7 @@ const EditEducation = () => {
 
     try {
       const response = await axios.post(
-        "http://192.168.1.188/hrwebapi/api/Admin/UpdateAdminInfo",
+        "https://localhost:7039/api/Admin/UpdateAdminInfo",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -158,7 +158,7 @@ const EditEducation = () => {
     formData.append("id", objUser.userid);
     console.log(formData)
     try {
-      const response = await axios.post("http://192.168.1.188/hrwebapi/api/Admin/UpdateAdminInfo", formData,
+      const response = await axios.post("https://localhost:7039/api/Admin/UpdateAdminInfo", formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
         }
@@ -166,8 +166,8 @@ const EditEducation = () => {
 
       if (response.data && response.data.profilePictureUrl) {
         const profilePictureUrl = response.data.profilePictureUrl
-          ? `http://192.168.1.188/hrwebapi${response.data.profilePictureUrl}`
-          : "http://192.168.1.188/hrwebapi/uploads/users/default-profile.jpg";
+          ? `https://localhost:7039/api${response.data.profilePictureUrl}`
+          : "https://localhost:7039/api/uploads/users/default-profile.jpg";
 
         setProfilePic(profilePictureUrl);
         setUploadMessage(
@@ -253,7 +253,7 @@ const EditEducation = () => {
                   src={`${profilePic}?t=${new Date().getTime()}`} // ✅ ป้องกันการแคช
                   alt="Admin Profile"
                   className="rounded-full border-4 border-cyan-700 object-cover w-32 h-32"
-                  onError={(e) => { e.target.src = "http://192.168.1.188/hrwebapi/uploads/admin/default-profile.jpg"; }} // ✅ ถ้าโหลดรูปไม่ได้ ให้ใช้รูป default
+                  onError={(e) => { e.target.src = "https://localhost:7039/api/uploads/admin/default-profile.jpg"; }} // ✅ ถ้าโหลดรูปไม่ได้ ให้ใช้รูป default
                 />
               ) : (
                 <p className="text-red-500 font-FontNoto"></p> // ✅ แสดงข้อความถ้าไม่มีรูป

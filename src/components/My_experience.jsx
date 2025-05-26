@@ -37,7 +37,7 @@ function MyExperience() {
     }
     try {
       const response = await axios.get(
-        `http://192.168.1.188/hrwebapi/api/WorkExperiences/GetById/${userID}`
+        `https://localhost:7039/api/WorkExperiences/GetById/${userID}`
       );
       if (response.status === 200) {
         console.log("ข้อมูลที่ได้จาก API:", response.data);
@@ -80,7 +80,7 @@ function MyExperience() {
       if (isEditing) {
         const updatedExperience = { ...experiences[editIndex], ...newExperience };
         const response = await axios.put(
-          `http://192.168.1.188/hrwebapi/api/WorkExperiences/Update/${updatedExperience.experienceID}`,
+          `https://localhost:7039/api/WorkExperiences/Update/${updatedExperience.experienceID}`,
           updatedExperience
         );
         const updatedExperiences = experiences.map((exp, index) =>
@@ -103,7 +103,7 @@ function MyExperience() {
         const config = {
           method: "post",
           maxBodyLength: Infinity,
-          url: "http://192.168.1.188/hrwebapi/api/WorkExperiences/Insert",
+          url: "https://localhost:7039/api/WorkExperiences/Insert",
           headers: {
             "Content-Type": "application/json",
           },
@@ -183,7 +183,7 @@ function MyExperience() {
   const handleDeleteExperience = async (experience) => {
     try {
       await axios.delete(
-        `http://192.168.1.188/hrwebapi/api/WorkExperiences/Delete/${experience.experienceID}`
+        `https://localhost:7039/api/WorkExperiences/Delete/${experience.experienceID}`
       );
       const updatedExperiences = experiences.filter(
         (exp) => exp.experienceID !== experience.experienceID
@@ -289,13 +289,6 @@ function MyExperience() {
             data-aos-duration="500"
             data-aos-easing="ease-in-out"
           >
-            {/* 🎀 รูปการ์ตูนน่ารัก */}
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/1828/1828665.png"
-              alt="cute warning"
-              className="w-12 h-12 absolute -top-6 left-4 rounded-full border-4 border-white shadow-lg bg-pink-100"
-            />
-
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-pink-600 font-FontNoto">
                 ⚠️ แจ้งเตือน
@@ -416,11 +409,6 @@ function MyExperience() {
             </div>
           </div>
           <div className="relative mt-4 w-full">
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/3377/3377466.png"
-              alt="cute icon"
-              className="w-8 h-8 absolute -top-3 -left-3 rotate-[-10deg]"
-            />
             <button
               type="submit"
               className="btn btn-outline btn-primary w-full font-FontNoto relative"

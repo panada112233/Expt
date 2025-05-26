@@ -31,7 +31,7 @@ const Worktime = () => {
 
     const fetchUpcomingLeaves = async (id) => {
         try {
-            const res = await axios.get(`http://192.168.1.188/hrwebapi/api/Worktime/UpcomingLeaves?userId=${id}`);
+            const res = await axios.get(`https://localhost:7039/api/Worktime/UpcomingLeaves?userId=${id}`);
             if (res.status === 200) {
                 setUpcomingLeaves(res.data);
             }
@@ -50,13 +50,13 @@ const Worktime = () => {
 
     const fetchData = async (id) => {
         try {
-            const userRes = await axios.get(`http://192.168.1.188/hrwebapi/api/Users/Getbyid/${id}`);
+            const userRes = await axios.get(`https://localhost:7039/api/Users/Getbyid/${id}`);
             if (userRes.status === 200) {
                 const userData = userRes.data;
                 setUserName(`${userData.firstName} ${userData.lastName}`);
             }
 
-            const worktimeRes = await axios.get('http://192.168.1.188/hrwebapi/api/Worktime');
+            const worktimeRes = await axios.get('https://localhost:7039/api/Worktime');
             setWorktimes(worktimeRes.data);
         } catch (error) {
             console.error('เกิดข้อผิดพลาดในการโหลดข้อมูล:', error);
