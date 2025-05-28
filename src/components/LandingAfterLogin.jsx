@@ -584,7 +584,7 @@ before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2
 before:translate-x-1/2 before:animate-ping before:rounded-full 
 before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
                                                 >
-                                                    เช็คเอาท์
+                                                    ลงเวลาเลิกงาน
                                                 </button>
                                             </div>
                                         )}
@@ -606,9 +606,11 @@ before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
 
                                                 if (['ลาพักร้อน', 'ลาคลอด', 'ลาบวช'].includes(selected)) {
                                                     setLeaveType('เต็มวัน');
-                                                } else {
+                                                } else if (!['ลาป่วย', 'ลากิจส่วนตัว'].includes(selected)) {
+                                                    // ✅ รีเซต leaveType เฉพาะกรณีไม่ใช่ประเภทที่ต้องเลือกช่วงเวลา
                                                     setLeaveType('');
                                                 }
+
                                             }}
                                         >
                                             <option className="font-FontNoto" value="" disabled>-- กรุณาเลือก --</option>
@@ -626,11 +628,12 @@ before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
                                             <label className="block text-sm font-FontNoto mb-1">เลือกช่วงเวลา</label>
                                             <select
                                                 className="select select-bordered w-full font-FontNoto"
-                                                value={leaveType}
-                                                onChange={(e) => setLeaveType(e.target.value)}
+                                                defaultValue={leaveType}
+                                                onChange={(e) => {
+                                                    setLeaveType(e.target.value);
+                                                }}
                                             >
-                                                <option className="font-FontNoto" value="" disabled>-- เลือกช่วงเวลา --</option>
-                                                {/* <option className="font-FontNoto" value="เต็มวัน">เต็มวัน</option> */}
+                                                <option className="font-FontNoto" value="">-- เลือกช่วงเวลา --</option>
                                                 <option className="font-FontNoto" value="ครึ่งวันเช้า">ครึ่งวันเช้า</option>
                                                 <option className="font-FontNoto" value="ครึ่งวันบ่าย">ครึ่งวันบ่าย</option>
                                             </select>
@@ -675,7 +678,7 @@ before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2
 before:translate-x-1/2 before:animate-ping before:rounded-full 
 before:bg-green-500 hover:bg-green-700 hover:before:bg-green-700"
                                                 >
-                                                    เช็คอิน
+                                                    ลงเวลาเข้างาน
                                                 </button>
                                             )}
                                     </div>

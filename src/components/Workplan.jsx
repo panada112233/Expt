@@ -34,6 +34,8 @@ const Workplan = () => {
     const [isEditingNote, setIsEditingNote] = useState(false);
     const [editedNote, setEditedNote] = useState("");
     const [editedTitle, setEditedTitle] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
+
 
 
     const [viewDetail, setViewDetail] = useState(null);
@@ -669,22 +671,7 @@ const Workplan = () => {
             </div>
 
             {activeTab === "history" && (
-                <div className="w-full max-w-6xl mx-auto bg-white rounded-xl">
-                    <h2 className="text-base sm:text-lg text-cyan-950 font-bold font-FontNoto leading-snug mb-2">
-                        ประวัติการทำงาน
-                    </h2>
-                    {/* ตัวเลือกวันที่ */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-3">
-
-                        <input
-                            type="date"
-                            value={historyDate}
-                            onChange={(e) => setHistoryDate(e.target.value)}
-                            className="input input-bordered font-FontNoto w-32 sm:w-40 bg-white text-black"
-                            style={{ colorScheme: "light" }}
-                        />
-                    </div>
-
+                <div className="w-full max-w-8xl mx-auto bg-gradient-to-br from-blue-50 via-cyan-50 to-white rounded-3xl p-6 shadow-md items-center justify-center">
                     {/* สร้างตัวแปรก่อนใช้ */}
                     {(() => {
                         const selectedDate = new Date(historyDate);
@@ -694,77 +681,143 @@ const Workplan = () => {
                         const selectedKey = selectedDate.toISOString().split("T")[0];
                         const yesterdayKey = yesterday.toISOString().split("T")[0];
 
-                        const usersWithPlans = allUsers.map((user) => {
-                            const todayPlan = allPlans.find(
-                                (p) => p.userID === user.userID && p.date.startsWith(selectedKey)
-                            );
-                            const yestPlan = allPlans.find(
-                                (p) => p.userID === user.userID && p.date.startsWith(yesterdayKey)
-                            );
-                            return {
-                                userID: user.userID,
-                                fullName: `${user.firstName} ${user.lastName}`,
-                                morningTask: yestPlan?.eveningTask || "-",
-                                eveningTask: todayPlan?.eveningTask || "-",
-                            };
-                        });
+                        const rolePriority = {
+                            GM: 1,
+                            Hr: 2,
+                            BA: 3,
+                            Dev: 4,
+                            Employee: 5,
+                        };
+
+                        const usersWithPlans = allUsers
+                            .filter((user) =>
+                                `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
+                            )
+                            .map((user) => {
+                                const todayPlan = allPlans.find(
+                                    (p) => p.userID === user.userID && p.date.startsWith(selectedKey)
+                                );
+                                const yestPlan = allPlans.find(
+                                    (p) => p.userID === user.userID && p.date.startsWith(yesterdayKey)
+                                );
+                                return {
+                                    userID: user.userID,
+                                    fullName: `${user.firstName} ${user.lastName}`,
+                                    role: user.role, // เพิ่ม role มาให้สำหรับจัดเรียง
+                                    morningTask: yestPlan?.eveningTask || "-",
+                                    eveningTask: todayPlan?.eveningTask || "-",
+                                };
+                            })
+                            .sort((a, b) => (rolePriority[a.role] || 99) - (rolePriority[b.role] || 99)); // เรียงตามลำดับตำแหน่ง
+
+
 
                         return (
-                            <div className="relative  font-FontNoto mb-8 p-3 animate-fade-in">
-                                <h3 className="font-semibold text-lg font-FontNoto">
-                                    การทำงานในวันที่ {selectedDate.toLocaleDateString("th-TH", {
-                                        day: "2-digit",
-                                        month: "long",
-                                        year: "numeric",
-                                    })}
-                                </h3>
-                                <div className="overflow-x-auto rounded-2xl shadow-lg border !border-gray-300 bg-white mt-4">
-                                    <table className="table text-sm text-center w-full table-fixed">
-                                        <thead className="bg-gray-300 !text-blue-950 font-FontNoto">
-                                            <tr>
-                                                <th className="w-[180px] py-3 font-bold border-b border-r border-gray-200  font-FontNoto text-base">
-                                                    ชื่อพนักงาน
-                                                </th>
-                                                <th className="w-[300px] py-3 font-bold border-b border-r border-gray-200 font-FontNoto text-base">
-                                                    แผนงานเมื่อวาน ({yesterday.toLocaleDateString("th-TH", {
-                                                        day: "2-digit",
-                                                        month: "long",
-                                                        year: "numeric",
-                                                    })})
-                                                </th>
-                                                <th className="w-[300px] py-3 font-bold border-b border-gray-200 font-FontNoto text-base">
-                                                    แผนงานวันนี้ ({selectedDate.toLocaleDateString("th-TH", {
-                                                        day: "2-digit",
-                                                        month: "long",
-                                                        year: "numeric",
-                                                    })})
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white font-FontNoto">
-                                            {usersWithPlans.map((rec, idx) => (
-                                                <tr key={idx} className="hover:bg-gray-50 transition-colors duration-300">
-                                                    <td className="text-left px-3 py-2 border-b border-r border-gray-200 font-FontNoto">
-                                                        <div className="flex items-center gap-3">
-                                                            <img
-                                                                src={`https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${rec.userID}`}
-                                                                alt={rec.fullName}
-                                                                className="w-8 h-8 rounded-full object-cover border border-gray-300"
-                                                            />
-                                                            <span className="font-FontNoto">{rec.fullName}</span>
-                                                        </div>
-                                                    </td>
+                            <div className="relative  font-FontNoto mb-8  animate-fade-in ">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                                    {/* ซ้าย: วันที่ + คนลงแผน */}
+                                    <div>
+                                        <h3 className="font-semibold text-lg font-FontNoto">
+                                            {(() => {
+                                                const daysInThai = ["วันอาทิตย์", "วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัสบดี", "วันศุกร์", "วันเสาร์"];
+                                                const dayName = daysInThai[selectedDate.getDay()];
+                                                const todayCount = usersWithPlans.filter(p =>
+                                                    p.eveningTask && p.eveningTask.trim() !== "-"
+                                                ).length;
 
-                                                    <td className="text-left px-3 py-2 border-b border-r border-gray-200 whitespace-pre-wrap break-words font-FontNoto">
-                                                        {rec.morningTask}
-                                                    </td>
-                                                    <td className="text-left px-3 py-2 border-b border-gray-200 whitespace-pre-wrap break-words font-FontNoto">
-                                                        {rec.eveningTask}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                                return (
+                                                    <>
+                                                        วันที่ : {dayName} ที่ {selectedDate.toLocaleDateString("th-TH", {
+                                                            day: "2-digit",
+                                                            month: "long",
+                                                            year: "numeric",
+                                                        })}
+                                                        {todayCount > 0 && (
+                                                            <span className="text-green-700 font-FontNoto font-bold ml-2"> ลงแผนงานแล้ว {todayCount} คน</span>
+                                                        )}
+                                                    </>
+                                                );
+                                            })()}
+                                        </h3>
+                                    </div>
+
+                                    {/* ขวา: ช่องเลือกวันที่ + ค้นหา */}
+                                    <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                                        <input
+                                            type="date"
+                                            value={historyDate}
+                                            onChange={(e) => setHistoryDate(e.target.value)}
+                                            className="input input-bordered font-FontNoto w-full sm:w-40 bg-white text-black"
+                                            style={{ colorScheme: "light" }}
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="ค้นหาชื่อพนักงาน..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            className="input input-bordered font-FontNoto w-full sm:w-64 bg-white text-black"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="overflow-x-auto ">
+                                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                                        {usersWithPlans.map((rec, idx) => (
+                                            <div
+                                                key={idx}
+                                                className="rounded-2xl border border-gray-200 bg-white p-5 shadow-md hover:shadow-xl transition-all duration-300"
+                                            >
+                                                {/* ชื่อพนักงาน + รูปโปรไฟล์ */}
+                                                <div className="flex items-center mb-3 bg-gray-200 rounded-2xl">
+                                                    <img
+                                                        src={`https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${rec.userID}`}
+                                                        alt={rec.fullName}
+                                                        className="w-10 h-10 rounded-full border border-gray-300 mr-3 object-cover font-FontNoto"
+                                                    />
+                                                    <div>
+                                                        <p className="font-bold text-black font-FontNoto">{rec.fullName}</p>
+                                                        <p className="text-sm text-gray-600 font-FontNoto">
+                                                            {
+                                                                roleMapping[
+                                                                allUsers.find(u => u.userID === rec.userID)?.role
+                                                                ] || "-"
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+
+                                                {/* แผนงานเมื่อวาน */}
+                                                <div className="mb-3">
+                                                    <p className="text-sm  font-semibold font-FontNoto mb-1">
+                                                        เมื่อวาน ({yesterday.toLocaleDateString("th-TH", { weekday: "long" }).replace("วัน", "")})
+                                                    </p>
+                                                    <ul className="list-disc list-inside text-sm text-black font-FontNoto space-y-1">
+                                                        {rec.morningTask
+                                                            ? rec.morningTask.split("\n").map((task, index) => (
+                                                                <li className="font-FontNoto" key={index}>{task}</li>
+                                                            ))
+                                                            : <li>-</li>}
+                                                    </ul>
+                                                </div>
+
+                                                {/* แผนงานวันนี้ */}
+                                                <div>
+                                                    <p className="text-sm  font-semibold font-FontNoto mb-1">
+                                                        วันนี้ ({selectedDate.toLocaleDateString("th-TH", { weekday: "long" }).replace("วัน", "")})
+                                                    </p>
+                                                    <ul className="list-disc list-inside text-sm text-green-700 font-FontNoto space-y-1">
+                                                        {rec.eveningTask
+                                                            ? rec.eveningTask.split("\n").map((task, index) => (
+                                                                <li className="font-FontNoto" key={index}>{task}</li>
+                                                            ))
+                                                            : <li>-</li>}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
                                 </div>
 
                             </div>
@@ -774,7 +827,7 @@ const Workplan = () => {
             )}
 
             {activeTab === "calendar" && (
-                <div className="w-full max-w-6xl mx-auto bg-slate-50 rounded-xl p-6 items-center justify-center">
+                <div className="w-full max-w-7xl mx-auto bg-slate-50 rounded-xl p-6 items-center justify-center">
                     <div className="flex items-center justify-center gap-x-2 mb-2">
                         <FcOrganization className="w-8 h-8" />
                         <h2 className="sm:text-xl font-bold font-FontNoto text-blue-950 text-center">
@@ -977,7 +1030,7 @@ const Workplan = () => {
                         </h3>
 
                         {viewDetail.title?.startsWith("โน้ตทั้งหมด") ? (
-                            <div className="space-y-4"> 
+                            <div className="space-y-4">
                                 {viewDetail.content.split('\n\n').map((block, idx) => {
                                     const titleMatch = block.match(/หัวข้อ:\s*(.*)/);
                                     const detailMatch = block.match(/รายละเอียด:\s*([\s\S]*)/);
@@ -999,7 +1052,7 @@ const Workplan = () => {
                         ) : (
                             <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed border border-gray-300 rounded-lg p-4 shadow-sm">
                                 {viewDetail.content.split('\n').map((line, idx) => (
-                                    <p key={idx} className="mb-1 font-FontNoto">- {line}</p>
+                                    <p key={idx} className="mb-1 font-FontNoto"> {line}</p>
                                 ))}
                             </div>
                         )}

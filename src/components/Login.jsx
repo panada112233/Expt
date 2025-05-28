@@ -82,12 +82,12 @@ const Login = ({ setIsLoggedIn }) => {
 
                 <form onSubmit={handleSubmit} className="space-y-4 font-FontNoto">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1 font-FontNoto">อีเมล</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1 font-FontNoto">ชื่อผู้ใช้งาน</label>
                         <input
                             type="text"
                             className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiInput ? 'placeholder-red-500' : ''
                                 }`}
-                            placeholder={isThaiInput ? 'กรุณากรอกเป็นภาษาอังกฤษเท่านั้น' : 'กรอกอีเมลที่ใช้สมัคร'}
+                            placeholder={isThaiInput ? 'กรุณากรอกเป็นภาษาอังกฤษเท่านั้น' : 'กรุณาระบุชื่อผู้ใช้งาน'}
                             value={identifier}
                             onChange={(e) => {
                                 if (/^[a-zA-Z0-9@._-]*$/.test(e.target.value)) {
@@ -113,14 +113,13 @@ const Login = ({ setIsLoggedIn }) => {
                                 type={showPassword ? 'text' : 'password'}
                                 className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiPassword ? 'placeholder-red-500' : ''
                                     }`}
-                                placeholder={isThaiPassword ? 'กรุณากรอกเป็นภาษาอังกฤษเท่านั้น' : 'รหัสผ่าน'}
+                                placeholder={isThaiPassword ? 'กรุณากรอกเป็นภาษาอังกฤษเท่านั้น' : 'กรุณาระบุรหัสผ่าน'}
                                 value={password}
                                 onChange={(e) => {
-                                    if (/^[a-zA-Z0-9]*$/.test(e.target.value)) {
-                                        setPassword(e.target.value);
-                                        setIsThaiPassword(false);
-                                    }
+                                    setPassword(e.target.value);
+                                    setIsThaiPassword(false);
                                 }}
+
                                 onBeforeInput={(e) => {
                                     const char = e.data;
                                     if (char && /[ก-๙]/.test(char)) {

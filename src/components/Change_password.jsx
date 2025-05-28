@@ -76,7 +76,7 @@ function ChangePassword() {
           {/* รหัสยืนยัน */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 font-FontNoto">
-              รหัสยืนยัน
+              รหัสยืนยันจากอีเมลของคุณ
             </label>
             <div className="relative">
               <input
@@ -84,7 +84,7 @@ function ChangePassword() {
                 className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiOldPassword ? "placeholder-red-500" : ""
                   }`}
                 placeholder={
-                  isThaiOldPassword ? "กรุณากรอกเป็นภาษาอังกฤษเท่านั้น" : "รหัสยืนยัน"
+                  isThaiOldPassword ? "กรุณากรอกเป็นภาษาอังกฤษเท่านั้น" : "กรุณาระบุรหัสยืนยันจากอีเมล"
                 }
                 value={oldPassword}
                 onChange={(e) => {
@@ -128,7 +128,7 @@ function ChangePassword() {
                 className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiNewPassword1 ? "placeholder-red-500" : ""
                   }`}
                 placeholder={
-                  isThaiNewPassword1 ? "กรุณากรอกเป็นภาษาอังกฤษเท่านั้น" : "รหัสผ่านใหม่"
+                  isThaiNewPassword1 ? "กรุณากรอกเป็นภาษาอังกฤษเท่านั้น" : "กรุณาระบุรหัสผ่านใหม่"
                 }
                 value={newPassword1}
                 onChange={(e) => {
@@ -172,7 +172,7 @@ function ChangePassword() {
                 className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiNewPassword2 ? "placeholder-red-500" : ""
                   }`}
                 placeholder={
-                  isThaiNewPassword2 ? "กรุณากรอกเป็นภาษาอังกฤษเท่านั้น" : "ยืนยันรหัสผ่านใหม่"
+                  isThaiNewPassword2 ? "กรุณากรอกเป็นภาษาอังกฤษเท่านั้น" : "กรุณายืนยันรหัสผ่านใหม่"
                 }
                 value={newPassword2}
                 onChange={(e) => {

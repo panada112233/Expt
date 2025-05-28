@@ -29,7 +29,7 @@ const ForgotPassword = () => {
       );
 
       if (response.status === 200) {
-        setMessage(response.data.message || 'ลิงก์สำหรับรีเซ็ตรหัสผ่านถูกส่งไปที่อีเมลของคุณแล้ว');
+        setMessage(response.data.message || 'โปรดตรวจสอบรหัสยืนยันที่อีเมลของคุณ');
         setTimeout(() => navigate('/ChangePassword'), 3000);
       } else {
         setMessage('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
@@ -62,7 +62,7 @@ const ForgotPassword = () => {
             <input
               type="email"
               className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiInput ? 'placeholder-red-500' : ''}`}
-              placeholder={isThaiInput ? 'กรุณากรอกเป็นภาษาอังกฤษเท่านั้น' : 'กรอกอีเมลของคุณ'}
+              placeholder={isThaiInput ? 'กรุณากรอกเป็นภาษาอังกฤษเท่านั้น' : 'กรุณาระบุอีเมลของคุณ'}
               value={email}
               onChange={(e) => {
                 const value = e.target.value;
