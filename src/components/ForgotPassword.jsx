@@ -61,7 +61,7 @@ const ForgotPassword = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1 font-FontNoto">อีเมล</label>
             <input
               type="email"
-              className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiInput ? 'placeholder-red-500' : ''}`}
+              className={`input input-bordered w-full text-black !bg-white font-FontNoto ${isThaiInput ? 'placeholder-red-500' : ''}`}
               placeholder={isThaiInput ? 'กรุณากรอกเป็นภาษาอังกฤษเท่านั้น' : 'กรุณาระบุอีเมลของคุณ'}
               value={email}
               onChange={(e) => {

@@ -262,13 +262,13 @@ const LandingAfterLogin = () => {
                 const address = await getAddressFromCoords(latitude, longitude);
                 const message = (
                     <p className="whitespace-pre-wrap font-FontNoto text-gray-700">
-                        <strong className="font-FontNoto">วันที่:</strong> {today}
+                        <strong className="font-FontNoto">วันที่ :</strong> {today}
                         {"\n"}
-                        <strong className="font-FontNoto">ประเภทการทำงาน:</strong> {finalLocation}
+                        <strong className="font-FontNoto">ประเภทการทำงาน :</strong> {finalLocation}
                         {"\n"}
-                        <strong className="font-FontNoto">ที่อยู่:</strong> {address}
+                        <strong className="font-FontNoto">สถานที่ :</strong> {address}
                         {"\n\n"}
-                        <strong className="font-FontNoto">คุณต้องการเช็คอินใช่หรือไม่?</strong>
+                        <strong className="font-FontNoto">คุณต้องการลงเวลาเข้างานหรือไม่?</strong>
                     </p>
                 );
 
@@ -395,7 +395,7 @@ const LandingAfterLogin = () => {
                 <div className="text-xl mb-2 text-blue-900 font-bold font-FontNoto">สวัสดี คุณ {userName}</div>
                 <div className="text-lg mb-6 bg-white/70 px-4 py-2 rounded-full shadow-md font-bold flex items-center space-x-2 font-FontInter">
                     <img src={imgPat} alt="clock1" className="w-8 h-8" />
-                    <span>{currentTime.toLocaleTimeString('th-TH', { hour12: false })}</span>
+                    <span className="font-FontNoto text-black">{currentTime.toLocaleTimeString('th-TH', { hour12: false })}</span>
                 </div>
                 {!isLineLinked && (
                     <button
@@ -418,7 +418,7 @@ const LandingAfterLogin = () => {
                         <div className="flex items-center justify-center mb-4">
                             <img src={imgPath} alt="clock" className="w-20 h-20 object-contain animate-float-slow z-10" />
                         </div>
-                        <h1 className="font-bold text-md text-center font-FontNoto group-hover:text-black duration-500 z-10">
+                        <h1 className="font-bold text-md text-center font-FontNoto group-hover:text-black duration-500 z-10 text-black">
                             {todayLeave
                                 ? `วันนี้ลา: ${todayLeave.location?.split('|')[0]?.trim() || ''} (${todayLeave.location?.split('|')[1]?.trim() || ''})`
                                 : 'เวลาเข้า-ออกงาน'}
@@ -443,7 +443,7 @@ const LandingAfterLogin = () => {
                             alt="profile"
                             className="w-20 h-20 rounded-full object-cover shadow-lg border-2 border-white mb-2 z-10"
                         />
-                        <h1 className="font-bold text-md text-center font-FontNoto group-hover:text-black duration-500 z-10">
+                        <h1 className="font-bold text-md text-center font-FontNoto group-hover:text-black duration-500 z-10 text-black">
                             เข้าสู่ระบบ EXPT
                         </h1>
                     </div>
@@ -490,47 +490,53 @@ const LandingAfterLogin = () => {
                             const today = new Date().setHours(0, 0, 0, 0);
                             const leaveType = nextLeave?.location?.split('|')[1]?.trim() || '';
 
-                            if (
-                                nextLeaveDate === today &&
-                                (leaveType === 'ครึ่งวันเช้า' || leaveType === 'ครึ่งวันบ่าย') &&
-                                todayWorktime?.checkIn
-                            ) {
-                                return (
-                                    <>
-                                        <div className="text-blue-600 font-FontNoto mb-4 font-bold">
-                                            เช็คอินแล้ววันนี้: {todayWorktime.checkIn}
-                                            {todayWorktime?.checkOut && (
-                                                <div className="text-red-700 mt-2 font-FontNoto">
-                                                    เช็คเอาท์แล้วเวลา {todayWorktime.checkOut}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {!todayWorktime?.checkOut && (
-                                            <div className="flex justify-end gap-2">
-                                                <button
-                                                    onClick={handleCheckOut}
-                                                    className="relative rounded-full bg-red-500 px-4 py-2 font-FontNoto text-white font-bold transition-colors duration-300 ease-linear 
-before:absolute before:right-1/2 before:top-1/2 before:-z-[1] 
-before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2 
-before:translate-x-1/2 before:animate-ping before:rounded-full 
-before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
-                                                >
-                                                    เช็คเอาท์
-                                                </button>
-                                            </div>
-                                        )}
-                                    </>
-                                );
-                            }
-
-                            // แสดงข้อความ modalMessage ถ้ามี
                             if (modalMessage) {
                                 return (
                                     <p className="text-gray-700 mb-4 whitespace-pre-wrap font-FontNoto">{modalMessage}</p>
                                 );
                             }
 
+                            // ✅ แยกเฉพาะกรณี "ครึ่งวันเช้า" เท่านั้น ที่ไม่ให้เช็คเอาท์
+                            if (
+                                nextLeaveDate === today &&
+                                leaveType === 'ครึ่งวันเช้า' &&
+                                todayWorktime?.checkIn
+                            ) {
+                                return (
+                                    <>
+                                        <div className="flex flex-col items-center justify-center text-center">
+                                            <img src={imgPat} alt="clock1" className="w-8 h-8 mb-2" />
+                                            <strong className="font-FontNoto">คุณลงเวลาเข้างานเรียบร้อยแล้ว</strong>
+                                        </div>
+                                    </>
+                                );
+                            }
+                            if (
+                                nextLeaveDate === today &&
+                                leaveType === 'ครึ่งวันบ่าย' &&
+                                todayWorktime?.checkIn &&
+                                !todayWorktime?.checkOut
+                            ) {
+                                return (
+                                    <>
+                                        <div className="text-blue-600 font-FontNoto mb-4 font-bold">
+                                            เช็คอินแล้ววันนี้: {todayWorktime.checkIn}
+                                        </div>
+                                        <div className="flex justify-end gap-2">
+                                            <button
+                                                onClick={handleCheckOut}
+                                                className="relative rounded-full bg-red-500 px-4 py-2 font-FontNoto text-white font-bold transition-colors duration-300 ease-linear 
+before:absolute before:right-1/2 before:top-1/2 before:-z-[1] 
+before:h-3/4 before:w-2/3 before:origin-bottom-left before:-translate-y-1/2 
+before:translate-x-1/2 before:animate-ping before:rounded-full 
+before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
+                                            >
+                                                ลงเวลาเลิกงาน
+                                            </button>
+                                        </div>
+                                    </>
+                                );
+                            }
                             // กรณีวันนี้ลา (เต็มวัน หรือ ครึ่งวัน) และยังไม่ได้เช็คอิน
                             if (todayLeave) {
                                 return (
@@ -596,9 +602,9 @@ before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
                             return (
                                 <>
                                     <div className="mb-3">
-                                        <label className="block text-sm font-FontNoto mb-1">ประเภทการทำงาน</label>
+                                        <label className="block text-sm font-FontNoto mb-1 text-black">ประเภทการทำงาน</label>
                                         <select
-                                            className="select select-bordered w-full font-FontNoto"
+                                            className="select select-bordered w-full font-FontNoto !bg-white text-black"
                                             value={location}
                                             onChange={(e) => {
                                                 const selected = e.target.value;
@@ -613,7 +619,7 @@ before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
 
                                             }}
                                         >
-                                            <option className="font-FontNoto" value="" disabled>-- กรุณาเลือก --</option>
+                                            <option className="font-FontNoto " value="" disabled>-- กรุณาเลือก --</option>
                                             {[
                                                 'Office', 'Work from home', 'Off-site (เข้าหน่วยงาน)', 'เช้า Work from home บ่าย Office',
                                                 'ลาป่วย', 'ลากิจส่วนตัว'

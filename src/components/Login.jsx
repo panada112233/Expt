@@ -85,7 +85,7 @@ const Login = ({ setIsLoggedIn }) => {
                         <label className="block text-sm font-medium text-gray-700 mb-1 font-FontNoto">ชื่อผู้ใช้งาน</label>
                         <input
                             type="text"
-                            className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiInput ? 'placeholder-red-500' : ''
+                            className={`input input-bordered w-full text-black !bg-white font-FontNoto ${isThaiInput ? 'placeholder-red-500' : ''
                                 }`}
                             placeholder={isThaiInput ? 'กรุณากรอกเป็นภาษาอังกฤษเท่านั้น' : 'กรุณาระบุชื่อผู้ใช้งาน'}
                             value={identifier}
@@ -111,7 +111,7 @@ const Login = ({ setIsLoggedIn }) => {
                         <div className="relative">
                             <input
                                 type={showPassword ? 'text' : 'password'}
-                                className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiPassword ? 'placeholder-red-500' : ''
+                                className={`input input-bordered w-full text-black !bg-white font-FontNoto ${isThaiPassword ? 'placeholder-red-500' : ''
                                     }`}
                                 placeholder={isThaiPassword ? 'กรุณากรอกเป็นภาษาอังกฤษเท่านั้น' : 'กรุณาระบุรหัสผ่าน'}
                                 value={password}

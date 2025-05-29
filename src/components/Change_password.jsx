@@ -81,7 +81,7 @@ function ChangePassword() {
             <div className="relative">
               <input
                 type={showOldPassword ? "text" : "password"}
-                className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiOldPassword ? "placeholder-red-500" : ""
+                className={`input input-bordered w-full text-black !bg-white font-FontNoto ${isThaiOldPassword ? "placeholder-red-500" : ""
                   }`}
                 placeholder={
                   isThaiOldPassword ? "กรุณากรอกเป็นภาษาอังกฤษเท่านั้น" : "กรุณาระบุรหัสยืนยันจากอีเมล"
@@ -125,7 +125,7 @@ function ChangePassword() {
             <div className="relative">
               <input
                 type={showNewPassword1 ? "text" : "password"}
-                className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiNewPassword1 ? "placeholder-red-500" : ""
+                className={`input input-bordered w-full text-black !bg-white font-FontNoto ${isThaiNewPassword1 ? "placeholder-red-500" : ""
                   }`}
                 placeholder={
                   isThaiNewPassword1 ? "กรุณากรอกเป็นภาษาอังกฤษเท่านั้น" : "กรุณาระบุรหัสผ่านใหม่"
@@ -169,7 +169,7 @@ function ChangePassword() {
             <div className="relative">
               <input
                 type={showNewPassword2 ? "text" : "password"}
-                className={`input input-bordered w-full text-black bg-white font-FontNoto ${isThaiNewPassword2 ? "placeholder-red-500" : ""
+                className={`input input-bordered w-full text-black !bg-white font-FontNoto ${isThaiNewPassword2 ? "placeholder-red-500" : ""
                   }`}
                 placeholder={
                   isThaiNewPassword2 ? "กรุณากรอกเป็นภาษาอังกฤษเท่านั้น" : "กรุณายืนยันรหัสผ่านใหม่"
@@ -218,11 +218,12 @@ function ChangePassword() {
       {/* Popup */}
       {popupVisible && (
         <dialog id="popup_modal" className="modal" open>
-          <div className="modal-box">
+          <div className="modal-box !bg-white text-black dark:bg-gray-800 dark:text-white">
             <p className="py-4 font-FontNoto">{popupMessage}</p>
           </div>
         </dialog>
       )}
+
     </div>
   );
 

@@ -129,7 +129,7 @@ const EmpBase = () => {
         </div>
       </div>
 
-     <div className="flex flex-col md:flex-row flex-1 py-2 bg-gradient-to-br from-blue-50 via-blue-50 to-slate-50">
+      <div className="flex flex-col md:flex-row flex-1 py-2 bg-gradient-to-br from-blue-50 via-blue-50 to-slate-50">
         {/* Sidebar */}
         <aside
           className={`bg-gradient-to-r from-blue-100 via-blue-50 to-cyan-50 shadow-md text-black fixed top-[64px] left-0 h-[calc(100vh-64px)] w-[280px] md:w-[280px] p-4 z-50 transform transition-transform overflow-y-auto
@@ -427,6 +427,15 @@ const EmpBase = () => {
                           เพิ่มพนักงานใหม่
                         </Link>
                       </li>
+                      {/* <li>
+                        <Link
+                          to="/EmpHome/AllcreateAdmin"
+                          onClick={() => setIsSidebarOpen(false)}
+                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                        >
+                          ทดสอบหน้าแอดมิน
+                        </Link>
+                      </li> */}
                     </ul>
                   </details>
 

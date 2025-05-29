@@ -717,7 +717,7 @@ const Workplan = () => {
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
                                     {/* ซ้าย: วันที่ + คนลงแผน */}
                                     <div>
-                                        <h3 className="font-semibold text-lg font-FontNoto">
+                                        <h3 className="font-semibold text-lg font-FontNoto text-black">
                                             {(() => {
                                                 const daysInThai = ["วันอาทิตย์", "วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัสบดี", "วันศุกร์", "วันเสาร์"];
                                                 const dayName = daysInThai[selectedDate.getDay()];
@@ -747,7 +747,7 @@ const Workplan = () => {
                                             type="date"
                                             value={historyDate}
                                             onChange={(e) => setHistoryDate(e.target.value)}
-                                            className="input input-bordered font-FontNoto w-full sm:w-40 bg-white text-black"
+                                            className="input input-bordered font-FontNoto w-full sm:w-40 !bg-white text-black"
                                             style={{ colorScheme: "light" }}
                                         />
                                         <input
@@ -755,7 +755,7 @@ const Workplan = () => {
                                             placeholder="ค้นหาชื่อพนักงาน..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="input input-bordered font-FontNoto w-full sm:w-64 bg-white text-black"
+                                            className="input input-bordered font-FontNoto w-full sm:w-64 !bg-white text-black"
                                         />
                                     </div>
                                 </div>
@@ -838,7 +838,7 @@ const Workplan = () => {
                     {/* ตัวกรองเดือนและปี */}
                     <div className="flex items-center justify-end space-x-4 mb-4">
                         <select
-                            className="select select-bordered w-40 text-black font-FontNoto"
+                            className="select select-bordered w-40 text-black font-FontNoto !bg-white"
                             value={month}
                             onChange={(e) => setMonth(parseInt(e.target.value))}
                         >
@@ -849,7 +849,7 @@ const Workplan = () => {
                             ))}
                         </select>
                         <select
-                            className="select select-bordered w-40 text-black font-FontNoto"
+                            className="select select-bordered w-40 text-black font-FontNoto !bg-white"
                             value={year}
                             onChange={(e) => setYear(parseInt(e.target.value))}
                         >

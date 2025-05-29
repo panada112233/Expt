@@ -33,6 +33,8 @@ import Workplan from './components/Workplan';
 import WorkplanEmp from './components/WorkplanEmp';
 import WorkplanGM from './components/WorkplanGM';
 
+import AllcreateAdmin from './components/AllcreateAdmin';
+
 import CallbackPage from './components/CallbackPage';
 
 import Profile from './components/Profile';
@@ -119,6 +121,8 @@ function App() {
               <Route path="BorrowEquipmentsEmp" element={<BorrowEquipmentsEmp />} />
               <Route path="ManageEquipmentsAdmin" element={<ManageEquipmentsAdmin />} />
 
+
+              <Route path="AllcreateAdmin" element={<AllcreateAdmin />} />
             </Route>
 
             {/* Route Logout */}
