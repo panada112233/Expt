@@ -615,40 +615,42 @@ const Workplan = () => {
             <h2 className="text-base sm:text-lg text-cyan-950 font-bold font-FontNoto leading-snug">
                 แจ้งเตือนวันนี้
             </h2>
-            <div className="flex flex-wrap gap-4 mt-4 mb-6 animate-fade-in">
-                {/* 🟡 การ์ดเวลาเข้า-ออก */}
-                <div className="w-full sm:w-[350px] group rounded-xl bg-gradient-to-r from-pink-100 via-pink-200 to-rose-100 p-5 shadow-md transition duration-300 cursor-pointer hover:translate-y-[3px] hover:shadow-xl relative">
-                    <p className="text-blue-950 font-semibold text-xl font-FontNoto mb-2">เวลาเข้า-เลิกงาน วันนี้</p>
-                    {todayWorktime ? (
-                        <div className="font-FontNoto text-sm text-blue-950 space-y-1">
-                            <p className="font-FontNoto">เช็คอิน: {todayWorktime.checkIn || "-"}</p>
-                            <p className="font-FontNoto">เช็คเอาท์: {todayWorktime.checkOut || "-"}</p>
-                            <p className="font-FontNoto">ประเภทการทำงาน: {todayWorktime.location || "-"}</p>
-                        </div>
-                    ) : (
-                        <p className="text-blue-950 text-sm font-FontNoto">ไม่มีข้อมูลเข้า-ออก</p>
-                    )}
-                    <FcExpired className="absolute right-[10%] top-[50%] translate-y-[-50%] opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-300 w-16 h-16 text-blue-700" />
-                </div>
+            <div className="overflow-x-auto sm:overflow-visible px-3">
+                <div className="flex flex-nowrap sm:flex-wrap space-x-4 sm:space-x-0 sm:gap-4 mt-4 mb-6 animate-fade-in snap-x snap-mandatory">
+                    {/* 🟡 การ์ดเวลาเข้า-ออก */}
+                    <div className="snap-start flex-shrink-0 w-[90%] sm:w-[350px] mx-auto sm:mx-0 group rounded-xl bg-gradient-to-r from-pink-100 via-pink-200 to-rose-100 p-5 shadow-md transition duration-300 cursor-pointer hover:translate-y-[3px] hover:shadow-xl relative">
+                        <p className="text-blue-950 font-semibold text-xl font-FontNoto mb-2">เวลาเข้า-เลิกงาน วันนี้</p>
+                        {todayWorktime ? (
+                            <div className="font-FontNoto text-sm text-blue-950 space-y-1">
+                                <p className="font-FontNoto">เช็คอิน: {todayWorktime.checkIn || "-"}</p>
+                                <p className="font-FontNoto">เช็คเอาท์: {todayWorktime.checkOut || "-"}</p>
+                                <p className="font-FontNoto">ประเภทการทำงาน: {todayWorktime.location || "-"}</p>
+                            </div>
+                        ) : (
+                            <p className="text-blue-950 text-sm font-FontNoto">ไม่มีข้อมูลเข้า-ออก</p>
+                        )}
+                        <FcExpired className="absolute right-[10%] top-[50%] translate-y-[-50%] opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-300 w-16 h-16 text-blue-700" />
+                    </div>
 
-                {/* 🌸 การ์ดแผนงานวันนี้ */}
-                <div className="w-full sm:w-[350px] group rounded-xl bg-gradient-to-r from-green-100 via-green-200 to-lime-100 p-5 shadow-md transition duration-300 cursor-pointer hover:translate-y-[3px] hover:shadow-xl relative">
-                    <p className="text-blue-950 font-semibold text-xl font-FontNoto mb-2">แผนงานวันนี้</p>
-                    {todayPlan ? (
-                        <p className="font-FontNoto text-sm text-blue-950">วันนี้: {todayPlan.eveningTask || "-"}</p>
-                    ) : (
-                        <p className="text-blue-950 text-sm font-FontNoto">ยังไม่ได้เขียนแผนงาน</p>
-                    )}
-                    <FcConferenceCall className="absolute right-[10%] top-[50%] translate-y-[-50%] opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-300 w-16 h-16 text-blue-700" />
-                </div>
+                    {/* 🌸 การ์ดแผนงานวันนี้ */}
+                    <div className="snap-start flex-shrink-0 w-[90%] sm:w-[350px] mx-auto sm:mx-0 group rounded-xl bg-gradient-to-r from-green-100 via-green-200 to-lime-100 p-5 shadow-md transition duration-300 cursor-pointer hover:translate-y-[3px] hover:shadow-xl relative">
+                        <p className="text-blue-950 font-semibold text-xl font-FontNoto mb-2">แผนงานวันนี้</p>
+                        {todayPlan ? (
+                            <p className="font-FontNoto text-sm text-blue-950">วันนี้: {todayPlan.eveningTask || "-"}</p>
+                        ) : (
+                            <p className="text-blue-950 text-sm font-FontNoto">ยังไม่ได้เขียนแผนงาน</p>
+                        )}
+                        <FcConferenceCall className="absolute right-[10%] top-[50%] translate-y-[-50%] opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-300 w-16 h-16 text-blue-700" />
+                    </div>
 
-                {/* 🌙 การ์ดแผนงานย้อนหลัง */}
-                <div className="w-full sm:w-[350px] group rounded-xl bg-gradient-to-r from-sky-200 via-blue-100 to-white p-5 shadow-md transition duration-300 cursor-pointer hover:translate-y-[3px] hover:shadow-xl relative">
-                    <p className="text-blue-950 font-semibold text-xl font-FontNoto mb-2">แผนงานย้อนหลัง</p>
-                    <p className="font-FontNoto text-sm text-blue-950">
-                        เมื่อวาน: {getPreviousDayPlan(summaryDay) || "-"}
-                    </p>
-                    <FcOvertime className="absolute right-[10%] top-[50%] translate-y-[-50%] opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-300 w-16 h-16 text-blue-700" />
+                    {/* 🌙 การ์ดแผนงานย้อนหลัง */}
+                    <div className="snap-start flex-shrink-0 w-[90%] sm:w-[350px] mx-auto sm:mx-0 group rounded-xl bg-gradient-to-r from-sky-200 via-blue-100 to-white p-5 shadow-md transition duration-300 cursor-pointer hover:translate-y-[3px] hover:shadow-xl relative">
+                        <p className="text-blue-950 font-semibold text-xl font-FontNoto mb-2">แผนงานย้อนหลัง</p>
+                        <p className="font-FontNoto text-sm text-blue-950">
+                            เมื่อวาน: {getPreviousDayPlan(summaryDay) || "-"}
+                        </p>
+                        <FcOvertime className="absolute right-[10%] top-[50%] translate-y-[-50%] opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-300 w-16 h-16 text-blue-700" />
+                    </div>
                 </div>
             </div>
 

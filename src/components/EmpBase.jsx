@@ -112,7 +112,7 @@ const EmpBase = () => {
         <div className="md:hidden flex justify-end px-4 py-2">
           <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
             <svg
-              className="w-8 h-8 text-white"
+              className="w-8 h-8 text-blue-950"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -462,7 +462,7 @@ const EmpBase = () => {
         )}
         {/* Main Content */}
         <div className="md:ml-[280px] mt-[64px] p-2 w-full min-h-[calc(100vh-64px)] overflow-auto bg-gradient-to-br from-blue-50 via-blue-50 to-slate-50">
-          <div className="max-w-[1550px] mx-auto px-6 rounded-2xl shadow-xl py-4 bg-gradient-to-r from-blue-50 via-blue-50 to-slate-50 backdrop-blur-md min-h-full">
+          <div className="max-w-[1550px] mx-auto  ">
             <Outlet />
           </div>
         </div>

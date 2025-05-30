@@ -31,6 +31,7 @@ const Worktime = () => {
         "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
         "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
     ];
+
     useEffect(() => {
         const today = new Date().toISOString().split("T")[0];
         const found = worktimes.find(
@@ -39,25 +40,10 @@ const Worktime = () => {
         );
 
         if (found && found.checkIn) {
-            const lateMin = calculateRawLateMinutes(found.checkIn, found.date);
-            if (lateMin > 0) {
-                const hours = Math.floor(lateMin / 60);
-                const minutes = lateMin % 60;
-
-                let lateText = "มาสาย ";
-                if (hours > 0) lateText += `${hours} ชั่วโมง `;
-                if (minutes > 0) lateText += `${minutes} นาที`;
-
-                setCheckinStatus({
-                    text: lateText.trim(), // ลบช่องว่างท้ายข้อความ
-                    color: 'bg-yellow-100 text-yellow-700',
-                });
-            } else {
-                setCheckinStatus({
-                    text: 'ปกติ',
-                    color: 'bg-green-100 text-green-700',
-                });
-            }
+            setCheckinStatus({
+                text: 'ทำงานอยู่',
+                color: 'bg-green-100 text-green-700',
+            });
         } else {
             setCheckinStatus({
                 text: 'ยังไม่ได้ลงเวลาเข้างาน',
@@ -65,6 +51,7 @@ const Worktime = () => {
             });
         }
     }, [worktimes, userId]);
+
 
     useEffect(() => {
         const id = sessionStorage.getItem('userId');
@@ -351,14 +338,14 @@ const Worktime = () => {
         }
 
         const diffMinutes = (checkIn - expected) / (1000 * 60);
-        if (diffMinutes <= 0) return '0 นาที';
+        if (diffMinutes <= 0) return '0 น.';
 
         const hours = Math.floor(diffMinutes / 60);
         const minutes = Math.round(diffMinutes % 60);
 
-        if (hours > 0 && minutes > 0) return `${hours} ชั่วโมง ${minutes} นาที`;
-        if (hours > 0) return `${hours} ชั่วโมง`;
-        return `${minutes} นาที`;
+        if (hours > 0 && minutes > 0) return `${hours} ชม. ${minutes} น.`;
+        if (hours > 0) return `${hours} ชม.`;
+        return `${minutes} น.`;
     };
 
     const calculateRawLateMinutes = (checkInTime, dateStr) => {
@@ -401,12 +388,12 @@ const Worktime = () => {
             totalMinutes -= 60; // หักเวลาออก 1 ชั่วโมง (60 นาที) สำหรับกรณีที่ไม่ได้ลา
         }
 
-        if (totalMinutes <= 0) return '0 ชั่วโมง 0 นาที';
+        if (totalMinutes <= 0) return '0 ชม. 0 น.';
 
         const hours = Math.floor(totalMinutes / 60);
         const minutes = Math.round(totalMinutes % 60);
 
-        return `${hours} ชั่วโมง ${minutes} นาที`;
+        return `${hours} ชม. ${minutes} น.`;
     };
 
     const getTotalLateTimeThisMonth = () => {
@@ -480,8 +467,8 @@ const Worktime = () => {
     const averageHoursPerDay = (() => {
         const totalMinutes = filteredWorktimes.reduce((sum, item) => {
             const result = calculateWorkingHours(item.checkIn, item.checkOut, item.date, '');
-            if (result !== '-' && result.includes('ชั่วโมง')) {
-                const [hStr, mStr] = result.replace('ชั่วโมง', '').replace('นาที', '').split(' ').map(t => t.trim());
+            if (result !== '-' && result.includes('ชม.')) {
+                const [hStr, mStr] = result.replace('ชม.', '').replace('น.', '').split(' ').map(t => t.trim());
                 const h = parseInt(hStr || '0');
                 const m = parseInt(mStr || '0');
                 return sum + h * 60 + m;
@@ -531,8 +518,8 @@ const Worktime = () => {
                 <p className="text-xs sm:text-sm mt-1 text-cyan-950 font-FontNoto">ตรวจสอบเวลาเข้า-ออกงาน และกิจกรรมที่เกี่ยวข้อง</p>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-4 mb-6">
-                <div className="flex flex-col gap-4 lg:w-2/3">
+            <div className="flex flex-col lg:flex-row gap-4 ">
+                <div className="flex flex-col gap-4 w-full lg:w-[100%]">
                     <div className="bg-white rounded-xl shadow-lg p-6 w-full text-center mb-6">
                         <h2 className="text-xl font-bold text-gray-700 font-FontNoto mb-1">เวลาปัจจุบัน</h2>
                         <div className="text-3xl font-extrabold text-green-600 font-FontNoto">
@@ -621,21 +608,24 @@ const Worktime = () => {
                                     </select>
                                 </div>
                             </div>
-
-                            <table className="table w-full text-center">
-                                <thead className="!bg-gray-100 !text-blue-900 text-sm">
+                                
+                                <div className='overflow-x-auto w-full'>
+                            <table className="table min-w-700px w-full  !text-center">
+                                <thead className="!bg-gray-100 !text-slate-800 !text-sm">
                                     <tr>
-                                        <th className="py-3 font-FontNoto">วันที่</th>
-                                        <th className="py-3 font-FontNoto">สถานที่</th>
-                                        <th className="py-3 font-FontNoto">ประเภทการลา</th>
-                                        <th className="py-3 font-FontNoto">พิกัด</th>
-                                        <th className="py-3 font-FontNoto">สถานะ</th>
-                                        <th className="py-3 font-FontNoto">เวลาเข้า</th>
-                                        <th className="py-3 font-FontNoto">เวลาออก</th>
-                                        <th className="py-3 font-FontNoto">ชั่วโมงทำงาน</th>
+                                        <th className="py-3 font-FontNoto whitespace-nowrap">วันที่</th>
+                                        <th className="py-3 font-FontNoto whitespace-nowrap">ประเภทการทำงาน</th>
+                                        <th className="py-3 font-FontNoto whitespace-nowrap">ประเภทการลา</th>
+                                        <th className="py-3 font-FontNoto whitespace-nowrap">สถานที่</th>
+
+                                        <th className="py-3 font-FontNoto whitespace-nowrap">เวลาเข้า</th>
+                                        <th className="py-3 font-FontNoto whitespace-nowrap">เวลาออก</th>
+                                        <th className="py-3 font-FontNoto whitespace-nowrap">ชั่วโมงทำงาน</th>
+                                        <th className="py-3 font-FontNoto whitespace-nowrap min-w-[120px] text-center">สถานะ</th>
+
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white">
+                                <tbody className="bg-white ">
                                     {paginatedWorktimes.map((item, index) => {
                                         const locationText = item.location || '';
                                         const leaveKeywords = ['ป่วย', 'กิจส่วนตัว', 'บวช', 'พักร้อน', 'ลาคลอด'];
@@ -652,15 +642,15 @@ const Worktime = () => {
                                         return (
                                             <tr
                                                 key={index}
-                                                className={`border-b transition duration-300 font-FontNoto ${isLeave ? 'bg-green-50 hover:bg-green-100 text-green-700' : 'hover:bg-blue-100 font-FontNoto'
+                                                className={`border-b transition !text-md duration-300 font-FontNoto ${isLeave ? 'bg-green-50 hover:bg-green-100 text-green-700' : 'hover:bg-blue-100 font-FontNoto'
                                                     }`}
                                             >
-                                                <td className="py-2 font-FontNoto">{formatDate(item.date)}</td>
+                                                <td className="py-2 font-FontNoto whitespace-nowrap">{formatDate(item.date)}</td>
 
                                                 {isLeave ? (
                                                     <>
-                                                        <td className="py-2 font-FontNoto">-</td>
-                                                        <td className="py-2 font-FontNoto">
+                                                        <td className="py-2 font-FontNoto whitespace-nowrap">-</td>
+                                                        <td className="py-2 font-FontNoto whitespace-nowrap">
                                                             {/* ✅ แก้ตรงนี้ */}
                                                             {locationText.split('|')[0]?.trim() || '-'}<br />
                                                             <span className="text-sm text-gray-600 font-FontNoto">
@@ -670,11 +660,11 @@ const Worktime = () => {
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <td className="py-2 font-FontNoto">{locationText}</td>
-                                                        <td className="py-2 font-FontNoto">-</td>
+                                                        <td className="py-2 font-FontNoto !text-sm whitespace-nowrap">{locationText}</td>
+                                                        <td className="py-2 font-FontNoto whitespace-nowrap">-</td>
                                                     </>
                                                 )}
-                                                <td className="py-2 font-FontNoto">
+                                                <td className="py-2 font-FontNoto text-left whitespace-nowrap">
                                                     {item.photoPath && item.photoPath.includes('|') ? (
                                                         <span className="text-sm text-gray-800 font-FontNoto">{item.photoPath.split('|')[1]?.trim()}</span>
                                                     ) : (
@@ -682,23 +672,36 @@ const Worktime = () => {
                                                     )}
                                                 </td>
 
-                                                <td className={`py-2 font-FontNoto ${shouldShowTime && calculateRawLateMinutes(item.checkIn, item.date, leaveType) > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                                    {shouldShowTime ? (
-                                                        calculateRawLateMinutes(item.checkIn, item.date, leaveType) > 0
-                                                            ? `มาสาย ${calculateLateMinutes(item.checkIn, item.date, leaveType)}`
-                                                            : 'ปกติ'
-                                                    ) : '-'}
-                                                </td>
-                                                <td className="py-2 font-FontNoto">{shouldShowTime ? item.checkIn || '-' : '-'}</td>
-                                                <td className="py-2 font-FontNoto">{shouldShowTime ? item.checkOut || '-' : '-'}</td>
-                                                <td className="py-2 font-FontNoto">
+
+
+                                                <td className="py-2 font-FontNoto whitespace-nowrap">{shouldShowTime ? item.checkIn || '-' : '-'}</td>
+                                                <td className="py-2 font-FontNoto whitespace-nowrap">{shouldShowTime ? item.checkOut || '-' : '-'}</td>
+                                                <td className="py-2 font-FontNoto whitespace-nowrap">
                                                     {shouldShowTime ? calculateWorkingHours(item.checkIn, item.checkOut, item.date, leaveType) : '-'}
+                                                </td>
+                                                <td className="py-2 font-FontNoto text-center  whitespace-nowrap">
+                                                    <span
+                                                        className={`inline-block px-3 py-1  font-semibold rounded-full
+      ${!shouldShowTime
+                                                                ? 'bg-gray-100 text-gray-600'
+                                                                : calculateRawLateMinutes(item.checkIn, item.date, leaveType) > 0
+                                                                    ? 'bg-yellow-100 text-yellow-700'
+                                                                    : 'bg-green-100 text-green-700'}
+    `}
+                                                    >
+                                                        {shouldShowTime
+                                                            ? calculateRawLateMinutes(item.checkIn, item.date, leaveType) > 0
+                                                                ? `สาย ${calculateLateMinutes(item.checkIn, item.date, leaveType)}`
+                                                                : 'ปกติ'
+                                                            : '-'}
+                                                    </span>
                                                 </td>
                                             </tr>
                                         );
                                     })}
                                 </tbody>
                             </table>
+                            </div>
 
                             <div className="flex flex-col md:flex-row justify-between items-center mt-4 text-sm font-FontNoto text-gray-600">
                                 <div className="font-FontNoto">
@@ -742,9 +745,7 @@ const Worktime = () => {
                         </div>
                     </div>
                 </div>
-
-                <div className="flex flex-col gap-4 lg:w-1/3">
-
+                <div className="flex flex-col gap-4 w-full lg:w-[20%]">
                     {/* กล่อง 1 */}
                     <div className="bg-white shadow-md rounded-xl p-5 flex-1">
                         <h3 className="text-md font-bold font-FontNoto mb-3">สรุปการทำงาน/เดือน</h3>
@@ -817,82 +818,57 @@ const Worktime = () => {
                     <div className="bg-white shadow-md rounded-xl p-5 flex-1 font-FontNoto">
                         <h3 className="text-md font-bold font-FontNoto mb-3">สรุปวันทำงาน/เดือน</h3>
 
-                        <PieChart width={280} height={220}>
-                            <Pie
-                                data={pieData}
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={70}
-                                dataKey="value"
-                            >
-                                {pieData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
-                                ))}
-                            </Pie>
+                        {/* ครอบ PieChart ด้วย div จัดกลาง */}
+                        <div className="flex justify-center items-center">
+                            <PieChart width={280} height={220}>
+                                <Pie
+                                    data={pieData}
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={70}
+                                    dataKey="value"
+                                >
+                                    {pieData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                                    ))}
+                                </Pie>
 
-                            <Tooltip
-                                formatter={(value, name, props) => {
-                                    const total = pieData.reduce((sum, entry) => sum + entry.value, 0);
-                                    const percent = ((value / total) * 100).toFixed(0);
-                                    return [`${percent}%`, name];
-                                }}
-                                wrapperStyle={{
-                                    fontFamily: '"Noto Sans Thai", sans-serif',
-                                    fontSize: '13px'
-                                }}
-                            />
+                                <Tooltip
+                                    formatter={(value, name, props) => {
+                                        const total = pieData.reduce((sum, entry) => sum + entry.value, 0);
+                                        const percent = ((value / total) * 100).toFixed(0);
+                                        return [`${percent}%`, name];
+                                    }}
+                                    wrapperStyle={{
+                                        fontFamily: '"Noto Sans Thai", sans-serif',
+                                        fontSize: '13px'
+                                    }}
+                                />
 
-                            <Legend
-                                verticalAlign="bottom"
-                                height={36}
-                                wrapperStyle={{
-                                    fontFamily: '"Noto Sans Thai", sans-serif',
-                                    fontSize: '13px'
-                                }}
-                            />
-                        </PieChart>
+                            </PieChart>
+                        </div>
+                        <div className="mt-4 space-y-1 text-sm text-gray-700 font-FontNoto">
+                            {pieData.map((entry, index) => (
+                                <div key={index} className="flex justify-between">
+                                    <span className="flex items-center gap-2">
+                                        <span
+                                            className="inline-block w-3 h-3 rounded-full"
+                                            style={{ backgroundColor: pieColors[index % pieColors.length] }}
+                                        ></span>
+                                        {entry.name}
+                                    </span>
+                                    <span>{entry.value} วัน</span>
+                                </div>
+                            ))}
+                        </div>
 
                     </div>
-
                     {/* กล่อง 3 */}
                     <div className="bg-white shadow-md rounded-xl p-5 flex-1">
-                        <h3 className="text-md font-bold font-FontNoto mb-2">ข้อมูลการทำงานวันนี้</h3>
-
-                        {(() => {
-                            const todayStr = new Date().toISOString().split("T")[0];
-                            const todayWork = filteredWorktimes.find(item => item.date.startsWith(todayStr));
-
-                            if (!todayWork) {
-                                return (
-                                    <>
-                                        <div className="text-sm text-gray-700 font-FontNoto">เวลาเข้า: <span className="font-bold">-</span></div>
-                                        <div className="text-sm text-gray-700 font-FontNoto">เวลาออก: <span className="font-bold">-</span></div>
-                                        <div className="text-sm text-gray-700 font-FontNoto">ประเภทการทำงาน: <span className="font-bold">-</span></div>
-                                        <div className="text-sm text-gray-700 font-FontNoto">ชั่วโมงทำงาน: <span className="font-bold">-</span></div>
-                                    </>
-                                );
-                            }
-
-                            const checkIn = todayWork.checkIn || '-';
-                            const checkOut = todayWork.checkOut || '-';
-                            const location = todayWork.location?.split('|')[0]?.trim() || '-';
-                            const leaveType = todayWork.location?.includes('ลา')
-                                ? (todayWork.location.split('|')[1]?.trim() || '-')
-                                : '-';
-                            const workHours = calculateWorkingHours(todayWork.checkIn, todayWork.checkOut, todayWork.date, leaveType);
-
-                            return (
-                                <>
-                                    <div className="text-sm text-gray-700 font-FontNoto">เวลาเข้า: <span className="font-bold">{checkIn}</span></div>
-                                    <div className="text-sm text-gray-700 font-FontNoto">เวลาออก: <span className="font-bold">{checkOut}</span></div>
-                                    <div className="text-sm text-gray-700 font-FontNoto">ประเภทการทำงาน: <span className="font-bold">{location}</span></div>
-                                    {todayWork.location?.includes('ลา') && (
-                                        <div className="text-sm text-gray-700 font-FontNoto">ประเภทการลา: <span className="font-bold">{leaveType}</span></div>
-                                    )}
-                                    <div className="text-sm text-gray-700 font-FontNoto">ชั่วโมงทำงาน: <span className="font-bold">{workHours}</span></div>
-                                </>
-                            );
-                        })()}
+                        <h3 className="text-md font-bold font-FontNoto mb-2">ข้อมูลการทำงาน</h3>
+                        <div className="text-sm text-gray-700 font-FontNoto">เวลาทำงาน: <span className="font-bold">08:30 - 17:30 น.</span></div>
+                        <div className="text-sm text-gray-700 font-FontNoto">วันทำงาน: <span className="font-bold">จันทร์ - ศุกร์</span></div>
+                        <div className="text-sm text-gray-700 font-FontNoto">พักกลางวัน: <span className="font-bold">12:00 - 13:00 น.</span></div>
                     </div>
                 </div>
             </div>
