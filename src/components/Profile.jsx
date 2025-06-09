@@ -1,15 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { CalendarIcon, BriefcaseIcon, ClockIcon, AwardIcon, Printer } from "lucide-react";
+import { FiEdit, FiTrash2 } from "react-icons/fi";
+import { PencilSquareIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+
 import { pdfMake, font } from "../libs/pdfmake";
+import { useLocation } from "react-router-dom";
 
 const roleMapping = {
-  Hr: "ทรัพยากรบุคคล",
   GM: "ผู้จัดการทั่วไป",
-  Dev: "นักพัฒนาระบบ",
-  BA: "นักวิเคราะห์ธุรกิจ",
-  Employee: "พนักงาน",
+  Hr: "เลขานุการฝ่ายบริหาร",
+  HEAD_BA: "หัวหน้าฝ่ายนักวิเคราะห์ธุรกิจ",
+  SENIOR_DEV: "Senior Programmer",
+  Dev: "Programmer",
+  BA: "นักวิเคราะห์ธุรกิจ (BA)",
+  TESTER: "Software Tester",
+  JUNIOR_DEV: "Junior Programmer",
+  ADMIN: "Admin",
 };
+
 
 // ฟังก์ชันแปลง Date object เป็น 'DD-MM-YYYY' พร้อมจัดการ Time Zone และปีพุทธศักราช
 const formatDateForDisplay = (date) => {
@@ -26,30 +35,47 @@ const formatDateForDisplay = (date) => {
 };
 
 function Profile() {
+  const currentUserRole = sessionStorage.getItem("role");
   const [employee, setEmployee] = useState({
+    userID: "",
+    prefix: "",
     firstName: "",
     lastName: "",
-    designation: "",
+    englishFirstName: "",
+    englishLastName: "",
+    nickname: "",
+    gender: "None",
+    maritalStatus: "",
+    nationalID: "",
     contact: "",
     email: "",
-    JDate: "",
-    gender: "None",
-    createdAt: "",
-    isActive: "",
-    passwordHash: "",
+    currentAddress: "",
+    emergencyContact: "",
+    designation: "",
+    employeeCode: "",
     role: "Hr",
+    passwordHash: "",
+    isActive: "",
+    createdAt: "",
     updatedAt: "",
-    userID: "",
+    JDate: "",
+    lineUserId: "",
+    birthday: "",
   });
+
   const [profilePicture, setProfilePicture] = useState(null);
   const [currentProfileImage, setCurrentProfileImage] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState(""); // เก็บข้อความใน Modal
   const [activeTab, setActiveTab] = useState("profile");
-  const userID = sessionStorage.getItem("userId") || "";
+  const location = useLocation();
+  const passedUserID = location.state?.userID;
+  const userID = passedUserID || sessionStorage.getItem("userId") || "";
   const fileInputRef = useRef(null);
 
   // ======================= ประสบการณ์ทำงาน ===========================
@@ -62,11 +88,14 @@ function Profile() {
     startDate: "",
     endDate: "",
     description: "",
-    salary: "",
   });
   const [errors, setErrors] = useState({ startDate: "", endDate: "" });
   const [isEditing, setIsEditing] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
+  const [showExperienceModal, setShowExperienceModal] = useState(false);
+  const [showEducationModal, setShowEducationModal] = useState(false);
+
+
   const [experienceToDelete, setExperienceToDelete] = useState(null);
   const [modalConfirmAction, setModalConfirmAction] = useState(null);
   // ======================= การศึกษา ===========================
@@ -77,6 +106,8 @@ function Profile() {
     fieldOfStudy: "",
     year: "",
     gpa: "",
+    thesis: "",
+    activities: "",
   });
   const [educationEditIndex, setEducationEditIndex] = useState(null);
   const [levelLabels] = useState({
@@ -89,6 +120,22 @@ function Profile() {
     Doctorate: "ปริญญาเอก",
   });
 
+  const maritalStatusMap = {
+    single: "โสด",
+    married: "สมรส",
+    divorced: "หย่าร้าง",
+    widowed: "หม้าย",
+    complicated: "ค่อนข้างอธิบายยาก",
+  };
+
+
+  const designationMap = {
+    FULLTIME: "พนักงานประจำ",
+    CONTRACT: "สัญญาจ้าง",
+    INTERN: "นักศึกษาฝึกงาน",
+    PROBATION: "ทดลองงาน",
+    ADMIN: "Admin"
+  };
   // ฟังก์ชันคำนวณอายุการทำงานจากวันที่เริ่มงาน
   const calculateWorkDuration = (startDateStr) => {
     if (!startDateStr) return "-";
@@ -247,6 +294,18 @@ function Profile() {
     setEmployee({ ...employee, [name]: value });
   };
 
+  const calculateAge = (birthday) => {
+    if (!birthday) return "-";
+    const birthDate = new Date(birthday);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= 0 ? age : "-";
+  };
+
   // ส่งข้อมูลที่แก้ไขกลับไปอัปเดตในฐานข้อมูล
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -280,6 +339,7 @@ function Profile() {
       .then((data) => {
         if (data.message === "อัปเดตข้อมูลสำเร็จ") {
           setModalMessage("อัปเดตโปรไฟล์สำเร็จ");
+          setIsEditMode(false);
         } else {
           setModalMessage("มีข้อผิดพลาดเกิดขึ้น โปรดลองอีกครั้ง");
         }
@@ -363,30 +423,63 @@ function Profile() {
       return;
     }
 
-    if (newEducation.gpa < 0 || newEducation.gpa > 4) {
+    if (newEducation.gpa !== "" && (newEducation.gpa < 0 || newEducation.gpa > 4)) {
       setModalMessage("กรุณากรอกเกรดเฉลี่ยสะสมให้ถูกต้อง (0.00 - 4.00)");
       setIsModalOpen(true);
       return;
     }
 
     try {
+      const gpaValue =
+        newEducation.gpa === "" || newEducation.gpa === null || isNaN(newEducation.gpa)
+          ? 0 // ✅ ส่ง 0 แทน null ถ้าไม่ได้กรอก
+          : parseFloat(newEducation.gpa);
       if (isEditing) {
-        const updated = { ...educations[editIndex], ...newEducation };
+        const updated = {
+          educationID: educations[editIndex].educationID,
+          userID: userID,
+          level: newEducation.level,
+          institute: newEducation.institute,
+          fieldOfStudy: newEducation.fieldOfStudy,
+          year: newEducation.year,
+          gpa: gpaValue,
+          thesis: newEducation.thesis || "",
+          activities: newEducation.activities || "",
+          createdAt: educations[editIndex].createdAt,
+          updatedAt: new Date().toISOString(),
+        };
+
         const res = await axios.put(
           `https://192.168.1.188/hrwebapi/api/Educations/Update/${updated.educationID}`,
           updated
         );
-        const updatedList = educations.map((edu, i) => i === editIndex ? res.data : edu);
+
+        const updatedList = educations.map((edu, i) =>
+          i === editIndex ? res.data : edu
+        );
         setEducations(updatedList);
       } else {
-        await axios.post("https://192.168.1.188/hrwebapi/api/Educations/Insert", {
+        const educationToSend = {
           ...newEducation,
           userID,
-        });
+          gpa: gpaValue,
+        };
+        await axios.post(
+          "https://192.168.1.188/hrwebapi/api/Educations/Insert",
+          educationToSend
+        );
         fetchEducations();
       }
 
-      setNewEducation({ level: "", institute: "", fieldOfStudy: "", year: "", gpa: "" });
+      setNewEducation({
+        level: "",
+        institute: "",
+        fieldOfStudy: "",
+        year: "",
+        gpa: "",
+        thesis: "",
+        activities: "",
+      });
       setIsEditing(false);
       setEditIndex(null);
     } catch (error) {
@@ -445,7 +538,6 @@ function Profile() {
           companyName: newExperience.companyName,
           startDate: newExperience.startDate,
           endDate: newExperience.endDate,
-          salary: newExperience.salary,
         });
         fetchExperiences();
       }
@@ -490,189 +582,85 @@ function Profile() {
     setIsModalOpen(false);
     setExperienceToDelete(null);
   };
-  const handleExportEducationPDF = () => {
-    const docDefinition = {
-      pageSize: 'A4',
-      content: [
-        {
-          text: "การศึกษา",
-          style: "header"
-        },
-        {
-          table: {
-            widths: ['*'],
-            body: [
-              ...educations.map((edu, i) => [
-                [
-                  {
-                    stack: [
-                      { text: `${i + 1}. ระดับ: ${levelLabels[edu.level]}`, style: "subHeader" },
-                      { text: `สถาบัน: ${edu.institute}`, style: "detail" },
-                      { text: `สาขา: ${edu.fieldOfStudy}`, style: "detail" },
-                      { text: `ปี: ${edu.year}`, style: "detail" },
-                      { text: `GPA: ${edu.gpa}`, style: "detail" },
-                    ],
-                    margin: [5, 5, 5, 5],
-                  }
-                ]
-              ]),
-            ],
-          },
-          layout: {
-            hLineWidth: () => 0.5,
-            vLineWidth: () => 0.5,
-            hLineColor: () => "#bfbfbf",
-            vLineColor: () => "#bfbfbf",
-            paddingLeft: () => 5,
-            paddingRight: () => 5,
-            paddingTop: () => 5,
-            paddingBottom: () => 5,
-          },
-        },
-      ],
-      styles: {
-        header: { fontSize: 20, bold: true, alignment: "center", margin: [0, 0, 0, 10] },
-        subHeader: { fontSize: 16, bold: true, margin: [0, 5, 0, 2] },
-        detail: { fontSize: 14, margin: [0, 2, 0, 0] },
-      },
-      defaultStyle: { font: "THSarabunNew" },
-    };
 
-    pdfMake.createPdf(docDefinition).download('การศึกษา.pdf');
-  };
-
-  const handleExportExperiencePDF = () => {
-    const docDefinition = {
-      pageSize: 'A4',
-      content: [
-        {
-          text: "ประสบการณ์ทำงาน",
-          style: "header"
-        },
-        {
-          table: {
-            widths: ['*'],
-            body: [
-              ...experiences.map((exp, index) => [
-                [
-                  {
-                    stack: [
-                      { text: `${index + 1}. บริษัท: ${exp.companyName}`, style: "subHeader" },
-                      { text: `ตำแหน่ง: ${exp.jobTitle}`, style: "detail" },
-                      { text: `เงินเดือน: ${exp.salary} บาท`, style: "detail" },
-                      { text: `ปีที่ทำงาน: ${exp.endDate ? `${exp.startDate} - ${exp.endDate}` : `${exp.startDate}`}`, style: "detail" },
-                    ],
-                    margin: [5, 5, 5, 5],
-                  },
-                ],
-              ]),
-            ],
-          },
-          layout: {
-            hLineWidth: () => 0.5,
-            vLineWidth: () => 0.5,
-            hLineColor: () => "#bfbfbf",
-            vLineColor: () => "#bfbfbf",
-            paddingLeft: () => 5,
-            paddingRight: () => 5,
-            paddingTop: () => 5,
-            paddingBottom: () => 5,
-          },
-        },
-      ],
-      styles: {
-        header: { fontSize: 20, bold: true, alignment: "center", margin: [0, 0, 0, 10] },
-        subHeader: { fontSize: 16, bold: true, margin: [0, 5, 0, 2] },
-        detail: { fontSize: 14, margin: [0, 2, 0, 0] },
-      },
-      defaultStyle: { font: "THSarabunNew" },
-    };
-
-    pdfMake.createPdf(docDefinition).download("ประสบการณ์ทำงาน.pdf");
-  };
-
-  // ฟังก์ชันสร้าง PDF ด้วย PDFMake
   const handleExportProfilePDF = () => {
     const formattedDate = formatDateForDisplay(employee.JDate || "");
-    console.log("วันที่แปลงแล้ว: ", formattedDate);
-
-    // แปลงค่าเพศที่เลือกเป็นภาษาไทยสำหรับการแสดงใน PDF
     const roleText = roleMapping[employee.role] || "ไม่ระบุ";
     const genderText = employee.gender === "Male" ? "ชาย" : employee.gender === "Female" ? "หญิง" : "ไม่ระบุ";
 
-    const docDefinition = {
-      pageSize: 'A4', // ขนาดกระดาษ A4
-      content: [
-        {
-          text: "โปรไฟล์พนักงาน",
-          style: "header",
-          alignment: "center"
-        },
-        {
-          image: currentProfileImage, // ใส่ Base64 ที่แปลงมาแล้ว
+    const educationSection = educations.length > 0 ? [
+      { text: "ประวัติการศึกษา", style: "sectionHeader", margin: [0, 20, 0, 6] },
+      ...educations.map((edu, i) => ({
+        text: `${i + 1}. ${levelLabels[edu.level]} - ${edu.institute}\n   สาขา: ${edu.fieldOfStudy}\n   ปี: ${edu.year} | GPA: ${edu.gpa}`,
+        style: "detail",
+        margin: [0, 0, 0, 6]
+      }))
+    ] : [];
+
+    const experienceSection = experiences.length > 0 ? [
+      { text: "ประสบการณ์ทำงาน", style: "sectionHeader", margin: [0, 20, 0, 6] },
+      ...experiences.map((exp, i) => ({
+        text: `${i + 1}. ${exp.companyName} (${exp.startDate} - ${exp.endDate || "ปัจจุบัน"})\n   ตำแหน่ง: ${exp.jobTitle}`,
+        style: "detail",
+        margin: [0, 0, 0, 6]
+      }))
+    ] : [];
+
+    const profileImageBlock =
+      currentProfileImage && currentProfileImage.trim() !== ""
+        ? {
+          image: currentProfileImage,
           width: 150,
           height: 150,
           alignment: "center",
-          margin: [0, 20, 0, 20]
-        },
+          margin: [0, 20, 0, 20],
+        }
+        : null;
+
+    const docDefinition = {
+      pageSize: "A4",
+      content: [
+        { text: "โปรไฟล์พนักงาน", style: "header", alignment: "center" },
+        ...(profileImageBlock ? [profileImageBlock] : []),
         {
           table: {
-            widths: [150, '*'],
+            widths: [150, "*"],
             body: [
               [{ text: "หัวข้อ", style: "tableHeader" }, { text: "ข้อมูล", style: "tableHeader" }],
               ["ชื่อ", employee.firstName || "-"],
               ["นามสกุล", employee.lastName || "-"],
-              ["แผนกพนักงาน", roleText || "-"],
-              ["ตำแหน่งพนักงาน", employee.designation || "-"],
+              ["ตำแหน่งพนักงาน", roleText],
+              ["สถานะงาน", designationMap[employee.designation] || "-"],
               ["ติดต่อ", employee.contact || "-"],
               ["อีเมล", employee.email || "-"],
               ["วันที่เข้าร่วม", formattedDate || "-"],
-              ["เพศ", genderText || "-"],
+              ["เพศ", genderText],
             ],
           },
           layout: {
-            hLineWidth: function (i, node) {
-              return 0.5; // ความหนาของเส้นขอบแนวนอน
-            },
-            vLineWidth: function (i, node) {
-              return 0.5; // ความหนาของเส้นขอบแนวตั้ง
-            },
-            hLineColor: function (i, node) {
-              return '#bfbfbf'; // สีเส้นขอบแนวนอน
-            },
-            vLineColor: function (i, node) {
-              return '#bfbfbf'; // สีเส้นขอบแนวตั้ง
-            },
+            hLineWidth: () => 0.5,
+            vLineWidth: () => 0.5,
+            hLineColor: () => '#bfbfbf',
+            vLineColor: () => '#bfbfbf',
           },
-          margin: [40, 20, 40, 0],
+          margin: [40, 0, 40, 10],
         },
+        ...educationSection,
+        ...experienceSection
       ],
       styles: {
-        header: {
-          fontSize: 20,
-          bold: true,
-          margin: [0, 0, 0, 14],
-        },
-        tableHeader: {
-          bold: true,
-          fontSize: 16,
-          color: "black",
-          fillColor: null,
-          alignment: "center",
-        },
-        tableContent: {
-          fontSize: 16,
-          bold: true,
-          color: "black",
-        },
+        header: { fontSize: 22, bold: true, margin: [0, 0, 0, 10] },
+        sectionHeader: { fontSize: 18, bold: true, decoration: "underline" },
+        tableHeader: { bold: true, fontSize: 14, alignment: "center", fillColor: "#eeeeee" },
+        detail: { fontSize: 14 },
       },
       defaultStyle: {
         font: "THSarabunNew",
       },
     };
+
     pdfMake.createPdf(docDefinition).download("โปรไฟล์ของฉัน.pdf");
   };
-
 
 
   return (
@@ -701,14 +689,11 @@ function Profile() {
               {employee.firstName} {employee.lastName}
             </h2>
             <p className="text-sm text-gray-600 font-FontNoto">
-              {employee.designation || "ไม่ระบุตำแหน่ง"}
+              {roleMapping[employee.role] || "ไม่ระบุแผนก"}
             </p>
             <div className="flex items-center gap-2 mt-1">
-              <span className="bg-white text-gray-800 px-3 py-1 rounded-full text-xs font-medium font-FontNoto border border-gray-300 shadow-sm">
-                {roleMapping[employee.role] || "ไม่ระบุแผนก"}
-              </span>
               <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium font-FontNoto border border-green-300 shadow-sm">
-                พนักงานประจำ
+                {designationMap[employee.designation] || "สถานะงาน"}
               </span>
             </div>
             {profilePicture && (
@@ -726,7 +711,6 @@ function Profile() {
           </div>
         </div>
 
-        {/* ปุ่มพิมพ์ข้อมูล */}
         <div className=" p-2 rounded-md inline-block">
           <button
             onClick={handleExportProfilePDF}
@@ -738,9 +722,6 @@ function Profile() {
         </div>
       </div>
 
-
-
-      {/* แสดงข้อมูลเพิ่มเติม 4 ช่อง */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6 font-FontNoto">
         <div className="bg-white shadow rounded-xl p-4 text-center">
           <div className="flex flex-col items-center mb-2">
@@ -796,182 +777,386 @@ function Profile() {
           ข้อมูลการศึกษา
         </button>
       </div>
+
       {activeTab === "profile" && (
         <>
-          <div className="max-w-3xl mx-auto rounded-lg relative">
-            {/* แสดงสถานะการโหลดข้อมูล */}
+          <div className="w-full rounded-lg relative bg-white md:shadow-lg p-3">
             {loading ? (
               <div className="text-center py-6">กำลังโหลดข้อมูล...</div>
             ) : error ? (
               <div className="alert alert-error">{error}</div>
             ) : (
               <>
-                {/* ฟอร์มแสดงข้อมูล */}
-                <div className="w-full bg-transparent rounded-xl p-3">
-                  {messages.length > 0 &&
-                    messages.map((message, index) => (
-                      <div key={index} className={`alert alert-${message.tags} mb-4 ${message.className || ""}`}>
-                        {message.text}
-                      </div>
-                    ))
-                  }
-
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-FontNoto">
-                      <div className="form-control font-FontNoto">
-                        <label className="label">
-                          <span className="label-text font-FontNoto">ชื่อ</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="firstName"
-                          className="input font-FontNoto input-bordered"
-                          placeholder="กรอกชื่อจริง"
-                          value={employee.firstName}
-                          onChange={handleChange}
-                        />
-                      </div>
-
-                      <div className="form-control font-FontNoto">
-                        <label className="label">
-                          <span className="label-text font-FontNoto">นามสกุล</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="lastName"
-                          className="input font-FontNoto input-bordered"
-                          placeholder="กรอกนามสกุล"
-                          value={employee.lastName}
-                          onChange={handleChange}
-                        />
-                      </div>
-
-                      <div className="form-control font-FontNoto">
-                        <label className="label">
-                          <span className="label-text font-FontNoto">แผนก</span>
-                        </label>
-                        <input
-                          type="text"
-                          className="input input-bordered font-FontNoto"
-                          value={roleMapping[employee.role] || "ไม่ระบุแผนก"}
-                          readOnly
-                        />
-                      </div>
-
-                      <div className="form-control font-FontNoto">
-                        <label className="label">
-                          <span className="label-text font-FontNoto">ตำแหน่ง</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="designation"
-                          className="input font-FontNoto input-bordered"
-                          placeholder="กรอกตำแหน่งพนักงาน"
-                          value={employee.designation}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="form-control font-FontNoto">
-                        <label className="label">
-                          <span className="label-text font-FontNoto">ติดต่อ</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="contact"
-                          className={`input font-FontNoto ${!/^\d{10}$/.test(employee.contact) && employee.contact !== '' ? 'border-red-500' : 'input-bordered'}`}
-                          placeholder="กรอกข้อมูลการติดต่อ"
-                          value={employee.contact}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            // Allow only numeric characters and limit to 10 digits
-                            if (/^\d{0,10}$/.test(value)) {
-                              handleChange(e); // Only call handleChange if the input is valid
-                            }
-                          }}
-                        />
-                        {!/^\d{10}$/.test(employee.contact) && employee.contact !== '' && (
-                          <span className="text-red-500 text-sm mt-1 font-FontNoto">กรุณากรอกหมายเลขติดต่อ 10 หลัก</span>
-                        )}
-                      </div>
-
-                      <div className="form-control font-FontNoto">
-                        <label className="label">
-                          <span className="label-text font-FontNoto">อีเมล</span>
-                        </label>
-                        <input
-                          type="email"
-                          name="email"
-                          className={`input font-FontNoto ${!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(employee.email) && employee.email !== '' ? 'border-red-500' : 'input-bordered'}`}
-                          placeholder="กรอกอีเมลของคุณ"
-                          value={employee.email}
-                          onChange={handleChange}
-                        />
-                        {!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(employee.email) && employee.email !== '' && (
-                          <span className="text-red-500 text-sm mt-1 font-FontNoto">กรุณากรอกอีเมลให้ถูกต้อง</span>
-                        )}
-                      </div>
-
-                      <div className="form-control font-FontNoto">
-                        <label className="label">
-                          <span className="label-text font-FontNoto">วันที่เริ่มงาน</span>
-                        </label>
-                        <input
-                          type="date"
-                          name="JDate"
-                          className="input input-bordered font-FontNoto"
-                          value={
-                            employee.JDate
-                          }
-                          onChange={handleChange}
-                          style={{
-                            colorScheme: "light", // บังคับไอคอนให้ใช้โหมดสว่าง
-                          }}
-                        />
-
-                      </div>
-                      <div className="form-control font-FontNoto">
-                        <label className="label">
-                          <span className="label-text font-FontNoto">เพศ</span>
-                        </label>
-                        <select
-                          name="gender"
-                          className="select select-bordered font-FontNoto"
-                          value={employee.gender}
-                          onChange={handleChange}
-                        >
-                          <option className="font-FontNoto" value="None">กรุณาเลือกเพศ</option>
-                          <option className="font-FontNoto" value="Male">ชาย</option>
-                          <option className="font-FontNoto" value="Female">หญิง</option>
-                        </select>
-                      </div>
-                      {isModalOpen && (
-                        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                          <div className="bg-white p-6 rounded-lg shadow-lg">
-                            <p className="text-lg font-FontNoto">{modalMessage}</p>
-                            <div className="flex justify-end mt-4">
-                              <button
-                                className="btn btn-outline btn-primary"
-                                onClick={() => setIsModalOpen(false)}
-                              >
-                                ตกลง
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                    </div>
-                    <div className="flex w-full justify-end gap-4">
+                <form id="profileForm" onSubmit={handleSubmit}>
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-bold font-FontNoto">ข้อมูลส่วนบุคคล</h2>
+                    {!isEditMode ? (
                       <button
-                        type="submit"
-                        className="btn btn-outline btn-success font-FontNoto"
-                        style={{ flexBasis: "20%", flexShrink: 0 }}
+                        type="button"
+                        onClick={() => setIsEditMode(true)}
+                        className="flex items-center px-4 py-1 text-white bg-blue-600 rounded hover:bg-blue-700 font-FontNoto"
                       >
-                        ยืนยัน
+                        <PencilSquareIcon className="w-5 h-5 mr-1" />
+                        แก้ไขข้อมูลส่วนบุคคล
                       </button>
+                    ) : (
+                      <div className="flex space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const form = document.getElementById("profileForm");
+                            if (form) form.requestSubmit();
+                          }}
+                          className="flex items-center px-4 py-1 text-white bg-green-600 rounded hover:bg-green-700 font-FontNoto"
+                        >
+                          <PlusIcon className="w-5 h-5 mr-1" />
+                          บันทึก
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsEditMode(false)}
+                          className="flex items-center px-4 py-1 text-white bg-red-600 rounded hover:bg-red-700 font-FontNoto"
+                        >
+                          <XMarkIcon className="w-5 h-5 mr-1" />
+                          ยกเลิก
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-6 text-sm text-gray-700 space-y-6 font-FontNoto">
+                    <h2 className="text-lg font-semibold border-b pb-2 mb-4">ข้อมูลส่วนตัว</h2>
+                    <div className="grid md:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-4">
+                          <label className="w-32 text-sm font-medium whitespace-nowrap">ชื่อ-นามสกุล :</label>
+                          {!isEditMode ? (
+                            <p className="text-sm">{employee.firstName} {employee.lastName}</p>
+                          ) : (
+                            <div className="flex gap-2 w-full">
+                              <input
+                                type="text"
+                                name="firstName"
+                                placeholder="ชื่อ"
+                                className="input input-sm input-bordered w-1/2"
+                                value={employee.firstName}
+                                onChange={handleChange}
+                              />
+                              <input
+                                type="text"
+                                name="lastName"
+                                placeholder="นามสกุล"
+                                className="input input-sm input-bordered w-1/2"
+                                value={employee.lastName}
+                                onChange={handleChange}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <label className="w-32 text-sm font-medium whitespace-nowrap">ชื่อภาษาอังกฤษ :</label>
+                          {!isEditMode ? (
+                            <p className="text-sm">{employee.englishFirstName} {employee.englishLastName}</p>
+                          ) : (
+                            <div className="flex gap-2 w-full">
+                              <input
+                                type="text"
+                                name="englishFirstName"
+                                className="input input-sm input-bordered w-1/2"
+                                value={employee.englishFirstName}
+                                onChange={handleChange}
+                              />
+                              <input
+                                type="text"
+                                name="englishLastName"
+                                className="input input-sm input-bordered w-1/2"
+                                value={employee.englishLastName}
+                                onChange={handleChange}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <label className="w-32 text-sm font-medium">ชื่อเล่น :</label>
+                          {!isEditMode ? (
+                            <p className="text-sm">{employee.nickname}</p>
+                          ) : (
+                            <input
+                              type="text"
+                              name="nickname"
+                              className="input input-sm input-bordered w-full"
+                              value={employee.nickname}
+                              onChange={handleChange}
+                            />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <label className="w-32 text-sm font-medium">เพศ :</label>
+                          {!isEditMode ? (
+                            <p className="text-sm">{employee.gender === "Male" ? "ชาย" : employee.gender === "Female" ? "หญิง" : "ไม่ระบุ"}</p>
+                          ) : (
+                            <select
+                              name="gender"
+                              className="select select-sm select-bordered w-full"
+                              value={employee.gender}
+                              onChange={handleChange}
+                            >
+                              <option value="None">ไม่ระบุ</option>
+                              <option value="Male">ชาย</option>
+                              <option value="Female">หญิง</option>
+                            </select>
+
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                          <label className="w-32 text-sm font-medium">วันเกิด :</label>
+                          {!isEditMode ? (
+                            <p className="text-sm">
+                              {employee.birthday
+                                ? new Date(employee.birthday).toLocaleDateString("th-TH")
+                                : "-"}
+                            </p>
+                          ) : (
+                            <input
+                              type="date"
+                              name="birthday"
+                              value={employee.birthday || ""}
+                              onChange={handleChange}
+                              className="input input-sm input-bordered w-full font-FontNoto"
+                              style={{ colorScheme: "light" }}
+                              max={new Date().toISOString().split("T")[0]}
+                            />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <label className="w-32 text-sm font-medium">สถานภาพ :</label>
+                          {!isEditMode ? (
+                            <p className="text-sm">{maritalStatusMap[employee.maritalStatus] || "ไม่ระบุ"}</p>
+                          ) : (
+                            <select
+                              name="maritalStatus"
+                              className="select select-sm select-bordered w-full"
+                              value={employee.maritalStatus}
+                              onChange={handleChange}
+                            >
+                              <option value="">ไม่ระบุ</option>
+                              <option value="single">โสด</option>
+                              <option value="married">สมรส</option>
+                              <option value="divorced">หย่าร้าง</option>
+                              <option value="widowed">หม้าย</option>
+                              <option value="complicated">ค่อนข้างอธิบายยาก</option>
+                            </select>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                          <label className="w-32 text-sm font-medium whitespace-nowrap">เลขบัตรประชาชน :</label>
+                          {!isEditMode ? (
+                            <p className="text-sm">{employee.nationalID}</p>
+                          ) : (
+                            <input
+                              type="text"
+                              name="nationalID"
+                              className="input input-sm input-bordered w-full"
+                              value={employee.nationalID}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, ""); // เอาเฉพาะตัวเลข
+                                if (value.length <= 13) {
+                                  setEmployee((prev) => ({ ...prev, nationalID: value }));
+                                }
+                              }}
+                              inputMode="numeric"
+                              maxLength={13}
+                              pattern="\d{13}"
+                              placeholder="กรอกเลขบัตร 13 หลัก"
+                            />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <label className="w-32 text-sm font-medium">อายุ :</label>
+                          <p className="text-sm">{calculateAge(employee.birthday)} ปี</p>
+                        </div>
+                      </div>
+
+                      {/* ขวา: ข้อมูลติดต่อ */}
+                      <div className="space-y-4">
+
+                        <div className="flex items-center gap-4">
+                          <label className="w-32 text-sm font-medium">อีเมล :</label>
+                          {!isEditMode ? (
+                            <p className="text-sm">{employee.email}</p>
+                          ) : (
+                            <input
+                              type="email"
+                              name="email"
+                              className="input input-sm input-bordered w-full"
+                              value={employee.email}
+                              onChange={handleChange}
+                            />
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                          <label className="w-32 text-sm font-medium">โทรศัพท์ :</label>
+                          {!isEditMode ? (
+                            <p className="text-sm">{employee.contact}</p>
+                          ) : (
+                            <input
+                              type="text"
+                              name="contact"
+                              className="input input-sm input-bordered w-full"
+                              value={employee.contact}
+                              onChange={handleChange}
+                            />
+                          )}
+                        </div>
+
+                        <div className="flex items-start gap-4">
+                          <label className="w-32 pt-1 text-sm font-medium">ที่อยู่ :</label>
+                          {!isEditMode ? (
+                            <p className="text-sm">{employee.currentAddress}</p>
+                          ) : (
+                            <input
+                              type="text"
+                              rows={2}
+                              className="input input-sm input-bordered w-full"
+                              value={employee.currentAddress}
+                              onChange={handleChange}
+                            />
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                          <label className="w-32 text-sm font-medium whitespace-nowrap">
+                            บุคคลติดต่อฉุกเฉิน :
+                          </label>
+
+                          {!isEditMode ? (
+                            <p className="text-sm">{employee.emergencyContact}</p>
+                          ) : (
+                            <input
+                              type="text"
+                              name="emergencyContact"
+                              className="input input-sm input-bordered w-full"
+                              value={employee.emergencyContact}
+                              onChange={handleChange}
+                            />
+                          )}
+                        </div>
+                      </div>
+
                     </div>
-                  </form>
-                </div>
+                    <div className="grid md:grid-cols-2 gap-8 text-sm text-gray-700 font-FontNoto">
+                      <div className="space-y-4">
+                        <h2 className="text-lg font-semibold border-b border-gray-300 pb-2 mb-4">ข้อมูลการทำงาน</h2>
+
+                        {(currentUserRole === "ADMIN" && isEditMode) ? (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <label className="w-32 text-sm font-medium whitespace-nowrap">รหัสพนักงาน :</label>
+                              <input
+                                type="text"
+                                name="employeeCode"
+                                className="input input-sm input-bordered w-full text-sm"
+                                value={employee.employeeCode}
+                                onChange={handleChange}
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <label className="w-32 text-sm font-medium whitespace-nowrap">ตำแหน่ง :</label>
+                              <select
+                                name="role"
+                                value={employee.role || ""}
+                                onChange={handleChange}
+                                className="select select-sm select-bordered w-full text-sm font-FontNoto"
+                                required
+                              >
+                                <option className="font-FontNoto" value="" disabled>เลือกตำแหน่ง</option>
+                                <option className="font-FontNoto" value="GM">ผู้จัดการทั่วไป</option>
+                                <option className="font-FontNoto" value="Hr">เลขานุการฝ่ายบริหาร</option>
+                                <option className="font-FontNoto" value="HEAD_BA">หัวหน้าฝ่ายนักวิเคราะห์ธุรกิจ</option>
+                                <option className="font-FontNoto" value="SENIOR_DEV">Senior Programmer</option>
+                                <option className="font-FontNoto" value="Dev">Programmer</option>
+                                <option className="font-FontNoto" value="BA">นักวิเคราะห์ธุรกิจ (BA)</option>
+                                <option className="font-FontNoto" value="TESTER">Software Tester</option>
+                                <option className="font-FontNoto" value="JUNIOR_DEV">Junior Programmer</option>
+                                <option className="font-FontNoto" value="ADMIN">Admin</option>
+                              </select>
+                            </div>
+
+                            {currentUserRole === "ADMIN" && (
+                              <div className="flex items-center gap-2">
+                                <label className="w-32 text-sm font-medium whitespace-nowrap">สถานะงาน :</label>
+                                {!isEditMode ? (
+                                  <p className="text-sm">{designationMap[employee.designation] || "ไม่ระบุ"}</p>
+                                ) : (
+                                  <select
+                                    name="designation"
+                                    value={employee.designation || ""}
+                                    onChange={handleChange}
+                                    className="select select-sm select-bordered w-full text-sm font-FontNoto"
+                                    required
+                                  >
+                                    <option value="" disabled>เลือกสถานะงาน</option>
+                                    <option value="FULLTIME">พนักงานประจำ</option>
+                                    <option value="CONTRACT">สัญญาจ้าง</option>
+                                    <option value="INTERN">นักศึกษาฝึกงาน</option>
+                                    <option value="PROBATION">ทดลองงาน</option>
+                                    <option value="ADMIN">Admin</option>
+                                  </select>
+                                )}
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2">
+                              <label className="w-32 text-sm font-medium whitespace-nowrap">วันที่เริ่มงาน :</label>
+                              <input
+                                type="date"
+                                name="JDate"
+                                value={employee.JDate || ""}
+                                onChange={handleChange}
+                                className="input input-sm input-bordered w-full text-sm font-FontNoto"
+                                style={{ colorScheme: "light" }}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <p><strong>รหัสพนักงาน :</strong> {employee.employeeCode}</p>
+                            <p><strong>ตำแหน่ง :</strong> {roleMapping[employee.role]}</p>
+                            {currentUserRole === "ADMIN" && (
+                              <p><strong>สถานะงาน :</strong> {designationMap[employee.designation] || "ไม่ระบุ"}</p>
+                            )}
+                            <p><strong>วันที่เริ่มงาน :</strong> {formatThaiDate(employee.JDate)}</p>
+                            <p><strong>อายุงาน :</strong> {calculateWorkDuration(employee.JDate)}</p>
+                          </>
+                        )}
+                      </div>
+                      <div className="space-y-4">
+                        <h2 className="text-lg font-semibold border-b border-gray-300 pb-2 mb-4">ข้อมูลการศึกษา</h2>
+                        {educations.length > 0 ? (() => {
+                          const sorted = [...educations].sort((a, b) => {
+                            const aEnd = parseInt(a.year.split("-")[1]) || 0;
+                            const bEnd = parseInt(b.year.split("-")[1]) || 0;
+                            return bEnd - aEnd;
+                          });
+                          const latest = sorted[0];
+                          return (
+                            <>
+                              <p><strong>ระดับการศึกษา :</strong> {levelLabels[latest.level]}</p>
+                              <p><strong>ชื่อสถาบัน :</strong> {latest.institute}</p>
+                              <p><strong>ปีการศึกษา :</strong> {latest.year}</p>
+                              <p><strong>เกรดเฉลี่ย (GPA) :</strong> {latest.gpa}</p>
+                            </>
+                          );
+                        })() : (
+                          <p className="text-gray-500 font-FontNoto">ยังไม่มีข้อมูลการศึกษา</p>
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+
+                </form>
               </>
             )}
           </div>
@@ -979,395 +1164,518 @@ function Profile() {
       )}
       {activeTab === "education" && (
         <>
-          <div className="">
-
-            {isModalOpen && (
-              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 animate-fade-in">
-                <div
-                  className="bg-white p-6 rounded-2xl shadow-2xl w-96 relative transition-transform duration-300 ease-in-out transform scale-100"
-                  data-aos="zoom-in"
-                  data-aos-duration="500"
-                  data-aos-easing="ease-in-out"
-                >
-
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold text-pink-600 font-FontNoto">
-                      ⚡ แจ้งเตือน
-                    </h3>
-                    <button
-                      onClick={handleCloseModal}
-                      className="text-red-500 text-lg font-bold hover:scale-110 transition"
-                    >
-                      ❌
-                    </button>
-                  </div>
-
-                  <div className="mb-4 text-gray-700 font-FontNoto">
-                    {modalMessage}
-                  </div>
-
-                  <div className="flex justify-end gap-2">
-                    {modalConfirmAction && (
-                      <button
-                        className="btn btn-outline btn-error font-FontNoto"
-                        onClick={modalConfirmAction}
-                      >
-                        ยืนยัน
-                      </button>
-                    )}
-                  </div>
+          {isModalOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-2xl shadow-2xl w-96 relative">
+                <div className="mb-2">
+                  <h3 className="text-lg font-bold text-red-600 text-center font-FontNoto">
+                    ยืนยันการลบข้อมูล
+                  </h3>
+                </div>
+                <div className="mb-6 text-gray-700 text-center font-FontNoto">
+                  {modalMessage || "คุณต้องการลบข้อมูลนี้ออกจากระบบหรือไม่?"}
+                </div>
+                <div className="flex justify-center gap-4">
+                  <button
+                    className="px-4 py-2 rounded-md border text-gray-700 bg-gray-100 hover:bg-gray-200 transition font-FontNoto"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition font-FontNoto"
+                    onClick={modalConfirmAction}
+                  >
+                    ลบข้อมูล
+                  </button>
                 </div>
               </div>
-            )}
-            <div className="max-w-4xl mx-auto  rounded-lg p-6 relative">
-              <form onSubmit={handleAddOrEditEducation} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            </div>
+          )}
+
+          <div className="w-full rounded-lg relative bg-white md:shadow-lg p-3">
+            <div className="w-full mx-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold font-FontNoto">ข้อมูลการศึกษา</h2>
+                <button
+                  className="btn btn-sm btn-primary font-FontNoto"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditIndex(null);
+                    setNewEducation({ level: "", institute: "", fieldOfStudy: "", year: "", gpa: "" });
+                    setShowEducationModal(true);
+                  }}
+                >
+                  เพิ่มข้อมูลการศึกษา
+                </button>
+              </div>
+              {educations.length === 0 ? (
+                <p className="text-gray-500 font-FontNoto">ไม่มีข้อมูลการศึกษา</p>
+              ) : (
+                <div className="space-y-4">
+                  {educations.map((edu, index) => (
+                    <div key={index} className="bg-white rounded-xl shadow p-4 border border-gray-200 relative">
+                      <div className="absolute top-4 right-4 bg-gray-100 px-3 py-1 rounded-full text-sm text-blue-600 font-FontNoto shadow-sm">
+                        {edu.year}
+                      </div>
+                      <div className="mb-4">
+                        <h3 className="text-lg font-bold text-purple-800 font-FontNoto">{levelLabels[edu.level]}</h3>
+                        {edu.fieldOfStudy && edu.fieldOfStudy !== "-" && (
+                          <p className="text-lg font-semibold text-blue-700 font-FontNoto">
+                            สาขาวิชา{edu.fieldOfStudy}
+                          </p>
+                        )}
+
+                        <p className="text-sm text-gray-600 font-FontNoto">{edu.institute}</p>
+                        {edu.gpa && (
+                          <p className="text-sm text-gray-600 font-FontNoto">เกรดเฉลี่ย : {edu.gpa}</p>
+                        )}
+                        {edu.thesis && (
+                          <p className="text-sm text-gray-600 font-FontNoto">วิทยานิพนธ์ : {edu.thesis}</p>
+                        )}
+                        {edu.activities && (
+                          <p className="text-sm text-gray-600 font-FontNoto">กิจกรรม : {edu.activities}</p>
+                        )}
+                      </div>
+
+                      <div className="flex justify-end gap-2">
+                        <button
+                          className="flex items-center gap-1 text-blue-600 bg-transparent hover:underline font-FontNoto"
+                          onClick={() => {
+                            setIsEditing(true);
+                            setEditIndex(index);
+                            setNewEducation(edu);
+                            setShowEducationModal(true);
+                          }}
+                        >
+                          <FiEdit />
+                          แก้ไข
+                        </button>
+                        <button
+                          className="flex items-center gap-1 text-red-600 bg-transparent hover:underline font-FontNoto"
+                          onClick={() => handleDeleteEducation(index)}
+                        >
+                          <FiTrash2 />
+                          ลบ
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          {showEducationModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg relative">
+                <h3 className="text-lg font-semibold mb-4 text-center text-indigo-700 font-FontNoto">
+                  {isEditing ? "แก้ไขข้อมูลการศึกษา" : "เพิ่มข้อมูลการศึกษา"}
+                </h3>
+
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const yearRegex = /^\d{4}-\d{4}$/;
+                    if (!yearRegex.test(newEducation.year)) {
+                      setModalMessage("กรุณากรอกปีในรูปแบบ 2567-2568");
+                      setIsModalOpen(true);
+                      return;
+                    }
+                    if (newEducation.gpa < 0 || newEducation.gpa > 4) {
+                      setModalMessage("กรุณากรอกเกรดเฉลี่ยสะสมให้ถูกต้อง (0.00 - 4.00)");
+                      setIsModalOpen(true);
+                      return;
+                    }
+
+                    try {
+                      if (isEditing) {
+                        const updated = { ...educations[editIndex], ...newEducation };
+                        await axios.put(
+                          `https://192.168.1.188/hrwebapi/api/Educations/Update/${updated.educationID}`,
+                          updated
+                        );
+                      } else {
+                        await axios.post("https://192.168.1.188/hrwebapi/api/Educations/Insert", {
+                          ...newEducation,
+                          userID,
+                        });
+                      }
+
+                      await fetchEducations();
+                      setNewEducation({ level: "", institute: "", fieldOfStudy: "", year: "", gpa: "" });
+                      setIsEditing(false);
+                      setEditIndex(null);
+                      setShowEducationModal(false);
+                    } catch (error) {
+                      console.error("เกิดข้อผิดพลาดในการบันทึก:", error);
+                    }
+                  }}
+                  className="space-y-4 font-FontNoto"
+                >
                   <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-FontNoto">ระดับการศึกษา</span>
-                    </label>
                     <select
                       name="level"
-                      className="select select-bordered font-FontNoto"
+                      className="select select-bordered w-full"
                       value={newEducation.level}
                       onChange={handleChangeEducation}
                       required
                     >
-                      <option className="font-FontNoto" value="">กรุณาเลือกระดับการศึกษา</option>
+                      <option value="">-- เลือกระดับการศึกษา --</option>
                       {Object.entries(levelLabels).map(([key, label]) => (
-                        <option className="font-FontNoto" key={key} value={key}>
-                          {label}
-                        </option>
+                        <option key={key} value={key}>{label}</option>
                       ))}
                     </select>
                   </div>
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-FontNoto">ชื่อสถาบัน</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="institute"
-                      className="input font-FontNoto input-bordered"
-                      placeholder="กรอกชื่อสถาบัน"
-                      value={newEducation.institute}
-                      onChange={handleChangeEducation}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-FontNoto">สาขาวิชา</span>
-                    </label>
+                  <div className="form-control md:col-span-2">
                     <input
                       type="text"
                       name="fieldOfStudy"
-                      className="input font-FontNoto input-bordered"
-                      placeholder="กรอกสาขาวิชา"
+                      className="input input-bordered w-full"
                       value={newEducation.fieldOfStudy}
                       onChange={handleChangeEducation}
+                      placeholder="สาขาวิชา"
+                      required
+                    />
+                  </div>
+                  <div className="form-control">
+                    <input
+                      type="text"
+                      name="institute"
+                      className="input input-bordered w-full"
+                      value={newEducation.institute}
+                      onChange={handleChangeEducation}
+                      placeholder="มหาวิทยาลัย, โรงเรียน, สถาบัน"
                       required
                     />
                   </div>
 
                   <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-FontNoto">ปีที่ศึกษา</span>
-                    </label>
+                    <input
+                      type="number"
+                      name="gpa"
+                      step="0.01"
+                      min="0"
+                      max="4"
+                      required
+                      className="input input-bordered w-full"
+                      value={newEducation.gpa}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setNewEducation({
+                          ...newEducation,
+                          gpa: val,
+                        });
+                      }}
+                      placeholder="เกรดเฉลี่ย (0.00 - 4.00)"
+                    />
+                  </div>
+
+
+                  <div className="form-control md:col-span-2">
+                    <textarea
+                      name="thesis"
+                      className="textarea textarea-bordered w-full"
+                      value={newEducation.thesis}
+                      onChange={handleChangeEducation}
+                      placeholder="วิทยานิพนธ์ (ถ้ามี)"
+                    />
+                  </div>
+
+                  <div className="form-control md:col-span-2">
+                    <textarea
+                      name="activities"
+                      className="textarea textarea-bordered w-full"
+                      value={newEducation.activities}
+                      onChange={handleChangeEducation}
+                      placeholder="กิจกรรม (ถ้ามี)"
+                    />
+                  </div>
+                  <div className="form-control">
                     <input
                       type="text"
                       name="year"
-                      className="input input-bordered font-FontNoto"
-                      placeholder="กรอกปีที่ศึกษา (ตัวอย่าง: 2567-2568)"
+                      className="input input-bordered w-full"
                       value={newEducation.year}
                       onChange={handleChangeEducation}
                       required
-                      pattern="\d{4}-\d{4}" // บังคับรูปแบบ 4 ตัวเลข-4 ตัวเลข
-                      title="กรอกปีในรูปแบบ 2567-2568"
-                      inputMode="numeric" // บังคับเฉพาะตัวเลข
+                      pattern="\d{4}-\d{4}"
+                      title="เช่น 2565-2569"
+                      placeholder="ปีที่ศึกษา (เช่น 2565-2569)"
                     />
                   </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-FontNoto">เกรดเฉลี่ยสะสม</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      name="gpa"
-                      className="input input-bordered font-FontNoto"
-                      placeholder="กรอกเกรดเฉลี่ยสะสม (สูงสุด 4.00)"
-                      value={newEducation.gpa}
-                      onChange={handleChangeEducation}
-                      required
-                      max="4.00"  // Restrict input to a maximum value of 4.00
-                    />
+                  {/* ปุ่ม */}
+                  <div className="flex justify-end gap-2 mt-6">
+                    <button
+                      type="button"
+                      className="btn !bg-gray-200 !text-black !hover:bg-gray-300 font-FontNoto"
+                      onClick={() => setShowEducationModal(false)}
+                    >
+                      ยกเลิก
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn !bg-blue-600 !text-white !hover:bg-blue-700 font-FontNoto"
+                    >
+                      บันทึก
+                    </button>
                   </div>
-
-                </div>
-                <div className="relative mt-4 w-full">
-                  <button
-                    type="submit"
-                    className="btn btn-outline btn-primary w-full font-FontNoto relative"
-                  >
-                    {isEditing ? "บันทึกการแก้ไข" : "เพิ่มการศึกษา"}
-                  </button>
-                </div>
-
-              </form>
-
-              <div className="mt-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold font-FontNoto">ประวัติการศึกษา</h3>
-                  <button
-                    className="btn btn-outline btn-error font-FontNoto"
-                    onClick={handleExportEducationPDF}
-                  >
-                    Export PDF
-                  </button>
-                </div>
-                {educations.length === 0 ? (
-                  <p className="text-gray-500 font-FontNoto">ไม่มีข้อมูลการศึกษา</p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="table table-zebra w-full">
-                      <thead>
-                        <tr className="text-black text-center bg-blue-100 font-FontNoto">
-                          {/* <th className="table-header font-FontNoto w-10">#</th> */}
-                          <th className="table-header font-FontNoto w-80">สถาบัน</th>
-                          <th className="table-header font-FontNoto w-40">ระดับ</th>
-                          <th className="table-header font-FontNoto w-40">สาขา</th>
-                          <th className="table-header font-FontNoto w-40">ปีที่ศึกษา</th>
-                          <th className="table-header font-FontNoto w-10">GPA</th>
-                          <th className="table-header font-FontNoto w-40">จัดการ</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {educations.map((edu, index) => (
-                          <tr key={index}>
-                            {/* <td className="table-header font-FontNoto">{index + 1}</td> */}
-                            <td className="table-header font-FontNoto">{edu.institute}</td>
-                            <td className="table-header font-FontNoto">{levelLabels[edu.level]}</td>
-                            <td className="table-header font-FontNoto">{edu.fieldOfStudy}</td>
-                            <td className="table-header font-FontNoto text-center">{edu.year}</td>
-                            <td className="table-header font-FontNoto text-center">{edu.gpa}</td>
-                            <td className="font-FontNoto text-center">
-                              <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
-                                <button
-                                  className="btn btn-xs btn-warning mr-2 font-FontNoto"
-                                  onClick={() => handleEditEducation(index)}
-                                >
-                                  แก้ไข
-                                </button>
-                                <button
-                                  className="btn btn-xs btn-error font-FontNoto"
-                                  onClick={() => handleDeleteEducation(index)}
-                                >
-                                  ลบ
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                </form>
               </div>
-
             </div>
-          </div>
+          )}
         </>
       )}
+
       {activeTab === "experience" && (
         <>
-          <div className="">
+          {/* Modal ลบ */}
+          {isModalOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-2xl shadow-2xl w-96 relative">
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold text-red-600 text-center font-FontNoto">
+                    ยืนยันการลบข้อมูล
+                  </h3>
+                </div>
 
-            {isModalOpen && (
-              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 animate-fade-in">
-                <div
-                  className="bg-white p-6 rounded-2xl shadow-2xl w-96 relative transition-transform duration-300 ease-in-out transform scale-100"
-                  data-aos="zoom-in"
-                  data-aos-duration="500"
-                  data-aos-easing="ease-in-out"
+                <div className="mb-6 text-gray-700 text-center font-FontNoto">
+                  {modalMessage || "คุณต้องการลบข้อมูลนี้ออกจากระบบหรือไม่?"}
+                </div>
+
+                <div className="flex justify-center gap-4">
+                  <button
+                    className="px-4 py-2 rounded-md border text-gray-700 bg-gray-100 hover:bg-gray-200 transition font-FontNoto"
+                    onClick={closeModal}
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition font-FontNoto"
+                    onClick={() => {
+                      modalConfirmAction();
+                      closeModal();
+                    }}
+                  >
+                    ลบข้อมูล
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="w-full rounded-lg relative bg-white md:shadow-lg p-3">
+            <div className="w-full mx-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold font-FontNoto">ประวัติการทำงาน</h2>
+                <button
+                  className="btn btn-sm btn-primary font-FontNoto"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditIndex(null);
+                    setNewExperience({ companyName: "", jobTitle: "", startDate: "", endDate: "", description: "" });
+                    setShowExperienceModal(true);
+                  }}
                 >
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold text-pink-600 font-FontNoto">
-                      ⚠️ แจ้งเตือน
-                    </h3>
-                    <button
-                      onClick={closeModal}
-                      className="text-red-500 text-lg font-bold hover:scale-110 transition"
-                    >
-                      ❌
-                    </button>
-                  </div>
+                  เพิ่มประวัติการทำงาน
+                </button>
+              </div>
+              <div className="space-y-4">
+                {experiences.length === 0 ? (
+                  <p className="text-center text-gray-500 mt-4 font-FontNoto">ไม่มีข้อมูลประสบการณ์ทำงาน</p>
+                ) : (
+                  experiences.map((exp, index) => (
+                    <div key={index} className="bg-white rounded-xl shadow p-4 border border-gray-200 relative">
+                      {/* วันที่ฝั่งขวาบน */}
+                      <div className="absolute top-4 right-4 bg-gray-100 px-3 py-1 rounded-full text-sm text-blue-600 font-FontNoto shadow-sm">
+                        {exp.startDate} - {exp.endDate || "ปัจจุบัน"}
+                      </div>
 
-                  <div className="mb-4 text-gray-700 font-FontNoto">
-                    {modalMessage}
-                  </div>
+                      {/* เนื้อหาหลัก */}
+                      <div className="mb-4">
+                        <h3 className="text-lg font-bold text-purple-800 font-FontNoto">{exp.jobTitle}</h3>
+                        <p className="text-lg font-semibold text-blue-700 font-FontNoto">{exp.companyName}</p>
+                        {exp.description && (
+                          <ul className="list-disc list-inside mt-2 text-sm text-gray-600 font-FontNoto">
+                            {exp.description.split(/[\n,]+/).map((item, i) => (
+                              <li key={i}>{item.trim()}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
 
-                  <div className="flex justify-end gap-2">
-                    <button
-                      className="btn btn-outline btn-error font-FontNoto"
-                      onClick={modalConfirmAction}
-                    >
-                      ยืนยัน
-                    </button>
-                  </div>
+                      {/* ปุ่มล่างขวา */}
+                      <div className="flex justify-end gap-2">
+                        <button
+                          className="flex items-center gap-1 text-blue-600 bg-transparent hover:underline font-FontNoto"
+                          onClick={() => {
+                            setIsEditing(true);
+                            setEditIndex(index);
+                            setNewExperience(exp);
+                            setShowExperienceModal(true);
+                          }}
+                        >
+                          <FiEdit />
+                          แก้ไข
+                        </button>
+                        <button
+                          className="flex items-center gap-1 text-red-600 bg-transparent hover:underline font-FontNoto"
+                          onClick={() => openModal(index)}
+                        >
+                          <FiTrash2 />
+                          ลบ
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {showExperienceModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg relative">
+
+                  <h3 className="text-lg font-semibold mb-4 font-FontNoto">
+                    {isEditing ? "แก้ไขประสบการณ์" : "เพิ่มประวัติการทำงาน"}
+                  </h3>
+
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+
+                      const startInvalid = newExperience.startDate.length !== 4;
+                      const endInvalid = newExperience.endDate && newExperience.endDate.length !== 4;
+
+                      if (startInvalid || endInvalid) {
+                        setErrors({
+                          startDate: startInvalid ? "กรุณากรอกปี พ.ศ. 4 หลัก" : "",
+                          endDate: endInvalid ? "กรุณากรอกปี พ.ศ. 4 หลัก" : "",
+                        });
+                        return;
+                      }
+
+                      try {
+                        if (isEditing) {
+                          const item = { ...experiences[editIndex], ...newExperience };
+                          await axios.put(
+                            `https://192.168.1.188/hrwebapi/api/WorkExperiences/Update/${item.experienceID}`,
+                            item
+                          );
+                        } else {
+                          await axios.post("https://192.168.1.188/hrwebapi/api/WorkExperiences/Insert", {
+                            userID,
+                            companyName: newExperience.companyName,
+                            jobTitle: newExperience.jobTitle,
+                            startDate: newExperience.startDate,
+                            endDate: newExperience.endDate,
+                            description: newExperience.description || "",
+                          });
+                        }
+
+                        await fetchExperiences();
+                        setShowExperienceModal(false);
+                        setIsEditing(false);
+                        setEditIndex(null);
+                        setNewExperience({
+                          companyName: "",
+                          jobTitle: "",
+                          startDate: "",
+                          endDate: "",
+                          description: "",
+                        });
+                        setErrors({});
+                      } catch (err) {
+                        console.error("บันทึกประสบการณ์ล้มเหลว", err);
+                      }
+                    }}
+                    className="space-y-4"
+                  >
+                    <div className="form-control">
+                      <input
+                        type="text"
+                        name="jobTitle"
+                        placeholder="ตำแหน่งงาน"
+                        className="input input-bordered font-FontNoto"
+                        value={newExperience.jobTitle}
+                        onChange={handleChangeExperience}
+                        required
+                      />
+                    </div>
+
+                    <div className="form-control">
+                      <input
+                        type="text"
+                        name="companyName"
+                        placeholder="ชื่อบริษัท"
+                        className="input input-bordered font-FontNoto"
+                        value={newExperience.companyName}
+                        onChange={handleChangeExperience}
+                        required
+                      />
+                    </div>
+
+                    <div className="form-control">
+                      <textarea
+                        name="description"
+                        placeholder="หน้าที่ความรับผิดชอบ (คั่นด้วย , หรือ Enter)"
+                        className="textarea textarea-bordered font-FontNoto"
+                        rows={3}
+                        value={newExperience.description}
+                        onChange={handleChangeExperience}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="form-control">
+                        <input
+                          type="text"
+                          name="startDate"
+                          placeholder="กรอกปี พ.ศ. เริ่มงาน"
+                          className={`input input-bordered font-FontNoto ${errors.startDate ? "border-red-500" : ""}`}
+                          value={newExperience.startDate}
+                          onChange={handleChangeExperience}
+                          required
+                        />
+                        {errors.startDate && (
+                          <span className="text-red-500 text-sm font-FontNoto">{errors.startDate}</span>
+                        )}
+                      </div>
+
+                      <div className="form-control">
+                        <input
+                          type="text"
+                          name="endDate"
+                          placeholder="เว้นว่างหากยังทำงานอยู่"
+                          className={`input input-bordered font-FontNoto ${errors.endDate ? "border-red-500" : ""}`}
+                          value={newExperience.endDate}
+                          onChange={handleChangeExperience}
+                        />
+                        {errors.endDate && (
+                          <span className="text-red-500 text-sm font-FontNoto">{errors.endDate}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-6">
+                      <button
+                        type="button"
+                        className="btn !bg-gray-200 !text-black !hover:bg-gray-300 font-FontNoto"
+                        onClick={() => setShowExperienceModal(false)}
+                      >
+                        ยกเลิก
+                      </button>
+                      <button type="submit" className="btn !bg-blue-600 !text-white !hover:bg-blue-700 font-FontNoto">
+                        บันทึก
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             )}
-            <div className="max-w-4xl mx-auto  rounded-lg p-6 relative">
-              <form onSubmit={handleAddOrEditExperience} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-FontNoto">บริษัท</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="companyName"
-                      className="input input-bordered font-FontNoto"
-                      placeholder="กรอกชื่อบริษัท"
-                      value={newExperience.companyName}
-                      onChange={handleChangeExperience}
-                      required
-                    />
-                  </div>
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-FontNoto">ตำแหน่ง</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="jobTitle"
-                      className="input input-bordered font-FontNoto"
-                      placeholder="กรอกตำแหน่ง"
-                      value={newExperience.jobTitle}
-                      onChange={handleChangeExperience}
-                      required
-                    />
-                  </div>
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-FontNoto">เงินเดือน</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="salary"
-                      className="input input-bordered font-FontNoto"
-                      placeholder="กรอกเงินเดือน"
-                      value={newExperience.salary}
-                      onChange={handleChangeExperience}
-                      required
-                    />
-                  </div>
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-FontNoto">ปี พ.ศ. เริ่มต้น</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="startDate"
-                      className={`input input-bordered font-FontNoto ${errors.startDate ? "border-red-500" : ""}`}
-                      placeholder="กรอกปีที่ทำงาน"
-                      value={newExperience.startDate}
-                      onChange={handleChangeExperience}
-                      required
-                    />
-                    {errors.startDate && <span className="text-red-500 text-sm font-FontNoto">{errors.startDate}</span>}
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-FontNoto">ปี พ.ศ. สิ้นสุด</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="endDate"
-                      className={`input input-bordered font-FontNoto ${errors.endDate ? "border-red-500" : ""}`}
-                      placeholder="กรอกปีสิ้นสุด (เว้นว่างหากยังทำงาน)"
-                      value={newExperience.endDate}
-                      onChange={handleChangeExperience}
-                    />
-                    {errors.endDate && <span className="text-red-500 text-sm font-FontNoto">{errors.endDate}</span>}
-                  </div>
-                </div>
-                <div className="relative mt-4 w-full">
-                  <button
-                    type="submit"
-                    className="btn btn-outline btn-primary w-full font-FontNoto relative"
-                  >
-                    {isEditing ? "บันทึกการแก้ไข" : "เพิ่มประสบการณ์"}
-                  </button>
-                </div>
-              </form>
-
-              <div className="mt-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold font-FontNoto">ประวัติการทำงาน</h3>
-                  <button
-                    className="btn btn-outline btn-error font-FontNoto"
-                    onClick={handleExportExperiencePDF}
-                  >
-                    Export PDF
-                  </button>
-                </div>
-                {experiences.length === 0 ? (
-                  <p className="text-gray-500 font-FontNoto">ไม่มีข้อมูลประสบการณ์ทำงาน</p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="table table-zebra w-full text-center">
-                      <thead>
-                        <tr className="text-black text-center bg-blue-100 font-FontNoto">
-                          {/* <th className="table-header font-FontNoto">#</th> */}
-                          <th className="table-header font-FontNoto">บริษัท</th>
-                          <th className="table-header font-FontNoto">ตำแหน่ง</th>
-                          <th className="table-header font-FontNoto">เงินเดือน</th>
-                          <th className="table-header font-FontNoto">ปี พ.ศ.</th>
-                          <th className="table-header font-FontNoto">จัดการ</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {experiences.map((exp, index) => (
-                          <tr key={index}>
-                            {/* <td className="table-header font-FontNoto">{index + 1}</td> */}
-                            <td className="table-header font-FontNoto">{exp.companyName}</td>
-                            <td className="table-header font-FontNoto ">{exp.jobTitle}</td>
-                            <td className="table-header font-FontNoto text-center">{exp.salary} บาท</td>
-                            <td className="table-header font-FontNoto text-center">
-                              {exp.endDate ? `${exp.startDate}-${exp.endDate}` : exp.startDate}
-                            </td>
-                            <td className="font-FontNoto text-center">
-                              <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
-                                <button
-                                  className="btn btn-xs btn-warning font-FontNoto"
-                                  onClick={() => handleEditExperience(index)}
-                                >
-                                  แก้ไข
-                                </button>
-                                <button
-                                  className="btn btn-xs btn-error font-FontNoto"
-                                  onClick={() => openModal(index)}
-                                >
-                                  ลบ
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </>
       )}
+
+
     </div>
   );
 }

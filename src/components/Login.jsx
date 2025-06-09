@@ -56,8 +56,19 @@ const Login = ({ setIsLoggedIn }) => {
                 sessionStorage.setItem('isAdmin', !isEmail);
 
                 setIsLoggedIn(true);
-                navigate(isEmail ? '/LandingAfterLogin' : '/AdminDashboard');
+
+                // ✅ ส่วนที่เปลี่ยน: redirect ตาม role
+                if (isEmail) {
+                    if (res.role === "ADMIN") {
+                        navigate("/EmpHome/Allemployee");
+                    } else {
+                        navigate("/LandingAfterLogin");
+                    }
+                } else {
+                    navigate("/AdminDashboard");
+                }
             }
+
         } catch (err) {
             if (err.response && err.response.status === 401) {
                 setError('ชื่อผู้ใช้/อีเมล หรือรหัสผ่านไม่ถูกต้อง');

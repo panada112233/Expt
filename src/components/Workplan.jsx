@@ -35,7 +35,9 @@ const Workplan = () => {
     const [editedNote, setEditedNote] = useState("");
     const [editedTitle, setEditedTitle] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
-
+    const [showAllPreviousTask, setShowAllPreviousTask] = useState(false);
+    const [showAllEveningTask, setShowAllEveningTask] = useState(false);
+    const [showMoreMap, setShowMoreMap] = useState({});
 
 
     const [viewDetail, setViewDetail] = useState(null);
@@ -635,22 +637,57 @@ const Workplan = () => {
                     {/* 🌸 การ์ดแผนงานวันนี้ */}
                     <div className="snap-start flex-shrink-0 w-[90%] sm:w-[350px] mx-auto sm:mx-0 group rounded-xl bg-gradient-to-r from-green-100 via-green-200 to-lime-100 p-5 shadow-md transition duration-300 cursor-pointer hover:translate-y-[3px] hover:shadow-xl relative">
                         <p className="text-blue-950 font-semibold text-xl font-FontNoto mb-2">แผนงานวันนี้</p>
+
                         {todayPlan ? (
-                            <p className="font-FontNoto text-sm text-blue-950">วันนี้: {todayPlan.eveningTask || "-"}</p>
+                            <div>
+                                <div className={`font-FontNoto text-sm text-blue-950 whitespace-pre-line ${showAllEveningTask ? '' : 'line-clamp-3'}`}>
+                                    วันนี้: {todayPlan.eveningTask || "-"}
+                                </div>
+                                {todayPlan.eveningTask && todayPlan.eveningTask.split('\n').length > 3 && (
+                                    <button
+                                        onClick={() => setShowAllEveningTask(!showAllEveningTask)}
+                                        className="mt-1 text-blue-700 underline text-sm font-FontNoto"
+                                    >
+                                        {showAllEveningTask ? "ดูน้อยลง" : "ดูเพิ่มเติม"}
+                                    </button>
+                                )}
+                            </div>
                         ) : (
                             <p className="text-blue-950 text-sm font-FontNoto">ยังไม่ได้เขียนแผนงาน</p>
                         )}
+
                         <FcConferenceCall className="absolute right-[10%] top-[50%] translate-y-[-50%] opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-300 w-16 h-16 text-blue-700" />
                     </div>
+                    {(() => {
+                        const today = new Date();
+                        const day = today.getDay(); // 0 = อาทิตย์, 1 = จันทร์, ..., 6 = เสาร์
+                        const summaryKey = day === 1 ? "friday" : "yesterday";
 
-                    {/* 🌙 การ์ดแผนงานย้อนหลัง */}
-                    <div className="snap-start flex-shrink-0 w-[90%] sm:w-[350px] mx-auto sm:mx-0 group rounded-xl bg-gradient-to-r from-sky-200 via-blue-100 to-white p-5 shadow-md transition duration-300 cursor-pointer hover:translate-y-[3px] hover:shadow-xl relative">
-                        <p className="text-blue-950 font-semibold text-xl font-FontNoto mb-2">แผนงานย้อนหลัง</p>
-                        <p className="font-FontNoto text-sm text-blue-950">
-                            เมื่อวาน: {getPreviousDayPlan(summaryDay) || "-"}
-                        </p>
-                        <FcOvertime className="absolute right-[10%] top-[50%] translate-y-[-50%] opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-300 w-16 h-16 text-blue-700" />
-                    </div>
+                        const isWeekend = day === 0 || day === 6;
+                        const previousPlan = isWeekend ? "-" : getPreviousDayPlan(summaryKey) || "-";
+
+                        return (
+                            <div className="snap-start flex-shrink-0 w-[90%] sm:w-[350px] mx-auto sm:mx-0 group rounded-xl bg-gradient-to-r from-sky-200 via-blue-100 to-white p-5 shadow-md transition duration-300 cursor-pointer hover:translate-y-[3px] hover:shadow-xl relative">
+                                <p className="text-blue-950 font-semibold text-xl font-FontNoto mb-2">แผนงานย้อนหลัง</p>
+
+                                <div>
+                                    <div className={`font-FontNoto text-sm text-blue-950 whitespace-pre-line ${showAllPreviousTask ? '' : 'line-clamp-3'}`}>
+                                        เมื่อวาน: {previousPlan}
+                                    </div>
+                                    {!isWeekend && previousPlan.split('\n').length > 3 && (
+                                        <button
+                                            onClick={() => setShowAllPreviousTask(!showAllPreviousTask)}
+                                            className="mt-1 text-blue-700 underline text-sm font-FontNoto"
+                                        >
+                                            {showAllPreviousTask ? "ดูน้อยลง" : "ดูเพิ่มเติม"}
+                                        </button>
+                                    )}
+                                </div>
+
+                                <FcOvertime className="absolute right-[10%] top-[50%] translate-y-[-50%] opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-300 w-16 h-16 text-blue-700" />
+                            </div>
+                        );
+                    })()}
                 </div>
             </div>
 
@@ -677,8 +714,27 @@ const Workplan = () => {
                     {/* สร้างตัวแปรก่อนใช้ */}
                     {(() => {
                         const selectedDate = new Date(historyDate);
+                        const day = selectedDate.getDay(); // 0=อาทิตย์, 1=จันทร์, ..., 6=เสาร์
+
+                        // ❌ ถ้าเป็นเสาร์หรืออาทิตย์ ไม่แสดงเลย
+                        if (day === 0 || day === 6) {
+                            return null;
+                        }
+
                         const yesterday = new Date(selectedDate);
-                        yesterday.setDate(selectedDate.getDate() - 1);
+                        let previousLabel = "";
+
+                        if (day === 1) {
+                            // จันทร์ → ใช้วันศุกร์
+                            yesterday.setDate(selectedDate.getDate() - 3);
+                            previousLabel = "ศุกร์";
+                        } else {
+                            // ปกติ → ใช้เมื่อวาน
+                            yesterday.setDate(selectedDate.getDate() - 1);
+                            previousLabel = yesterday.toLocaleDateString("th-TH", {
+                                weekday: "long",
+                            }).replace("วัน", "");
+                        }
 
                         const selectedKey = selectedDate.toISOString().split("T")[0];
                         const yesterdayKey = yesterday.toISOString().split("T")[0];
@@ -702,18 +758,17 @@ const Workplan = () => {
                                 const yestPlan = allPlans.find(
                                     (p) => p.userID === user.userID && p.date.startsWith(yesterdayKey)
                                 );
+
                                 return {
                                     userID: user.userID,
                                     fullName: `${user.firstName} ${user.lastName}`,
-                                    role: user.role, // เพิ่ม role มาให้สำหรับจัดเรียง
+                                    role: user.role,
                                     morningTask: yestPlan?.eveningTask || "-",
-                                    eveningTask: todayPlan?.eveningTask || "-",
+                                    eveningTask: todayPlan?.eveningTask || "",
                                 };
                             })
-                            .sort((a, b) => (rolePriority[a.role] || 99) - (rolePriority[b.role] || 99)); // เรียงตามลำดับตำแหน่ง
-
-
-
+                            .filter((rec) => rec.eveningTask && rec.eveningTask.trim() !== "")
+                            .sort((a, b) => (rolePriority[a.role] || 99) - (rolePriority[b.role] || 99));
                         return (
                             <div className="relative  font-FontNoto mb-8  animate-fade-in ">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
@@ -762,65 +817,88 @@ const Workplan = () => {
                                     </div>
                                 </div>
 
-                                <div className="overflow-x-auto ">
+                                <div className="overflow-x-auto">
                                     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                                        {usersWithPlans.map((rec, idx) => (
-                                            <div
-                                                key={idx}
-                                                className="rounded-2xl border border-gray-200 bg-white p-5 shadow-md hover:shadow-xl transition-all duration-300"
-                                            >
-                                                {/* ชื่อพนักงาน + รูปโปรไฟล์ */}
-                                                <div className="flex items-center mb-3 bg-gray-200 rounded-2xl">
-                                                    <img
-                                                        src={`https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${rec.userID}`}
-                                                        alt={rec.fullName}
-                                                        className="w-10 h-10 rounded-full border border-gray-300 mr-3 object-cover font-FontNoto"
-                                                    />
-                                                    <div>
-                                                        <p className="font-bold text-black font-FontNoto">{rec.fullName}</p>
-                                                        <p className="text-sm text-gray-600 font-FontNoto">
-                                                            {
-                                                                roleMapping[
-                                                                allUsers.find(u => u.userID === rec.userID)?.role
-                                                                ] || "-"
-                                                            }
+                                        {usersWithPlans.map((rec, idx) => {
+                                            const morningLines = rec.morningTask?.split("\n") || [];
+                                            const eveningLines = rec.eveningTask?.split("\n") || [];
+
+                                            const toggleShow = (field) => {
+                                                const key = `${rec.userID}-${field}`;
+                                                setShowMoreMap((prev) => ({
+                                                    ...prev,
+                                                    [key]: !prev[key],
+                                                }));
+                                            };
+
+                                            const isShowAllMorning = showMoreMap[`${rec.userID}-morning`];
+                                            const isShowAllEvening = showMoreMap[`${rec.userID}-evening`];
+
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className="rounded-2xl border border-gray-200 bg-white p-5 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                                                >
+                                                    {/* ชื่อพนักงาน + รูปโปรไฟล์ */}
+                                                    <div className="flex items-center mb-3 bg-gray-200 rounded-2xl">
+                                                        <img
+                                                            src={`https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${rec.userID}`}
+                                                            alt={rec.fullName}
+                                                            className="w-10 h-10 rounded-full border border-gray-300 mr-3 object-cover font-FontNoto"
+                                                        />
+                                                        <div>
+                                                            <p className="font-bold text-black font-FontNoto">{rec.fullName}</p>
+                                                            <p className="text-sm text-gray-600 font-FontNoto">
+                                                                {roleMapping[allUsers.find((u) => u.userID === rec.userID)?.role] || "-"}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* แผนงานเมื่อวาน */}
+                                                    <div className="mb-3 min-h-[100px]">
+                                                        <p className="text-sm font-semibold font-FontNoto mb-1">
+                                                            เมื่อวัน{previousLabel}
                                                         </p>
+                                                        <ul className="list-disc list-inside text-sm text-black font-FontNoto space-y-1">
+                                                            {(isShowAllMorning ? morningLines : morningLines.slice(0, 3)).map((task, i) => (
+                                                                <li key={i}>{task}</li>
+                                                            ))}
+                                                        </ul>
+                                                        {morningLines.length > 3 && (
+                                                            <button
+                                                                className="text-blue-600 underline text-sm mt-1 font-FontNoto"
+                                                                onClick={() => toggleShow("morning")}
+                                                            >
+                                                                {isShowAllMorning ? "ดูน้อยลง" : "ดูเพิ่มเติม"}
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    {/* แผนงานวันนี้ */}
+                                                    <div className="min-h-[100px]">
+                                                        <p className="text-sm font-semibold font-FontNoto mb-1">
+                                                            วันนี้ ({selectedDate.toLocaleDateString("th-TH", { weekday: "long" }).replace("วัน", "")})
+                                                        </p>
+                                                        <ul className="list-disc list-inside text-sm text-green-700 font-FontNoto space-y-1">
+                                                            {(isShowAllEvening ? eveningLines : eveningLines.slice(0, 3)).map((task, i) => (
+                                                                <li key={i}>{task}</li>
+                                                            ))}
+                                                        </ul>
+                                                        {eveningLines.length > 3 && (
+                                                            <button
+                                                                className="text-blue-600 underline text-sm mt-1 font-FontNoto"
+                                                                onClick={() => toggleShow("evening")}
+                                                            >
+                                                                {isShowAllEvening ? "ดูน้อยลง" : "ดูเพิ่มเติม"}
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
-
-
-                                                {/* แผนงานเมื่อวาน */}
-                                                <div className="mb-3">
-                                                    <p className="text-sm  font-semibold font-FontNoto mb-1">
-                                                        เมื่อวาน ({yesterday.toLocaleDateString("th-TH", { weekday: "long" }).replace("วัน", "")})
-                                                    </p>
-                                                    <ul className="list-disc list-inside text-sm text-black font-FontNoto space-y-1">
-                                                        {rec.morningTask
-                                                            ? rec.morningTask.split("\n").map((task, index) => (
-                                                                <li className="font-FontNoto" key={index}>{task}</li>
-                                                            ))
-                                                            : <li>-</li>}
-                                                    </ul>
-                                                </div>
-
-                                                {/* แผนงานวันนี้ */}
-                                                <div>
-                                                    <p className="text-sm  font-semibold font-FontNoto mb-1">
-                                                        วันนี้ ({selectedDate.toLocaleDateString("th-TH", { weekday: "long" }).replace("วัน", "")})
-                                                    </p>
-                                                    <ul className="list-disc list-inside text-sm text-green-700 font-FontNoto space-y-1">
-                                                        {rec.eveningTask
-                                                            ? rec.eveningTask.split("\n").map((task, index) => (
-                                                                <li className="font-FontNoto" key={index}>{task}</li>
-                                                            ))
-                                                            : <li>-</li>}
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
-
                                 </div>
+
 
                             </div>
                         );

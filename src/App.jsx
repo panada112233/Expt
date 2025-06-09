@@ -22,7 +22,8 @@ import ManageEquipmentsAdmin from './components/ManageEquipmentsAdmin';
 import TrendStatistics from './components/TrendStatistics';
 import LeaveStatistics from './components/LeaveStatistics';
 import Allemployee from './components/Allemployee';
-import Alldocuments from './components/Alldocuments';
+import WorkplanAdmin from "./components/WorkplanAdmin";
+
 import EmployeeView from './components/EmployeeView';
 
 import EmpHome from './components/EmpHome';
@@ -30,11 +31,7 @@ import EmpBase from './components/EmpBase';
 import Worktime from './components/Worktime';
 import WorktimeEmp from './components/WorktimeEmp';
 import Workplan from './components/Workplan';
-import WorkplanEmp from './components/WorkplanEmp';
 import WorkplanGM from './components/WorkplanGM';
-
-import AllcreateAdmin from './components/AllcreateAdmin';
-
 import CallbackPage from './components/CallbackPage';
 
 import Profile from './components/Profile';
@@ -45,7 +42,6 @@ import MyEducation from './components/My_education';
 import MyExperience from './components/My_experience';
 import ChangeProfile from './components/Change_profile';
 import ForgotPassword from './components/ForgotPassword';
-import Allcreate from './components/Allcreate';
 
 import AdminDashboard from "./components/AdminDashboard";
 import Admintime from "./components/Admintime";
@@ -103,9 +99,8 @@ function App() {
               <Route path="Worktime" element={<Worktime />} />
               <Route path="WorktimeEmp" element={<WorktimeEmp />} />
               <Route path="Workplan" element={<Workplan />} />
-              <Route path="WorkplanEmp" element={<WorkplanEmp />} />
               <Route path="WorkplanGM" element={<WorkplanGM />} />
-              
+              <Route path="WorkplanAdmin" element={<WorkplanAdmin />} />              
               <Route path="Change_password" element={<ChangePassword />} />
               <Route path="Document" element={<Document />} />
               <Route path="My_education" element={<MyEducation />} />
@@ -115,14 +110,9 @@ function App() {
               <Route path="TrendStatistics" element={<TrendStatistics />} />
               <Route path="LeaveStatistics" element={<LeaveStatistics />} />
               <Route path="Allemployee" element={<Allemployee />} />
-              <Route path="Alldocuments" element={<Alldocuments />} />
               <Route path="EmployeeView" element={<EmployeeView />} />
-              <Route path="Allcreate" element={<Allcreate />} />
               <Route path="BorrowEquipmentsEmp" element={<BorrowEquipmentsEmp />} />
               <Route path="ManageEquipmentsAdmin" element={<ManageEquipmentsAdmin />} />
-
-
-              <Route path="AllcreateAdmin" element={<AllcreateAdmin />} />
             </Route>
 
             {/* Route Logout */}

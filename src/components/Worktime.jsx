@@ -519,7 +519,7 @@ const Worktime = () => {
             </div>
 
             <div className="flex flex-col lg:flex-row gap-4 ">
-                <div className="flex flex-col gap-4 w-full lg:w-[100%]">
+                <div className="flex flex-col gap-4 w-full lg:w-[75%] xl:w-[80%]">
                     <div className="bg-white rounded-xl shadow-lg p-6 w-full text-center mb-6">
                         <h2 className="text-xl font-bold text-gray-700 font-FontNoto mb-1">เวลาปัจจุบัน</h2>
                         <div className="text-3xl font-extrabold text-green-600 font-FontNoto">
@@ -608,99 +608,99 @@ const Worktime = () => {
                                     </select>
                                 </div>
                             </div>
-                                
-                                <div className='overflow-x-auto w-full'>
-                            <table className="table min-w-700px w-full  !text-center">
-                                <thead className="!bg-gray-100 !text-slate-800 !text-sm">
-                                    <tr>
-                                        <th className="py-3 font-FontNoto whitespace-nowrap">วันที่</th>
-                                        <th className="py-3 font-FontNoto whitespace-nowrap">ประเภทการทำงาน</th>
-                                        <th className="py-3 font-FontNoto whitespace-nowrap">ประเภทการลา</th>
-                                        <th className="py-3 font-FontNoto whitespace-nowrap">สถานที่</th>
 
-                                        <th className="py-3 font-FontNoto whitespace-nowrap">เวลาเข้า</th>
-                                        <th className="py-3 font-FontNoto whitespace-nowrap">เวลาออก</th>
-                                        <th className="py-3 font-FontNoto whitespace-nowrap">ชั่วโมงทำงาน</th>
-                                        <th className="py-3 font-FontNoto whitespace-nowrap min-w-[120px] text-center">สถานะ</th>
+                            <div className='overflow-x-auto w-full'>
+                                <table className="table min-w-700px w-full  !text-center">
+                                    <thead className="!bg-gray-100 !text-slate-800 !text-sm">
+                                        <tr>
+                                            <th className="py-3 font-FontNoto whitespace-nowrap">วันที่</th>
+                                            <th className="py-3 font-FontNoto whitespace-nowrap">ประเภทการทำงาน</th>
+                                            <th className="py-3 font-FontNoto whitespace-nowrap">ประเภทการลา</th>
+                                            <th className="py-3 font-FontNoto whitespace-nowrap">สถานที่</th>
 
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white ">
-                                    {paginatedWorktimes.map((item, index) => {
-                                        const locationText = item.location || '';
-                                        const leaveKeywords = ['ป่วย', 'กิจส่วนตัว', 'บวช', 'พักร้อน', 'ลาคลอด'];
-                                        const isLeave = leaveKeywords.some(keyword => locationText.includes(keyword));
-                                        const leaveType = locationText.includes('ครึ่งวันเช้า')
-                                            ? 'morning'
-                                            : locationText.includes('ครึ่งวันบ่าย')
-                                                ? 'afternoon'
-                                                : locationText.includes('ลาทั้งวัน')
-                                                    ? 'full'
-                                                    : '';
+                                            <th className="py-3 font-FontNoto whitespace-nowrap">เวลาเข้า</th>
+                                            <th className="py-3 font-FontNoto whitespace-nowrap">เวลาออก</th>
+                                            <th className="py-3 font-FontNoto whitespace-nowrap">ชั่วโมงทำงาน</th>
+                                            <th className="py-3 font-FontNoto whitespace-nowrap min-w-[120px] text-center">สถานะ</th>
 
-                                        const shouldShowTime = !isLeave || leaveType === 'morning' || leaveType === 'afternoon';
-                                        return (
-                                            <tr
-                                                key={index}
-                                                className={`border-b transition !text-md duration-300 font-FontNoto ${isLeave ? 'bg-green-50 hover:bg-green-100 text-green-700' : 'hover:bg-blue-100 font-FontNoto'
-                                                    }`}
-                                            >
-                                                <td className="py-2 font-FontNoto whitespace-nowrap">{formatDate(item.date)}</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white ">
+                                        {paginatedWorktimes.map((item, index) => {
+                                            const locationText = item.location || '';
+                                            const leaveKeywords = ['ป่วย', 'กิจส่วนตัว', 'บวช', 'พักร้อน', 'ลาคลอด'];
+                                            const isLeave = leaveKeywords.some(keyword => locationText.includes(keyword));
+                                            const leaveType = locationText.includes('ครึ่งวันเช้า')
+                                                ? 'morning'
+                                                : locationText.includes('ครึ่งวันบ่าย')
+                                                    ? 'afternoon'
+                                                    : locationText.includes('ลาทั้งวัน')
+                                                        ? 'full'
+                                                        : '';
 
-                                                {isLeave ? (
-                                                    <>
-                                                        <td className="py-2 font-FontNoto whitespace-nowrap">-</td>
-                                                        <td className="py-2 font-FontNoto whitespace-nowrap">
-                                                            {/* ✅ แก้ตรงนี้ */}
-                                                            {locationText.split('|')[0]?.trim() || '-'}<br />
-                                                            <span className="text-sm text-gray-600 font-FontNoto">
-                                                                {locationText.split('|')[1]?.trim() || ''}
-                                                            </span>
-                                                        </td>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <td className="py-2 font-FontNoto !text-sm whitespace-nowrap">{locationText}</td>
-                                                        <td className="py-2 font-FontNoto whitespace-nowrap">-</td>
-                                                    </>
-                                                )}
-                                                <td className="py-2 font-FontNoto text-left whitespace-nowrap">
-                                                    {item.photoPath && item.photoPath.includes('|') ? (
-                                                        <span className="text-sm text-gray-800 font-FontNoto">{item.photoPath.split('|')[1]?.trim()}</span>
+                                            const shouldShowTime = !isLeave || leaveType === 'morning' || leaveType === 'afternoon';
+                                            return (
+                                                <tr
+                                                    key={index}
+                                                    className={`border-b transition !text-md duration-300 font-FontNoto ${isLeave ? 'bg-green-50 hover:bg-green-100 text-green-700' : 'hover:bg-blue-100 font-FontNoto'
+                                                        }`}
+                                                >
+                                                    <td className="py-2 font-FontNoto whitespace-nowrap">{formatDate(item.date)}</td>
+
+                                                    {isLeave ? (
+                                                        <>
+                                                            <td className="py-2 font-FontNoto whitespace-nowrap">-</td>
+                                                            <td className="py-2 font-FontNoto whitespace-nowrap">
+                                                                {/* ✅ แก้ตรงนี้ */}
+                                                                {locationText.split('|')[0]?.trim() || '-'}<br />
+                                                                <span className="text-sm text-gray-600 font-FontNoto">
+                                                                    {locationText.split('|')[1]?.trim() || ''}
+                                                                </span>
+                                                            </td>
+                                                        </>
                                                     ) : (
-                                                        item.photoPath || '-'
+                                                        <>
+                                                            <td className="py-2 font-FontNoto !text-sm whitespace-nowrap">{locationText}</td>
+                                                            <td className="py-2 font-FontNoto whitespace-nowrap">-</td>
+                                                        </>
                                                     )}
-                                                </td>
+                                                    <td className="py-2 font-FontNoto text-left whitespace-nowrap">
+                                                        {item.photoPath && item.photoPath.includes('|') ? (
+                                                            <span className="text-sm text-gray-800 font-FontNoto">{item.photoPath.split('|')[1]?.trim()}</span>
+                                                        ) : (
+                                                            item.photoPath || '-'
+                                                        )}
+                                                    </td>
 
 
 
-                                                <td className="py-2 font-FontNoto whitespace-nowrap">{shouldShowTime ? item.checkIn || '-' : '-'}</td>
-                                                <td className="py-2 font-FontNoto whitespace-nowrap">{shouldShowTime ? item.checkOut || '-' : '-'}</td>
-                                                <td className="py-2 font-FontNoto whitespace-nowrap">
-                                                    {shouldShowTime ? calculateWorkingHours(item.checkIn, item.checkOut, item.date, leaveType) : '-'}
-                                                </td>
-                                                <td className="py-2 font-FontNoto text-center  whitespace-nowrap">
-                                                    <span
-                                                        className={`inline-block px-3 py-1  font-semibold rounded-full
+                                                    <td className="py-2 font-FontNoto whitespace-nowrap">{shouldShowTime ? item.checkIn || '-' : '-'}</td>
+                                                    <td className="py-2 font-FontNoto whitespace-nowrap">{shouldShowTime ? item.checkOut || '-' : '-'}</td>
+                                                    <td className="py-2 font-FontNoto whitespace-nowrap">
+                                                        {shouldShowTime ? calculateWorkingHours(item.checkIn, item.checkOut, item.date, leaveType) : '-'}
+                                                    </td>
+                                                    <td className="py-2 font-FontNoto text-center  whitespace-nowrap">
+                                                        <span
+                                                            className={`inline-block px-3 py-1  font-semibold rounded-full
       ${!shouldShowTime
-                                                                ? 'bg-gray-100 text-gray-600'
-                                                                : calculateRawLateMinutes(item.checkIn, item.date, leaveType) > 0
-                                                                    ? 'bg-yellow-100 text-yellow-700'
-                                                                    : 'bg-green-100 text-green-700'}
+                                                                    ? 'bg-gray-100 text-gray-600'
+                                                                    : calculateRawLateMinutes(item.checkIn, item.date, leaveType) > 0
+                                                                        ? 'bg-yellow-100 text-yellow-700'
+                                                                        : 'bg-green-100 text-green-700'}
     `}
-                                                    >
-                                                        {shouldShowTime
-                                                            ? calculateRawLateMinutes(item.checkIn, item.date, leaveType) > 0
-                                                                ? `สาย ${calculateLateMinutes(item.checkIn, item.date, leaveType)}`
-                                                                : 'ปกติ'
-                                                            : '-'}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
+                                                        >
+                                                            {shouldShowTime
+                                                                ? calculateRawLateMinutes(item.checkIn, item.date, leaveType) > 0
+                                                                    ? `สาย ${calculateLateMinutes(item.checkIn, item.date, leaveType)}`
+                                                                    : 'ปกติ'
+                                                                : '-'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
                             </div>
 
                             <div className="flex flex-col md:flex-row justify-between items-center mt-4 text-sm font-FontNoto text-gray-600">
@@ -745,7 +745,7 @@ const Worktime = () => {
                         </div>
                     </div>
                 </div>
-                <div className="flex flex-col gap-4 w-full lg:w-[20%]">
+                <div className="flex flex-col gap-4 w-full lg:w-[25%] xl:w-[20%]">
                     {/* กล่อง 1 */}
                     <div className="bg-white shadow-md rounded-xl p-5 flex-1">
                         <h3 className="text-md font-bold font-FontNoto mb-3">สรุปการทำงาน/เดือน</h3>

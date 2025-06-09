@@ -2,6 +2,18 @@ import React, { useState, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import axios from "axios";
 
+const roleMapping = {
+  GM: "ผู้จัดการทั่วไป",
+  Hr: "เลขานุการฝ่ายบริหาร",
+  HEAD_BA: "หัวหน้าฝ่ายนักวิเคราะห์ธุรกิจ",
+  SENIOR_DEV: "Senior Programmer",
+  Dev: "Programmer",
+  BA: "นักวิเคราะห์ธุรกิจ (BA)",
+  TESTER: "Software Tester",
+  JUNIOR_DEV: "Junior Programmer",
+  ADMIN: "Admin",
+};
+
 const EmpBase = () => {
   const [currentProfileImage, setCurrentProfileImage] = useState("");
   const [userName, setUserName] = useState("กำลังโหลด...");
@@ -89,9 +101,8 @@ const EmpBase = () => {
         } else {
           setUserName("ผู้ใช้งานใหม่");
         }
-        const position = userData.designation || "ไม่ระบุตำแหน่ง";
-        setRoleText(position);
-
+        const roleName = roleMapping[userData.role] || "ไม่ระบุตำแหน่ง";
+        setRoleText(roleName);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -190,116 +201,106 @@ const EmpBase = () => {
           {/* Sidebar Links */}
           <div className="overflow-y-auto max-h-[calc(100vh-64px)]">
             <ul className="space-y-2 w-full text-sm font-FontNoto">
-              <Link
-                to="/EmpHome/Workplan"
-                className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
-              >
-                ปฏิทินการทำงาน
-              </Link>
-              <Link
-                to="/EmpHome/Worktime"
-                className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
-              >
-                ระบบบันทึกเข้าออกงาน
-              </Link>
-              <Link
-                to="/EmpHome/Document"
-                className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
-              >
-                จัดการเอกสาร
-              </Link>
-              <Link
-                to="/EmpHome/LeaveRequestForm"
-                className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
-              >
-                ระบบลางาน
-              </Link>
-              <Link
-                to="/EmpHome/BorrowEquipmentsEmp"
-                className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
-              >
-                ยืม-คืนอุปกรณ์
-              </Link>
-              <details className="group ">
-                <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden">
-                  จัดการเอกสาร
-                  <svg
-                    className="w-4 h-4 transition-transform group-open:rotate-180 flex-shrink-0 ml-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+              {role !== "ADMIN" && (
+                <>
+                  <Link
+                    to="/EmpHome/Workplan"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </summary>
-
-                <ul className="mt-2 ml-3 space-y-1 text-sm">
-                  <li>
-                    <Link
-                      to="/EmpHome"
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                    >
-                      กราฟจำนวนเอกสาร
-                    </Link>
-                  </li>
-                </ul>
-              </details>
-              <details className="group">
-                <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden">
-                  ข้อมูลส่วนตัว
-                  <svg
-                    className="w-4 h-4 transition-transform group-open:rotate-180 flex-shrink-0 ml-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                    ปฏิทินการทำงาน
+                  </Link>
+                  <Link
+                    to="/EmpHome/Worktime"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </summary>
-                <ul className="mt-2 ml-3 space-y-1 text-sm">
+                    ระบบบันทึกเข้าออกงาน
+                  </Link>
+                  <Link
+                    to="/EmpHome/Document"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
+                  >
+                    จัดการเอกสาร
+                  </Link>
+                  <Link
+                    to="/EmpHome/LeaveRequestForm"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
+                  >
+                    ระบบลางาน
+                  </Link>
+                  <Link
+                    to="/EmpHome/BorrowEquipmentsEmp"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
+                  >
+                    ยืม-คืนอุปกรณ์
+                  </Link>
+                </>
+              )}
+              {role !== "ADMIN" && (
+                <details className="group ">
+                  <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden">
+                    จัดการเอกสาร
+                    <svg
+                      className="w-4 h-4 transition-transform group-open:rotate-180 flex-shrink-0 ml-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </summary>
 
-                  <li>
-                    <Link
-                      to="/EmpHome/Profile"
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                    >
-                      โปรไฟล์ของฉัน
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/EmpHome/My_experience"
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                    >
-                      ประสบการณ์ทำงาน
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/EmpHome/My_education"
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                    >
-                      การศึกษา
-                    </Link>
-                  </li>
-
-                </ul>
-              </details>
-              {role === "Hr" ? (
+                  <ul className="mt-2 ml-3 space-y-1 text-sm">
+                    <li>
+                      <Link
+                        to="/EmpHome"
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                      >
+                        กราฟจำนวนเอกสาร
+                      </Link>
+                    </li>
+                  </ul>
+                </details>
+              )}
+              {role === "ADMIN" ? (
+                <>
+                  <Link
+                    to="/EmpHome/Allemployee"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
+                  >
+                    ระบบจัดการข้อมูลพนักงาน
+                  </Link>
+                  <Link
+                    to="/EmpHome/WorkplanAdmin"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
+                  >
+                    แผนการทำงานพนักงาน
+                  </Link>
+                  <Link
+                    to="/EmpHome/WorktimeEmp"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
+                  >
+                    ระบบบันทึกเข้า-ออกงาน
+                  </Link>
+                  <Link
+                    to="/EmpHome/Allemployee"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
+                  >
+                    ระบบลางานพนักงาน
+                  </Link>
+                  <Link
+                    to="/EmpHome/Allemployee"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
+                  >
+                    ระบบยืม-คืนอุปกรณ์
+                  </Link>
+                </>
+              ) : role === "Hr" ? (
                 <>
                   <Link
                     to="/EmpHome/HRInbox"
@@ -309,8 +310,7 @@ const EmpBase = () => {
                     ใบลาพนักงาน
                   </Link>
                 </>
-              ) : null}
-              {role === "GM" ? (
+              ) : role === "GM" ? (
                 <>
                   <li>
                     <Link
@@ -323,7 +323,7 @@ const EmpBase = () => {
                   </li>
                 </>
               ) : null}
-              {role === "GM" || role === "Hr" ? (
+              {role === "GM" || role === "Hr" || role === "HEAD_BA" ? (
                 <>
                   <details className="group">
                     <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden">
@@ -418,30 +418,11 @@ const EmpBase = () => {
                           พนักงานในระบบ
                         </Link>
                       </li>
-                      <li>
-                        <Link
-                          to="/EmpHome/Allcreate"
-                          onClick={() => setIsSidebarOpen(false)}
-                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                        >
-                          เพิ่มพนักงานใหม่
-                        </Link>
-                      </li>
-                      {/* <li>
-                        <Link
-                          to="/EmpHome/AllcreateAdmin"
-                          onClick={() => setIsSidebarOpen(false)}
-                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                        >
-                          ทดสอบหน้าแอดมิน
-                        </Link>
-                      </li> */}
                     </ul>
                   </details>
 
                 </>
               ) : null}
-
               <li>
                 <Link
                   to="/EmpHome/Logout"
