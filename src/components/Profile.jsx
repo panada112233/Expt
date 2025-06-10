@@ -68,6 +68,7 @@ function Profile() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [workingHours, setWorkingHours] = useState({ hours: 0, minutes: 0 });
 
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -128,13 +129,14 @@ function Profile() {
     complicated: "ค่อนข้างอธิบายยาก",
   };
 
-
   const designationMap = {
     FULLTIME: "พนักงานประจำ",
     CONTRACT: "สัญญาจ้าง",
     INTERN: "นักศึกษาฝึกงาน",
     PROBATION: "ทดลองงาน",
-    ADMIN: "Admin"
+    ADMIN: "Admin",
+    RESIGNED: "ลาออก",
+    EXPIRED: "หมดสัญญา",
   };
   // ฟังก์ชันคำนวณอายุการทำงานจากวันที่เริ่มงาน
   const calculateWorkDuration = (startDateStr) => {
@@ -171,24 +173,6 @@ function Profile() {
     return `${day}/${month}/${year}`;
   };
 
-  const getWorkingHoursThisMonth = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth(); // 0 = ม.ค.
-
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    let workingDays = 0;
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      const dayOfWeek = date.getDay();
-      if (dayOfWeek >= 1 && dayOfWeek <= 5) { // จันทร์ถึงศุกร์
-        workingDays++;
-      }
-    }
-
-    return workingDays * 8;
-  };
 
   const convertToBase64 = async (imageUrl) => {
     try {
@@ -211,6 +195,69 @@ function Profile() {
       return null; // คืนค่า null ถ้าแปลงไม่สำเร็จ
     }
   };
+
+  useEffect(() => {
+    const fetchWorktimeAndCalculate = async () => {
+      const userId = sessionStorage.getItem("userId");
+      if (!userId) return;
+
+      try {
+        const res = await axios.get("https://192.168.1.188/hrwebapi/api/Worktime");
+        const worktimes = res.data;
+
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
+
+        const filtered = worktimes.filter(item => {
+          const date = new Date(item.date);
+          return (
+            item.userID === parseInt(userId) &&
+            date.getMonth() + 1 === currentMonth &&
+            date.getFullYear() === currentYear
+          );
+        });
+
+        let totalMinutes = 0;
+
+        for (const item of filtered) {
+          const locationText = item.location || '';
+          const leaveType = locationText.includes('ครึ่งวันเช้า')
+            ? 'morning'
+            : locationText.includes('ครึ่งวันบ่าย')
+              ? 'afternoon'
+              : locationText.includes('ลาทั้งวัน') || locationText.includes('เต็มวัน')
+                ? 'full'
+                : '';
+
+          if (!item.checkIn || !item.checkOut || leaveType === 'full') continue;
+
+          const [inH, inM] = item.checkIn.split(':').map(Number);
+          const [outH, outM] = item.checkOut.split(':').map(Number);
+
+          const inDate = new Date(item.date);
+          inDate.setHours(inH, inM, 0);
+
+          const outDate = new Date(item.date);
+          outDate.setHours(outH, outM, 0);
+
+          let diff = (outDate - inDate) / (1000 * 60);
+          if (leaveType !== 'morning' && leaveType !== 'afternoon') {
+            diff -= 60; // หักพักเที่ยง 1 ชม.
+          }
+
+          if (diff > 0) totalMinutes += diff;
+        }
+
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = Math.round(totalMinutes % 60);
+        setWorkingHours({ hours, minutes });
+      } catch (err) {
+        console.error("ดึงเวลาทำงานล้มเหลว", err);
+      }
+    };
+
+    fetchWorktimeAndCalculate();
+  }, []);
 
   useEffect(() => {
     if (userID) {
@@ -394,15 +441,15 @@ function Profile() {
 
   const handleChangeExperience = (e) => {
     const { name, value } = e.target;
+
     if (name === "salary" || name === "startDate" || name === "endDate") {
-      setNewExperience((prev) => ({ ...prev, [name]: value }));
+      const numericOnly = value.replace(/[^0-9]/g, "").slice(0, 4); // เอาแค่ตัวเลข 4 หลัก
+      setNewExperience((prev) => ({ ...prev, [name]: numericOnly }));
     } else {
-      const pattern = /^[ก-๙a-zA-Z\s]*$/;
-      if (pattern.test(value) || value === "") {
-        setNewExperience((prev) => ({ ...prev, [name]: value }));
-      }
+      setNewExperience((prev) => ({ ...prev, [name]: value }));
     }
   };
+
   const handleChangeEducation = (e) => {
     const { name, value } = e.target;
     if (name === "year") {
@@ -665,60 +712,61 @@ function Profile() {
 
   return (
     <div className=" ">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        {/* รูปโปรไฟล์ + ข้อมูลพื้นฐาน */}
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <img
-              src={currentProfileImage}
-              alt="Profile"
-              className="w-28 h-28 rounded-full border-4 border-white shadow-md object-cover cursor-pointer hover:opacity-80 transition"
-              onClick={() => fileInputRef.current.click()}
-            />
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/*"
-              className="hidden"
-            />
-          </div>
-
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 font-FontNoto">
-              {employee.firstName} {employee.lastName}
-            </h2>
-            <p className="text-sm text-gray-600 font-FontNoto">
-              {roleMapping[employee.role] || "ไม่ระบุแผนก"}
-            </p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium font-FontNoto border border-green-300 shadow-sm">
-                {designationMap[employee.designation] || "สถานะงาน"}
-              </span>
+      <div className="w-full bg-gradient-to-r from-cyan-100 via-blue-100 to-blue-50 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          {/* รูปโปรไฟล์ + ข้อมูลพื้นฐาน */}
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <img
+                src={currentProfileImage}
+                alt="Profile"
+                className="w-28 h-28 rounded-full border-4 border-white shadow-md object-cover cursor-pointer hover:opacity-80 transition"
+                onClick={() => fileInputRef.current.click()}
+              />
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+              />
             </div>
-            {profilePicture && (
-              <div className="mt-2">
-                <button
-                  type="button"
-                  onClick={handleProfileSubmit}
-                  className="btn btn-sm font-FontNoto !bg-white !text-indigo-800"
-                >
-                  บันทึกรูปโปรไฟล์
-                </button>
+
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 font-FontNoto">
+                {employee.firstName} {employee.lastName}
+              </h2>
+              <p className="text-sm text-gray-600 font-FontNoto">
+                {roleMapping[employee.role] || "ไม่ระบุแผนก"}
+              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium font-FontNoto border border-green-300 shadow-sm">
+                  {designationMap[employee.designation] || "สถานะงาน"}
+                </span>
               </div>
-            )}
-
+              {profilePicture && (
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    onClick={handleProfileSubmit}
+                    className="btn btn-sm font-FontNoto !bg-white !text-indigo-800"
+                  >
+                    บันทึกรูปโปรไฟล์
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className=" p-2 rounded-md inline-block">
-          <button
-            onClick={handleExportProfilePDF}
-            className="btn btn-sm font-FontNoto !bg-white !text-indigo-800 border border-gray-400 hover:bg-gray-100 flex items-center gap-2"
-          >
-            <Printer size={16} />
-            พิมพ์ข้อมูล
-          </button>
+          <div className=" p-2 rounded-md inline-block">
+            <button
+              onClick={handleExportProfilePDF}
+              className="btn btn-sm font-FontNoto !bg-white !text-indigo-800 border border-gray-400 hover:bg-gray-100 flex items-center gap-2"
+            >
+              <Printer size={16} />
+              พิมพ์ข้อมูล
+            </button>
+          </div>
         </div>
       </div>
 
@@ -746,8 +794,9 @@ function Profile() {
             <p className="text-sm text-gray-500 font-FontNoto">ชั่วโมงทำงาน</p>
           </div>
           <p className="text-base font-bold text-indigo-800 font-FontNoto">
-            {getWorkingHoursThisMonth()} ชม./เดือน
+            {workingHours.hours} ชม. {workingHours.minutes} น./เดือน
           </p>
+
         </div>
         <div className="bg-white shadow rounded-xl p-4 text-center">
           <div className="flex flex-col items-center mb-2">
@@ -1018,6 +1067,7 @@ function Profile() {
                           ) : (
                             <input
                               type="text"
+                              name="currentAddress"
                               rows={2}
                               className="input input-sm input-bordered w-full"
                               value={employee.currentAddress}
@@ -1102,6 +1152,8 @@ function Profile() {
                                     <option value="CONTRACT">สัญญาจ้าง</option>
                                     <option value="INTERN">นักศึกษาฝึกงาน</option>
                                     <option value="PROBATION">ทดลองงาน</option>
+                                    <option value="EXPIRED">หมดสัญญา</option>
+                                    <option value="RESIGNED">ลาออก</option>
                                     <option value="ADMIN">Admin</option>
                                   </select>
                                 )}
@@ -1210,7 +1262,7 @@ function Profile() {
                 </button>
               </div>
               {educations.length === 0 ? (
-                <p className="text-gray-500 font-FontNoto">ไม่มีข้อมูลการศึกษา</p>
+                <p className="text-center text-gray-500 mt-4 font-FontNoto">ไม่มีข้อมูลการศึกษา</p>
               ) : (
                 <div className="space-y-4">
                   {educations.map((edu, index) => (
@@ -1630,12 +1682,16 @@ function Profile() {
                         <input
                           type="text"
                           name="startDate"
+                          inputMode="numeric"
+                          maxLength={4}
+                          pattern="\d{4}"
                           placeholder="กรอกปี พ.ศ. เริ่มงาน"
                           className={`input input-bordered font-FontNoto ${errors.startDate ? "border-red-500" : ""}`}
                           value={newExperience.startDate}
                           onChange={handleChangeExperience}
                           required
                         />
+
                         {errors.startDate && (
                           <span className="text-red-500 text-sm font-FontNoto">{errors.startDate}</span>
                         )}
@@ -1645,11 +1701,15 @@ function Profile() {
                         <input
                           type="text"
                           name="endDate"
+                          inputMode="numeric"
+                          maxLength={4}
+                          pattern="\d{4}"
                           placeholder="เว้นว่างหากยังทำงานอยู่"
                           className={`input input-bordered font-FontNoto ${errors.endDate ? "border-red-500" : ""}`}
                           value={newExperience.endDate}
                           onChange={handleChangeExperience}
                         />
+
                         {errors.endDate && (
                           <span className="text-red-500 text-sm font-FontNoto">{errors.endDate}</span>
                         )}

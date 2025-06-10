@@ -32,6 +32,163 @@ const Worktime = () => {
         "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
     ];
 
+    const holidaysByYear = {
+        2024: {
+            "01-01": "วันขึ้นปีใหม่",
+            "04-06": "วันจักรี",
+            "04-13": "วันสงกรานต์",
+            "04-14": "วันสงกรานต์",
+            "04-15": "วันสงกรานต์",
+            "05-01": "วันแรงงาน",
+            "05-04": "วันฉัตรมงคล",
+            "06-03": "วันเฉลิมราชินี",
+            "07-28": "วันเฉลิมพระเจ้าอยู่หัว",
+            "08-12": "วันแม่แห่งชาติ",
+            "10-13": "วันคล้ายวันสวรรคต ร.9",
+            "10-23": "วันปิยมหาราช",
+            "12-05": "วันพ่อแห่งชาติ",
+            "12-10": "วันรัฐธรรมนูญ",
+            "12-31": "วันสิ้นปี"
+        },
+        2025: {
+            "01-01": "วันขึ้นปีใหม่",
+            "02-12": "วันมาฆบูชา",
+            "04-06": "วันจักรี",
+            "04-13": "วันสงกรานต์",
+            "04-14": "วันสงกรานต์",
+            "04-15": "วันสงกรานต์",
+            "05-01": "วันแรงงาน",
+            "05-04": "วันฉัตรมงคล",
+            "05-11": "วันวิสาขบูชา",
+            "06-03": "วันเฉลิมราชินี",
+            "07-10": "วันอาสาฬหบูชา",
+            "07-11": "วันเข้าพรรษา",
+            "07-28": "วันเฉลิมพระเจ้าอยู่หัว",
+            "08-12": "วันแม่แห่งชาติ",
+            "10-13": "วันคล้ายวันสวรรคต ร.9",
+            "10-23": "วันปิยมหาราช",
+            "12-05": "วันพ่อแห่งชาติ",
+            "12-10": "วันรัฐธรรมนูญ",
+            "12-31": "วันสิ้นปี"
+        },
+        2026: {
+            "01-01": "วันขึ้นปีใหม่",
+            "01-02": "วันหยุดพิเศษ (ครม.)",
+            "03-03": "วันมาฆบูชา",
+            "04-06": "วันจักรี",
+            "04-13": "วันสงกรานต์",
+            "04-14": "วันสงกรานต์",
+            "04-15": "วันสงกรานต์",
+            "05-01": "วันแรงงาน",
+            "05-04": "วันฉัตรมงคล",
+            "05-31": "วันวิสาขบูชา",
+            "06-03": "วันเฉลิมราชินี",
+            "07-28": "วันเฉลิมพระเจ้าอยู่หัว",
+            "07-29": "วันอาสาฬหบูชา",
+            "07-30": "วันเข้าพรรษา",
+            "08-12": "วันแม่แห่งชาติ",
+            "10-13": "วันคล้ายวันสวรรคต ร.9",
+            "10-23": "วันปิยมหาราช",
+            "12-05": "วันพ่อแห่งชาติ",
+            "12-10": "วันรัฐธรรมนูญ",
+            "12-31": "วันสิ้นปี"
+        },
+        2027: {
+            "01-01": "วันขึ้นปีใหม่",
+            "02-21": "วันมาฆบูชา",
+            "04-06": "วันจักรี",
+            "04-13": "วันสงกรานต์",
+            "04-14": "วันสงกรานต์",
+            "04-15": "วันสงกรานต์",
+            "05-01": "วันแรงงาน",
+            "05-04": "วันฉัตรมงคล",
+            "05-20": "วันวิสาขบูชา",
+            "06-03": "วันเฉลิมราชินี",
+            "07-18": "วันอาสาฬหบูชา",
+            "07-20": "วันเข้าพรรษา",
+            "07-28": "วันเฉลิมพระเจ้าอยู่หัว",
+            "08-12": "วันแม่แห่งชาติ",
+            "10-13": "วันคล้ายวันสวรรคต ร.9",
+            "10-23": "วันปิยมหาราช",
+            "12-05": "วันพ่อแห่งชาติ",
+            "12-10": "วันรัฐธรรมนูญ",
+            "12-31": "วันสิ้นปี"
+        }
+    };
+
+    // Template วันหยุดที่เหมือนกันทุกปี 2028-2034
+    const baseHolidayTemplate = {
+        "01-01": "วันขึ้นปีใหม่",
+        "04-06": "วันจักรี",
+        "04-13": "วันสงกรานต์",
+        "04-14": "วันสงกรานต์",
+        "04-15": "วันสงกรานต์",
+        "05-01": "วันแรงงาน",
+        "05-04": "วันฉัตรมงคล",
+        "06-03": "วันเฉลิมราชินี",
+        "07-28": "วันเฉลิมพระเจ้าอยู่หัว",
+        "08-12": "วันแม่แห่งชาติ",
+        "10-13": "วันคล้ายวันสวรรคต ร.9",
+        "10-23": "วันปิยมหาราช",
+        "12-05": "วันพ่อแห่งชาติ",
+        "12-10": "วันรัฐธรรมนูญ",
+        "12-31": "วันสิ้นปี"
+    };
+
+    // เพิ่มปี 2028–2034 โดยใช้ template เดียวกัน
+    for (let year = 2028; year <= 2034; year++) {
+        holidaysByYear[year] = { ...baseHolidayTemplate };
+    }
+    const getCompensatedHolidays = (year, holidays) => {
+        const compensated = {};
+        const usedDates = new Set(Object.keys(holidays));
+
+        Object.entries(holidays).forEach(([key, name]) => {
+            const [mm, dd] = key.split('-');
+            const date = new Date(`${year}-${mm}-${dd}`);
+            const day = date.getDay();
+
+            if (day === 0 || day === 6) {
+                let next = new Date(date);
+                let attempt = 0;
+                while (attempt++ < 10) {
+                    next.setDate(next.getDate() + 1);
+                    const newKey = `${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
+                    if (!usedDates.has(newKey) && next.getDay() !== 0 && next.getDay() !== 6) {
+                        compensated[newKey] = `ชดเชย${name}`;
+                        usedDates.add(newKey);
+                        break;
+                    }
+                }
+            }
+        });
+
+        return compensated;
+    };
+    const getWorkingDaysInMonth = (month, year) => {
+        const holidays = holidaysByYear[year] || {};
+        const compensated = getCompensatedHolidays(year, holidays);
+        const allHolidays = { ...holidays, ...compensated };
+
+        let count = 0;
+        const totalDays = new Date(year, month, 0).getDate();
+
+        for (let day = 1; day <= totalDays; day++) {
+            const date = new Date(year, month - 1, day);
+            const dayOfWeek = date.getDay(); // 0=Sun, 6=Sat
+
+            const key = `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            const isHoliday = !!allHolidays[key];
+
+            if (!isWeekend && !isHoliday) {
+                count++;
+            }
+        }
+
+        return count;
+    };
+
     useEffect(() => {
         const today = new Date().toISOString().split("T")[0];
         const found = worktimes.find(
@@ -463,7 +620,7 @@ const Worktime = () => {
     // สถิติเพื่อแสดงในกล่องสรุป
     const totalDaysInMonth = new Date(yearFilter, monthFilter, 0).getDate();
     const workingDayCount = filteredWorktimes.length;
-    const standardWorkingDays = 25;
+    const standardWorkingDays = getWorkingDaysInMonth(monthFilter, yearFilter);
     const averageHoursPerDay = (() => {
         const totalMinutes = filteredWorktimes.reduce((sum, item) => {
             const result = calculateWorkingHours(item.checkIn, item.checkOut, item.date, '');

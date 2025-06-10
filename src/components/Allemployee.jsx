@@ -4,17 +4,14 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { FiInfo, FiTrash2 } from "react-icons/fi";
 
-const sexLabels = {
-    Male: "ชาย",
-    Female: "หญิง",
-};
-
 const designationMap = {
     FULLTIME: "พนักงานประจำ",
     CONTRACT: "สัญญาจ้าง",
     INTERN: "นักศึกษาฝึกงาน",
     PROBATION: "ทดลองงาน",
-    ADMIN: "Admin"
+    ADMIN: "Admin",
+    RESIGNED: "ลาออก",
+    EXPIRED: "หมดสัญญา",
 };
 
 const roleMapping = {
@@ -28,7 +25,6 @@ const roleMapping = {
     JUNIOR_DEV: "Junior Programmer",
     ADMIN: "Admin",
 };
-
 
 const Allemployee = () => {
     const navigate = useNavigate();
@@ -74,7 +70,9 @@ const Allemployee = () => {
 
     const handleDeleteUser = async () => {
         try {
-            await axios.delete(`https://192.168.1.188/hrwebapi/api/Admin/${userToDelete}`);
+            // เปลี่ยนจาก DELETE เป็น PUT เพื่อ soft delete
+            await axios.put(`https://192.168.1.188/hrwebapi/api/Users/Resign/${userToDelete}`);
+
             setUsers(users.filter((user) => user.userID !== userToDelete));
             setFilteredUsers(filteredUsers.filter((user) => user.userID !== userToDelete));
             document.getElementById('delete_modal').close();
@@ -83,11 +81,11 @@ const Allemployee = () => {
             alert("ลบผู้ใช้งานไม่สำเร็จ กรุณาลองใหม่");
         }
     };
+
     const openDeleteModal = (userID) => {
         setUserToDelete(userID);
         document.getElementById('delete_modal').showModal();
     };
-
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -287,15 +285,46 @@ const Allemployee = () => {
                 </div>
                 <div className="flex flex-row flex-wrap gap-2 mt-4 mb-4">
                     <button className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full font-FontNoto">
-                        พนักงานปัจจุบัน: <span className="font-bold">{users.filter(u => u.role !== "ADMIN" && u.designation !== "CONTRACT").length} คน</span>
+                        พนักงานปัจจุบัน:{" "}
+                        <span className="font-bold">
+                            {
+                                users.filter(u =>
+                                    u.isActive !== false &&
+                                    u.role !== "ADMIN" && 
+                                    u.designation !== "CONTRACT" && 
+                                    u.designation !== "RESIGNED" && 
+                                    u.designation !== "EXPIRED" 
+                                ).length
+                            } คน
+                        </span>
                     </button>
+
+
                     <button className="flex items-center gap-2 bg-red-100 text-red-600 px-4 py-2 rounded-full font-FontNoto">
-                        ลาออก: <span className="font-bold">0 คน</span>
+                        ลาออก:{" "}
+                        <span className="font-bold">
+                            {
+                                users.filter(u =>
+                                    u.isActive !== false && // 👈 กรองผู้ถูกลบ
+                                    u.designation === "RESIGNED"
+                                ).length
+                            } คน
+                        </span>
                     </button>
+
                     <button className="flex items-center gap-2 bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full font-FontNoto">
-                        หมดสัญญา: <span className="font-bold">0 คน</span>
+                        หมดสัญญา:{" "}
+                        <span className="font-bold">
+                            {
+                                users.filter(u =>
+                                    u.isActive !== false && // 👈 กรองผู้ถูกลบ
+                                    u.designation === "EXPIRED"
+                                ).length
+                            } คน
+                        </span>
                     </button>
                 </div>
+
 
                 <div className="flex flex-wrap gap-4 mt-4 mb-4 bg-gray-100 rounded-lg p-2">
                     {/* ตำแหน่ง */}
@@ -317,8 +346,6 @@ const Allemployee = () => {
                             <option>Junior Programmer</option>
                         </select>
                     </div>
-
-                    {/* สถานะงาน */}
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full sm:w-auto">
                         <label className="text-sm text-gray-700 font-FontNoto whitespace-nowrap">สถานะงาน</label>
                         <select
@@ -331,8 +358,8 @@ const Allemployee = () => {
                             <option>สัญญาจ้าง</option>
                             <option>นักศึกษาฝึกงาน</option>
                             <option>ทดลองงาน</option>
-                            <option>ลาออก</option>
                             <option>หมดสัญญา</option>
+                            <option>ลาออก</option>
                         </select>
                     </div>
 
@@ -364,7 +391,21 @@ const Allemployee = () => {
                 ) : (
                     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                         {users
-                            .filter((user) => user.role !== "ADMIN")
+                            .filter((user) => {
+                                const isAdmin = user.role === "ADMIN";
+                                const isResignedOrExpired = ["RESIGNED", "EXPIRED"].includes(user.designation);
+                                const isInactive = user.isActive === false; // 👈 เพิ่มตัวนี้
+
+                                if (isInactive) return false; // 👈 กรองผู้ใช้ที่ถูกลบออก
+
+                                const showStatus =
+                                    (selectedDesignation === "ทั้งหมด" && !isResignedOrExpired) ||
+                                    (selectedDesignation === "ลาออก" && user.designation === "RESIGNED") ||
+                                    (selectedDesignation === "หมดสัญญา" && user.designation === "EXPIRED") ||
+                                    (["พนักงานประจำ", "สัญญาจ้าง", "นักศึกษาฝึกงาน", "ทดลองงาน"].includes(selectedDesignation));
+
+                                return !isAdmin && showStatus;
+                            })
                             .filter((user) => {
                                 const roleMatch =
                                     selectedRole === "ทั้งหมด" || roleMapping[user.role] === selectedRole;
@@ -372,7 +413,22 @@ const Allemployee = () => {
                                     selectedDesignation === "ทั้งหมด" || designationMap[user.designation] === selectedDesignation;
                                 const workStatusMatch =
                                     selectedWorkStatus === "ทั้งหมด" || getStatusForEmployee(user.userID).text === selectedWorkStatus;
+
                                 return roleMatch && designationMatch && workStatusMatch;
+                            })
+
+                            .sort((a, b) => {
+                                const priority = {
+                                    GM: 1,
+                                    HEAD_BA: 2,
+                                    Hr: 3,
+                                    SENIOR_DEV: 4,
+                                    Dev: 5,
+                                    BA: 6,
+                                    TESTER: 7,
+                                    JUNIOR_DEV: 8,
+                                };
+                                return (priority[a.role] || 99) - (priority[b.role] || 99);
                             })
                             .map((user) => {
                                 const profileImageUrl = `https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${user.userID}`;
@@ -412,12 +468,13 @@ const Allemployee = () => {
                                                 <FiInfo className="text-base" />
                                                 รายละเอียด
                                             </button>
+
                                             <button
-                                                className="w-1/2 font-FontNoto text-red-600 hover:text-red-800 focus:outline-none flex items-center justify-center gap-1"
+                                                className="min-w-[32%] font-FontNoto text-red-500 hover:text-red-700 focus:outline-none flex items-center justify-center gap-1"
                                                 onClick={() => openDeleteModal(user.userID)}
                                             >
                                                 <FiTrash2 className="text-base" />
-                                                ลบข้อมูล
+                                                ลบออก
                                             </button>
                                         </div>
 
@@ -431,10 +488,10 @@ const Allemployee = () => {
             <dialog id="delete_modal" className="modal">
                 <div className="modal-box font-FontNoto w-full !max-w-[400px] px-5 py-6 text-center rounded-xl shadow-lg">
                     <h2 className="text-lg font-bold text-red-600 mb-3">
-                        ยืนยันการลบข้อมูล
+                        ยืนยันการลบผู้ใช้งาน
                     </h2>
                     <p className="text-gray-700 mb-5 text-base leading-relaxed">
-                        คุณต้องการลบพนักงานคนนี้ออกจากระบบหรือไม่?
+                        คุณต้องการลบผู้ใช้งานคนนี้ออกจากระบบหรือไม่?
                     </p>
                     <div className="flex justify-center gap-3">
                         <button
@@ -447,7 +504,7 @@ const Allemployee = () => {
                             onClick={handleDeleteUser}
                             className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg"
                         >
-                            ลบข้อมูล
+                            ลบออก
                         </button>
                     </div>
                 </div>

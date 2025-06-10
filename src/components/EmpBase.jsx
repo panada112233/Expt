@@ -235,7 +235,7 @@ const EmpBase = () => {
                   </Link>
                 </>
               )}
-              {role !== "ADMIN" && (
+              {/* {role !== "ADMIN" && (
                 <details className="group ">
                   <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden">
                     จัดการเอกสาร
@@ -266,7 +266,7 @@ const EmpBase = () => {
                     </li>
                   </ul>
                 </details>
-              )}
+              )} */}
               {role === "ADMIN" ? (
                 <>
                   <Link
@@ -390,37 +390,12 @@ const EmpBase = () => {
                       </li>
                     </ul>
                   </details>
-                  <details className="group">
-                    <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden">
-                      พนักงานในระบบ
-                      <svg
-                        className="w-4 h-4 transition-transform group-open:rotate-180 flex-shrink-0 ml-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </summary>
-
-                    <ul className="mt-2 ml-3 space-y-1 text-sm">
-                      <li>
-                        <Link
-                          to="/EmpHome/Allemployee"
-                          onClick={() => setIsSidebarOpen(false)}
-                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                        >
-                          พนักงานในระบบ
-                        </Link>
-                      </li>
-                    </ul>
-                  </details>
-
+                  <Link
+                    to="/EmpHome/Allemployee"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
+                  >
+                    พนักงานในระบบ
+                  </Link>
                 </>
               ) : null}
               <li>
