@@ -76,23 +76,23 @@ const EmpBase = () => {
     // ดึงข้อมูลรูปภาพ
     try {
       const profileResponse = await axios.get(
-        `https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${id}`
+        `https://localhost:7039/api/Files/GetProfileImage?userID=${id}`
       );
 
       if (profileResponse.status === 200) {
-        const fullImageUrl = `https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${id}`;
+        const fullImageUrl = `https://localhost:7039/api/Files/GetProfileImage?userID=${id}`;
         setCurrentProfileImage(fullImageUrl);
       }
     } catch (error) {
       console.error("Error fetching profile image:", error);
       // กำหนดรูปภาพเริ่มต้น
-      setCurrentProfileImage("https://192.168.1.188/hrwebapi/api/Files/GetDefaultProfileImage");
+      setCurrentProfileImage("https://localhost:7039/api/Files/GetDefaultProfileImage");
     }
 
     // ดึงข้อมูลผู้ใช้งานแยกต่างหาก
     try {
       const userResponse = await axios.get(
-        `https://192.168.1.188/hrwebapi/api/Users/Getbyid/${id}`
+        `https://localhost:7039/api/Users/Getbyid/${id}`
       );
       if (userResponse.status === 200) {
         const userData = userResponse.data;

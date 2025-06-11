@@ -23,8 +23,8 @@ const Login = ({ setIsLoggedIn }) => {
         const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
 
         const url = isEmail
-            ? "https://192.168.1.188/hrwebapi/api/Users/Login"
-            : "https://192.168.1.188/hrwebapi/api/Admin/login";
+            ? "https://localhost:7039/api/Users/Login"
+            : "https://localhost:7039/api/Admin/login";
 
         const data = isEmail
             ? { email: identifier, passwordHash: password }

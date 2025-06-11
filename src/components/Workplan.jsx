@@ -557,12 +557,15 @@ const Workplan = () => {
             today.getDate() === selectedDate &&
             today.getMonth() === month &&
             today.getFullYear() === year;
-
-
         if (isToday) {
             setTodayPlan(newTask); // อัปเดตการ์ด
         }
-
+        setAllPlans((prevPlans) => {
+            const withoutSameDate = prevPlans.filter(p =>
+                !(p.userID === newTask.userID && p.date.startsWith(newTask.date))
+            );
+            return [...withoutSameDate, newTask];
+        });
         setShowModal(false);
     };
     const prevMonth = month === 0 ? 11 : month - 1;
@@ -854,7 +857,14 @@ const Workplan = () => {
                                                             className="w-10 h-10 rounded-full border border-gray-300 mr-3 object-cover font-FontNoto"
                                                         />
                                                         <div>
-                                                            <p className="font-bold text-black font-FontNoto">{rec.fullName}</p>
+                                                            <p className="font-bold text-black font-FontNoto">
+                                                                {rec.fullName}
+                                                                {(() => {
+                                                                    const user = allUsers.find((u) => u.userID === rec.userID);
+                                                                    return user?.nickname ? ` (${user.nickname})` : "";
+                                                                })()}
+                                                            </p>
+
                                                             <p className="text-sm text-gray-600 font-FontNoto">
                                                                 {roleMapping[allUsers.find((u) => u.userID === rec.userID)?.role] || "-"}
                                                             </p>
@@ -905,8 +915,6 @@ const Workplan = () => {
                                         })}
                                     </div>
                                 </div>
-
-
                             </div>
                         );
                     })()}
@@ -914,7 +922,7 @@ const Workplan = () => {
             )}
 
             {activeTab === "calendar" && (
-                <div className="w-full max-w-7xl mx-auto bg-slate-50 rounded-xl p-6 items-center justify-center">
+                <div className="w-full max-w-8xl mx-auto bg-slate-50 rounded-xl p-6 items-center justify-center">
                     <div className="flex items-center justify-center gap-x-2 mb-2">
                         <FcOrganization className="w-8 h-8" />
                         <h2 className="sm:text-xl font-bold font-FontNoto text-blue-950 text-center">

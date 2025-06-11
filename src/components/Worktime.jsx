@@ -933,18 +933,26 @@ const Worktime = () => {
                         <div className="mt-2 text-sm text-gray-700 font-FontNoto">
                             <div className="flex justify-between">
                                 <span className="font-FontNoto">อัตราการมาตรงเวลา/เดือน:</span>
-                                <span className="font-FontNoto">{Math.round((daysSummary['มาตรงเวลา'] / standardWorkingDays) * 100)}%</span>
+                                <span className="font-FontNoto">
+                                    {(() => {
+                                        const cameToWork = daysSummary['มาตรงเวลา'] + daysSummary['มาสาย'];
+                                        const percent = cameToWork > 0 ? Math.round((daysSummary['มาตรงเวลา'] / cameToWork) * 100) : 0;
+                                        return `${percent}%`;
+                                    })()}
+                                </span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1 mb-1">
                                 <div
                                     className="bg-green-500 h-2.5 rounded-full"
                                     style={{
-                                        width: `${(daysSummary['มาตรงเวลา'] / standardWorkingDays) * 100}%`
+                                        width: `${(() => {
+                                            const cameToWork = daysSummary['มาตรงเวลา'] + daysSummary['มาสาย'];
+                                            return cameToWork > 0 ? (daysSummary['มาตรงเวลา'] / cameToWork) * 100 : 0;
+                                        })()}%`
                                     }}
                                 ></div>
                             </div>
                         </div>
-
                         <div className="mt-2 text-sm text-gray-700 font-FontNoto">
                             <div className="flex justify-between">
                                 <span className="font-FontNoto">วันทำงาน/ต่อเดือน:</span>

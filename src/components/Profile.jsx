@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { CalendarIcon, BriefcaseIcon, ClockIcon, AwardIcon, Printer } from "lucide-react";
-import { FiEdit, FiTrash2 } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { PencilSquareIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 import { pdfMake, font } from "../libs/pdfmake";
@@ -62,6 +62,12 @@ function Profile() {
     lineUserId: "",
     birthday: "",
   });
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword1, setNewPassword1] = useState("");
+  const [newPassword2, setNewPassword2] = useState("");
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword1, setShowNewPassword1] = useState(false);
+  const [showNewPassword2, setShowNewPassword2] = useState(false);
 
   const [profilePicture, setProfilePicture] = useState(null);
   const [currentProfileImage, setCurrentProfileImage] = useState("");
@@ -95,7 +101,7 @@ function Profile() {
   const [editIndex, setEditIndex] = useState(null);
   const [showExperienceModal, setShowExperienceModal] = useState(false);
   const [showEducationModal, setShowEducationModal] = useState(false);
-
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const [experienceToDelete, setExperienceToDelete] = useState(null);
   const [modalConfirmAction, setModalConfirmAction] = useState(null);
@@ -172,7 +178,35 @@ function Profile() {
     const year = date.getFullYear() + 543;
     return `${day}/${month}/${year}`;
   };
+  const handleSubmitChangePassword = async (e) => {
+    e.preventDefault();
 
+    if (newPassword1 !== newPassword2) {
+      alert("รหัสผ่านใหม่ไม่ตรงกัน");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "https://192.168.1.188/hrwebapi/api/Users/ChangeMyPassword",
+        {
+          userID: userID,
+          oldPassword,
+          newPassword: newPassword1,
+        },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      if (response.status === 200) {
+        alert("เปลี่ยนรหัสผ่านสำเร็จ");
+        setShowPasswordModal(false);
+        setOldPassword("");
+        setNewPassword1("");
+        setNewPassword2("");
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "รหัสผ่านเดิมไม่ถูกต้อง");
+    }
+  };
 
   const convertToBase64 = async (imageUrl) => {
     try {
@@ -198,9 +232,8 @@ function Profile() {
 
   useEffect(() => {
     const fetchWorktimeAndCalculate = async () => {
-      const userId = sessionStorage.getItem("userId");
-      if (!userId) return;
-
+      const targetUserID = passedUserID || sessionStorage.getItem("userId");
+      if (!targetUserID) return;
       try {
         const res = await axios.get("https://192.168.1.188/hrwebapi/api/Worktime");
         const worktimes = res.data;
@@ -211,7 +244,7 @@ function Profile() {
         const filtered = worktimes.filter(item => {
           const date = new Date(item.date);
           return (
-            item.userID === parseInt(userId) &&
+            item.userID === parseInt(targetUserID) &&
             date.getMonth() + 1 === currentMonth &&
             date.getFullYear() === currentYear
           );
@@ -629,87 +662,6 @@ function Profile() {
     setIsModalOpen(false);
     setExperienceToDelete(null);
   };
-
-  const handleExportProfilePDF = () => {
-    const formattedDate = formatDateForDisplay(employee.JDate || "");
-    const roleText = roleMapping[employee.role] || "ไม่ระบุ";
-    const genderText = employee.gender === "Male" ? "ชาย" : employee.gender === "Female" ? "หญิง" : "ไม่ระบุ";
-
-    const educationSection = educations.length > 0 ? [
-      { text: "ประวัติการศึกษา", style: "sectionHeader", margin: [0, 20, 0, 6] },
-      ...educations.map((edu, i) => ({
-        text: `${i + 1}. ${levelLabels[edu.level]} - ${edu.institute}\n   สาขา: ${edu.fieldOfStudy}\n   ปี: ${edu.year} | GPA: ${edu.gpa}`,
-        style: "detail",
-        margin: [0, 0, 0, 6]
-      }))
-    ] : [];
-
-    const experienceSection = experiences.length > 0 ? [
-      { text: "ประสบการณ์ทำงาน", style: "sectionHeader", margin: [0, 20, 0, 6] },
-      ...experiences.map((exp, i) => ({
-        text: `${i + 1}. ${exp.companyName} (${exp.startDate} - ${exp.endDate || "ปัจจุบัน"})\n   ตำแหน่ง: ${exp.jobTitle}`,
-        style: "detail",
-        margin: [0, 0, 0, 6]
-      }))
-    ] : [];
-
-    const profileImageBlock =
-      currentProfileImage && currentProfileImage.trim() !== ""
-        ? {
-          image: currentProfileImage,
-          width: 150,
-          height: 150,
-          alignment: "center",
-          margin: [0, 20, 0, 20],
-        }
-        : null;
-
-    const docDefinition = {
-      pageSize: "A4",
-      content: [
-        { text: "โปรไฟล์พนักงาน", style: "header", alignment: "center" },
-        ...(profileImageBlock ? [profileImageBlock] : []),
-        {
-          table: {
-            widths: [150, "*"],
-            body: [
-              [{ text: "หัวข้อ", style: "tableHeader" }, { text: "ข้อมูล", style: "tableHeader" }],
-              ["ชื่อ", employee.firstName || "-"],
-              ["นามสกุล", employee.lastName || "-"],
-              ["ตำแหน่งพนักงาน", roleText],
-              ["สถานะงาน", designationMap[employee.designation] || "-"],
-              ["ติดต่อ", employee.contact || "-"],
-              ["อีเมล", employee.email || "-"],
-              ["วันที่เข้าร่วม", formattedDate || "-"],
-              ["เพศ", genderText],
-            ],
-          },
-          layout: {
-            hLineWidth: () => 0.5,
-            vLineWidth: () => 0.5,
-            hLineColor: () => '#bfbfbf',
-            vLineColor: () => '#bfbfbf',
-          },
-          margin: [40, 0, 40, 10],
-        },
-        ...educationSection,
-        ...experienceSection
-      ],
-      styles: {
-        header: { fontSize: 22, bold: true, margin: [0, 0, 0, 10] },
-        sectionHeader: { fontSize: 18, bold: true, decoration: "underline" },
-        tableHeader: { bold: true, fontSize: 14, alignment: "center", fillColor: "#eeeeee" },
-        detail: { fontSize: 14 },
-      },
-      defaultStyle: {
-        font: "THSarabunNew",
-      },
-    };
-
-    pdfMake.createPdf(docDefinition).download("โปรไฟล์ของฉัน.pdf");
-  };
-
-
   return (
     <div className=" ">
       <div className="w-full bg-gradient-to-r from-cyan-100 via-blue-100 to-blue-50 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
@@ -735,7 +687,9 @@ function Profile() {
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-800 font-FontNoto">
                 {employee.firstName} {employee.lastName}
+                {employee.nickname && ` (${employee.nickname})`}
               </h2>
+
               <p className="text-sm text-gray-600 font-FontNoto">
                 {roleMapping[employee.role] || "ไม่ระบุแผนก"}
               </p>
@@ -758,15 +712,17 @@ function Profile() {
             </div>
           </div>
 
-          <div className=" p-2 rounded-md inline-block">
-            <button
-              onClick={handleExportProfilePDF}
-              className="btn btn-sm font-FontNoto !bg-white !text-indigo-800 border border-gray-400 hover:bg-gray-100 flex items-center gap-2"
-            >
-              <Printer size={16} />
-              พิมพ์ข้อมูล
-            </button>
-          </div>
+          {employee.userID?.toString() === sessionStorage.getItem("userId") && (
+            <div className="p-2 rounded-md inline-block">
+              <button
+                onClick={() => setShowPasswordModal(true)}
+                className="btn btn-sm font-FontNoto !bg-white !text-indigo-800 border border-gray-400 hover:bg-gray-100 flex items-center gap-2"
+              >
+                <FiLock className="w-4 h-4" />
+                เปลี่ยนรหัสผ่าน
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -879,14 +835,30 @@ function Profile() {
                         <div className="flex items-center gap-4">
                           <label className="w-32 text-sm font-medium whitespace-nowrap">ชื่อ-นามสกุล :</label>
                           {!isEditMode ? (
-                            <p className="text-sm">{employee.firstName} {employee.lastName}</p>
+                            <p className="text-sm">
+                              {employee.prefix === "MR" && "นาย "}
+                              {employee.prefix === "MRS" && "นาง "}
+                              {employee.prefix === "MISS" && "นางสาว "}
+                              {employee.firstName} {employee.lastName}
+                            </p>
                           ) : (
                             <div className="flex gap-2 w-full">
+                              <select
+                                name="prefix"
+                                className="select select-sm select-bordered w-1/4"
+                                value={employee.prefix}
+                                onChange={handleChange}
+                              >
+                                <option value="">เลือกคำนำหน้า</option>
+                                <option value="MR">นาย</option>
+                                <option value="MRS">นาง</option>
+                                <option value="MISS">นางสาว</option>
+                              </select>
                               <input
                                 type="text"
                                 name="firstName"
                                 placeholder="ชื่อ"
-                                className="input input-sm input-bordered w-1/2"
+                                className="input input-sm input-bordered w-1/4"
                                 value={employee.firstName}
                                 onChange={handleChange}
                               />
@@ -901,6 +873,7 @@ function Profile() {
                             </div>
                           )}
                         </div>
+
                         <div className="flex items-center gap-4">
                           <label className="w-32 text-sm font-medium whitespace-nowrap">ชื่อภาษาอังกฤษ :</label>
                           {!isEditMode ? (
@@ -1024,6 +997,27 @@ function Profile() {
                         <div className="flex items-center gap-4">
                           <label className="w-32 text-sm font-medium">อายุ :</label>
                           <p className="text-sm">{calculateAge(employee.birthday)} ปี</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <label className="w-32 text-sm font-medium">Username :</label>
+                          {!isEditMode ? (
+                            <p className="text-sm">{employee.username}</p>
+                          ) : (
+                            <input
+                              type="text"
+                              name="username"
+                              className="input input-sm input-bordered w-full"
+                              value={employee.username}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                const noThaiPattern = /^[^\u0E00-\u0E7F]*$/;
+                                if (noThaiPattern.test(value)) {
+                                  setEmployee((prev) => ({ ...prev, username: value }));
+                                }
+                              }}
+                              required
+                            />
+                          )}
                         </div>
                       </div>
 
@@ -1317,6 +1311,7 @@ function Profile() {
               )}
             </div>
           </div>
+
           {showEducationModal && (
             <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
               <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg relative">
@@ -1734,8 +1729,125 @@ function Profile() {
           </div>
         </>
       )}
+      {showPasswordModal && (
+        <dialog open className="modal modal-open z-50">
+          <div className="modal-box font-FontNoto">
+            <h3 className="font-bold text-lg text-blue-700 mb-4">เปลี่ยนรหัสผ่าน</h3>
+            <form onSubmit={handleSubmitChangePassword} className="space-y-3">
+              {/* รหัสผ่านปัจจุบัน */}
+              <div className="relative">
+                <input
+                  type={showOldPassword ? "text" : "password"}
+                  placeholder="รหัสผ่านปัจจุบัน"
+                  className="input input-bordered w-full"
+                  value={oldPassword}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^[A-Za-z0-9@#&]*$/.test(value)) {
+                      setOldPassword(value);
+                    }
+                  }}
+                  onBeforeInput={(e) => {
+                    const char = e.data;
+                    if (char && !/^[A-Za-z0-9@#&]$/.test(char)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-3 flex items-center"
+                  onClick={() => setShowOldPassword(!showOldPassword)}
+                >
+                  {showOldPassword ? (
+                    <FiEyeOff className="w-5 h-5 text-gray-500" />
+                  ) : (
+                    <FiEye className="w-5 h-5 text-gray-500" />
+                  )}
+                </button>
+              </div>
 
+              {/* รหัสผ่านใหม่ */}
+              <div className="relative">
+                <input
+                  type={showNewPassword1 ? "text" : "password"}
+                  placeholder="รหัสผ่านใหม่"
+                  className="input input-bordered w-full"
+                  value={newPassword1}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^[A-Za-z0-9@#&]*$/.test(value)) {
+                      setNewPassword1(value);
+                    }
+                  }}
+                  onBeforeInput={(e) => {
+                    const char = e.data;
+                    if (char && !/^[A-Za-z0-9@#&]$/.test(char)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-3 flex items-center"
+                  onClick={() => setShowNewPassword1(!showNewPassword1)}
+                >
+                  {showNewPassword1 ? (
+                    <FiEyeOff className="w-5 h-5 text-gray-500" />
+                  ) : (
+                    <FiEye className="w-5 h-5 text-gray-500" />
+                  )}
+                </button>
+              </div>
 
+              {/* ยืนยันรหัสผ่านใหม่ */}
+              <div className="relative">
+                <input
+                  type={showNewPassword2 ? "text" : "password"}
+                  placeholder="ยืนยันรหัสผ่านใหม่"
+                  className="input input-bordered w-full"
+                  value={newPassword2}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^[A-Za-z0-9@#&]*$/.test(value)) {
+                      setNewPassword2(value);
+                    }
+                  }}
+                  onBeforeInput={(e) => {
+                    const char = e.data;
+                    if (char && !/^[A-Za-z0-9@#&]$/.test(char)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-3 flex items-center"
+                  onClick={() => setShowNewPassword2(!showNewPassword2)}
+                >
+                  {showNewPassword2 ? (
+                    <FiEyeOff className="w-5 h-5 text-gray-500" />
+                  ) : (
+                    <FiEye className="w-5 h-5 text-gray-500" />
+                  )}
+                </button>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button type="button" className="btn" onClick={() => setShowPasswordModal(false)}>
+                  ยกเลิก
+                </button>
+                <button type="submit" className="btn !text-white !bg-blue-600">
+                  ยืนยัน
+                </button>
+              </div>
+            </form>
+          </div>
+        </dialog>
+      )}
     </div>
   );
 }
