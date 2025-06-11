@@ -326,8 +326,8 @@ const EmpBase = () => {
               {role === "GM" || role === "Hr" || role === "HEAD_BA" ? (
                 <>
                   <details className="group">
-                    <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden">
-                      ข้อมูลพนักงาน
+                    <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden">
+                      ระบบจัดการพนักงงาน
                       <svg
                         className="w-4 h-4 transition-transform group-open:rotate-180 flex-shrink-0 ml-2"
                         fill="none"
@@ -347,7 +347,7 @@ const EmpBase = () => {
                         <Link
                           to="/EmpHome/WorktimeEmp"
                           onClick={() => setIsSidebarOpen(false)}
-                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                          className="flex items-center justify-between px-4 py-2 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
                         >
                           รายการเข้า-ออกงาน
                         </Link>
@@ -356,7 +356,7 @@ const EmpBase = () => {
                         <Link
                           to="/EmpHome/WorkplanGM"
                           onClick={() => setIsSidebarOpen(false)}
-                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                          className="flex items-center justify-between px-4 py-2 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
                         >
                           แผนการทำงาน
                         </Link>
@@ -365,7 +365,7 @@ const EmpBase = () => {
                         <Link
                           to="/EmpHome/LeaveStatistics"
                           onClick={() => setIsSidebarOpen(false)}
-                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                          className="flex items-center justify-between px-4 py-2 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
                         >
                           สถิติการลา
                         </Link>
@@ -374,7 +374,7 @@ const EmpBase = () => {
                         <Link
                           to="/EmpHome/ManageEquipmentsAdmin"
                           onClick={() => setIsSidebarOpen(false)}
-                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                          className="flex items-center justify-between px-4 py-2 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
                         >
                           รายการยืม-คืนอุปกรณ์
                         </Link>
@@ -383,19 +383,22 @@ const EmpBase = () => {
                         <Link
                           to="/EmpHome/TrendStatistics"
                           onClick={() => setIsSidebarOpen(false)}
-                          className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
+                          className="flex items-center justify-between px-4 py-2 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
                         >
                           กราฟเอกสารรายปี
                         </Link>
                       </li>
+                      <li>
+                        <Link
+                          to="/EmpHome/Allemployee"
+                          onClick={() => setIsSidebarOpen(false)}
+                          className="flex items-center justify-between px-4 py-2 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
+                        >
+                          พนักงานในระบบ
+                        </Link>
+                      </li>
                     </ul>
                   </details>
-                  <Link
-                    to="/EmpHome/Allemployee"
-                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
-                  >
-                    พนักงานในระบบ
-                  </Link>
                 </>
               ) : null}
               <li>

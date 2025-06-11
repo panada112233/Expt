@@ -10,7 +10,6 @@ import LeaveRequestForm from './components/LeaveRequestForm';
 import GMInbox from './components/GMInbox';
 import HRInbox from './components/HRInbox';
 
-import LeaveGraph from './components/LeaveGraph';
 import Login from './components/Login';
 import Navbars from './components/Navbars';
 import AdminRegistration from './components/AdminRegistration';
@@ -38,14 +37,12 @@ import Profile from './components/Profile';
 import ChangePassword from './components/Change_password';
 import Document from './components/Document';
 import Logout from './components/Logout';
-import MyEducation from './components/My_education';
-import MyExperience from './components/My_experience';
+
 import ChangeProfile from './components/Change_profile';
 import ForgotPassword from './components/ForgotPassword';
 
 import AdminDashboard from "./components/AdminDashboard";
-import Admintime from "./components/Admintime";
-import Adminplan from "./components/Adminplan";
+
 import UserList from "./components/UserList";
 import UserDetails from "./components/UserDetails";
 import UserEdit from "./components/UserEdit";
@@ -103,8 +100,6 @@ function App() {
               <Route path="WorkplanAdmin" element={<WorkplanAdmin />} />              
               <Route path="Change_password" element={<ChangePassword />} />
               <Route path="Document" element={<Document />} />
-              <Route path="My_education" element={<MyEducation />} />
-              <Route path="My_experience" element={<MyExperience />} />
               <Route path="Change_profile" element={<ChangeProfile />} />
 
               <Route path="TrendStatistics" element={<TrendStatistics />} />
@@ -120,8 +115,6 @@ function App() {
 
             {/* Routes สำหรับการจัดการผู้ดูแลระบบ */}
             <Route path="/AdminDashboard" element={<AdminDashboard />} />
-            <Route path="/Admintime" element={<Admintime />} />
-            <Route path="/Adminplan" element={<Adminplan />} />
             <Route path="/UserList" element={<UserList />} />
             <Route path="/UserForm/create" element={<UserForm />} />
             <Route path="/UserForm/edit/:id" element={<UserForm />} />
@@ -133,7 +126,6 @@ function App() {
             <Route path="/users/edit/:UserID" element={<UserEdit />} />
             <Route path="educations/edit/:id" element={<EditEducation />} />
             <Route path="/work-experience/edit/:experienceID/:userid" element={<EditWorkExperience />} />
-            <Route path="/LeaveGraph" element={<LeaveGraph />} />
             <Route path="/AdminRegistration" element={<AdminRegistration />} />
             <Route path="/AdminManagement" element={<AdminManagement />} />
           </Routes>
