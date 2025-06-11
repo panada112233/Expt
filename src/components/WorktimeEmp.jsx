@@ -583,13 +583,11 @@ const WorktimeEmp = () => {
                     </select>
                 </div>
 
-
                 <div className="flex flex-wrap items-center space-x-4 w-full sm:w-auto">
                     <div className="p-1 space-x-2 ml-auto">
-
                         <button
                             onClick={handleExportExcel}
-                            className="btn btn-sm !bg-green-500 !text-white !hover:bg-green-600 font-FontNoto"
+                            className="btn btn-sm !bg-green-500 !text-white !hover:bg-green-600 font-FontNoto whitespace-nowrap"
                         >
                             Export Excel
                         </button>

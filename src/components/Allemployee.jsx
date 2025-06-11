@@ -443,7 +443,7 @@ const Allemployee = () => {
                                                 onClick={() => openModal(profileImageUrl)}
                                             />
                                             <div>
-                                                <p className="font-bold text-blue-900">{user.firstName} {user.lastName}</p>
+                                                <p className="font-bold text-blue-900">{user.firstName} {user.lastName} {user.nickname && ` (${user.nickname})`}</p>
                                                 <p className="text-sm text-gray-500">{roleMapping[user.role]}</p>
                                             </div>
                                         </div>
