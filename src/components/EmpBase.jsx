@@ -76,23 +76,23 @@ const EmpBase = () => {
     // ดึงข้อมูลรูปภาพ
     try {
       const profileResponse = await axios.get(
-        `https://localhost:7039/api/Files/GetProfileImage?userID=${id}`
+        `https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${id}`
       );
 
       if (profileResponse.status === 200) {
-        const fullImageUrl = `https://localhost:7039/api/Files/GetProfileImage?userID=${id}`;
+        const fullImageUrl = `https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${id}`;
         setCurrentProfileImage(fullImageUrl);
       }
     } catch (error) {
       console.error("Error fetching profile image:", error);
       // กำหนดรูปภาพเริ่มต้น
-      setCurrentProfileImage("https://localhost:7039/api/Files/GetDefaultProfileImage");
+      setCurrentProfileImage("https://192.168.1.188/hrwebapi/api/Files/GetDefaultProfileImage");
     }
 
     // ดึงข้อมูลผู้ใช้งานแยกต่างหาก
     try {
       const userResponse = await axios.get(
-        `https://localhost:7039/api/Users/Getbyid/${id}`
+        `https://192.168.1.188/hrwebapi/api/Users/Getbyid/${id}`
       );
       if (userResponse.status === 200) {
         const userData = userResponse.data;
@@ -235,38 +235,7 @@ const EmpBase = () => {
                   </Link>
                 </>
               )}
-              {/* {role !== "ADMIN" && (
-                <details className="group ">
-                  <summary className="cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg bg-white text-black hover:bg-blue-900 hover:text-white font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden">
-                    จัดการเอกสาร
-                    <svg
-                      className="w-4 h-4 transition-transform group-open:rotate-180 flex-shrink-0 ml-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </summary>
 
-                  <ul className="mt-2 ml-3 space-y-1 text-sm">
-                    <li>
-                      <Link
-                        to="/EmpHome"
-                        onClick={() => setIsSidebarOpen(false)}
-                        className="block px-4 py-2 rounded-md bg-white shadow hover:shadow-lg hover:bg-blue-50 text-black font-bold font-FontNoto transition duration-150 whitespace-nowrap overflow-hidden text-ellipsis"
-                      >
-                        กราฟจำนวนเอกสาร
-                      </Link>
-                    </li>
-                  </ul>
-                </details>
-              )} */}
               {role === "ADMIN" ? (
                 <>
                   <Link
@@ -300,29 +269,10 @@ const EmpBase = () => {
                     ระบบยืม-คืนอุปกรณ์
                   </Link>
                 </>
-              ) : role === "Hr" ? (
-                <>
-                  <Link
-                    to="/EmpHome/HRInbox"
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
-                  >
-                    ใบลาพนักงาน
-                  </Link>
-                </>
-              ) : role === "GM" ? (
-                <>
-                  <li>
-                    <Link
-                      to="/EmpHome/GMInbox"
-                      onClick={() => setIsSidebarOpen(false)}
-                      className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
-                    >
-                      ใบลาพนักงาน
-                    </Link>
-                  </li>
-                </>
-              ) : null}
+              ) : (
+                null
+              )}
+
               {role === "GM" || role === "Hr" || role === "HEAD_BA" ? (
                 <>
                   <details className="group">
@@ -352,22 +302,14 @@ const EmpBase = () => {
                           รายการเข้า-ออกงาน
                         </Link>
                       </li>
+
                       <li>
                         <Link
-                          to="/EmpHome/WorkplanGM"
+                          to="/EmpHome/LeaveRequestAdmin"
                           onClick={() => setIsSidebarOpen(false)}
                           className="flex items-center justify-between px-4 py-2 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
                         >
-                          แผนการทำงาน
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/EmpHome/LeaveStatistics"
-                          onClick={() => setIsSidebarOpen(false)}
-                          className="flex items-center justify-between px-4 py-2 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
-                        >
-                          สถิติการลา
+                          ใบลาพนักงาน
                         </Link>
                       </li>
                       <li>
@@ -379,7 +321,7 @@ const EmpBase = () => {
                           รายการยืม-คืนอุปกรณ์
                         </Link>
                       </li>
-                      <li>
+                      {/* <li>
                         <Link
                           to="/EmpHome/TrendStatistics"
                           onClick={() => setIsSidebarOpen(false)}
@@ -387,7 +329,7 @@ const EmpBase = () => {
                         >
                           กราฟเอกสารรายปี
                         </Link>
-                      </li>
+                      </li> */}
                       <li>
                         <Link
                           to="/EmpHome/Allemployee"

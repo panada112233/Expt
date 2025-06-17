@@ -57,12 +57,12 @@ const EmpHome = () => {
           return;
         }
 
-        const userRequest = axios.get(`https://localhost:7039/api/Users/Getbyid/${id}`);
-        const documentsRequest = axios.get(`https://localhost:7039/api/Files/Document`, {
+        const userRequest = axios.get(`https://192.168.1.188/hrwebapi/api/Users/Getbyid/${id}`);
+        const documentsRequest = axios.get(`https://192.168.1.188/hrwebapi/api/Files/Document`, {
           params: { userID: id }
         });
-        const educationsRequest = axios.get(`https://localhost:7039/api/Educations/Getbyid/${id}`);
-        const experiencesRequest = axios.get(`https://localhost:7039/api/WorkExperiences/Getbyid/${id}`);
+        const educationsRequest = axios.get(`https://192.168.1.188/hrwebapi/api/Educations/Getbyid/${id}`);
+        const experiencesRequest = axios.get(`https://192.168.1.188/hrwebapi/api/WorkExperiences/Getbyid/${id}`);
 
         const [userResponse, documentsResponse, educationsResponse, experiencesResponse] = await Promise.all([
           userRequest,

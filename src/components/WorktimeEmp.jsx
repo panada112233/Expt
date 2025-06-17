@@ -519,7 +519,8 @@ const WorktimeEmp = () => {
                                             ({Object.entries(u.leaves).map(
                                                 ([type, days], i) =>
                                                     `ลา${type} ${days % 1 === 0 ? days : days.toFixed(1)} วัน${i < Object.entries(u.leaves).length - 1 ? ', ' : ''}`
-                                            )})
+                                            )} รวม {(Object.values(u.leaves).reduce((sum, d) => sum + d, 0)).toFixed(1).replace(/\.0$/, '')} วัน)
+
                                         </p>
 
                                     ))}

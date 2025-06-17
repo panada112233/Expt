@@ -53,10 +53,13 @@ const WorkplanAdmin = () => {
 
     const rolePriority = {
         GM: 1,
-        Hr: 2,
-        BA: 3,
-        Dev: 4,
-        Employee: 5,
+        HEAD_BA: 2,
+        Hr: 3,
+        SENIOR_DEV: 4,
+        Dev: 5,
+        BA: 6,
+        TESTER: 7,
+        JUNIOR_DEV: 8,
     };
 
     const usersWithPlans = allUsers
@@ -116,10 +119,13 @@ const WorkplanAdmin = () => {
 
                     const rolePriority = {
                         GM: 1,
-                        Hr: 2,
-                        BA: 3,
-                        Dev: 4,
-                        Employee: 5,
+                        HEAD_BA: 2,
+                        Hr: 3,
+                        SENIOR_DEV: 4,
+                        Dev: 5,
+                        BA: 6,
+                        TESTER: 7,
+                        JUNIOR_DEV: 8,
                     };
 
                     const usersWithPlans = allUsers

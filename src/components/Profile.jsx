@@ -726,42 +726,48 @@ function Profile() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6 font-FontNoto">
-        <div className="bg-white shadow rounded-xl p-4 text-center">
-          <div className="flex flex-col items-center mb-2">
-            <CalendarIcon size={24} className="text-indigo-600 mb-1" />
-            <p className="text-sm text-gray-500 font-FontNoto">วันเริ่มงาน</p>
+      <div className="overflow-x-auto sm:overflow-visible px-3 mt-6">
+        <div className="flex sm:grid sm:grid-cols-2 md:grid-cols-4 gap-4 font-FontNoto min-w-[640px] sm:min-w-0">
+          <div className="flex-shrink-0 w-[250px] sm:w-auto bg-white shadow rounded-xl p-4 text-center">
+            <div className="flex flex-col items-center mb-2">
+              <CalendarIcon size={24} className="text-indigo-600 mb-1" />
+              <p className="text-sm text-gray-500 font-FontNoto">วันเริ่มงาน</p>
+            </div>
+            <p className="text-base font-bold text-indigo-800 font-FontNoto">
+              {formatThaiDate(employee.JDate)}
+            </p>
           </div>
-          <p className="text-base font-bold text-indigo-800 font-FontNoto">{formatThaiDate(employee.JDate)}</p>
-        </div>
-        <div className="bg-white shadow rounded-xl p-4 text-center">
-          <div className="flex flex-col items-center mb-2">
-            <BriefcaseIcon size={24} className="text-green-700 mb-1" />
-            <p className="text-sm text-gray-500 font-FontNoto">อายุการทำงาน</p>
-          </div>
-          <p className="text-base font-bold text-indigo-800 font-FontNoto">
-            {calculateWorkDuration(employee.JDate)}
-          </p>
-        </div>
 
-        <div className="bg-white shadow rounded-xl p-4 text-center">
-          <div className="flex flex-col items-center mb-2">
-            <ClockIcon size={24} className="text-yellow-600 mb-1" />
-            <p className="text-sm text-gray-500 font-FontNoto">ชั่วโมงทำงาน</p>
+          <div className="flex-shrink-0 w-[250px] sm:w-auto bg-white shadow rounded-xl p-4 text-center">
+            <div className="flex flex-col items-center mb-2">
+              <BriefcaseIcon size={24} className="text-green-700 mb-1" />
+              <p className="text-sm text-gray-500 font-FontNoto">อายุการทำงาน</p>
+            </div>
+            <p className="text-base font-bold text-indigo-800 font-FontNoto">
+              {calculateWorkDuration(employee.JDate)}
+            </p>
           </div>
-          <p className="text-base font-bold text-indigo-800 font-FontNoto">
-            {workingHours.hours} ชม. {workingHours.minutes} น./เดือน
-          </p>
 
-        </div>
-        <div className="bg-white shadow rounded-xl p-4 text-center">
-          <div className="flex flex-col items-center mb-2">
-            <AwardIcon size={24} className="text-pink-600 mb-1" />
-            <p className="text-sm text-gray-500 font-FontNoto">ผลประเมิน</p>
+          <div className="flex-shrink-0 w-[250px] sm:w-auto bg-white shadow rounded-xl p-4 text-center">
+            <div className="flex flex-col items-center mb-2">
+              <ClockIcon size={24} className="text-yellow-600 mb-1" />
+              <p className="text-sm text-gray-500 font-FontNoto">ชั่วโมงทำงาน</p>
+            </div>
+            <p className="text-base font-bold text-indigo-800 font-FontNoto">
+              {workingHours.hours} ชม. {workingHours.minutes} น./เดือน
+            </p>
           </div>
-          <p className="text-base font-bold text-indigo-800 font-FontNoto">ยังไม่มีการประเมิน</p>
+
+          <div className="flex-shrink-0 w-[250px] sm:w-auto bg-white shadow rounded-xl p-4 text-center">
+            <div className="flex flex-col items-center mb-2">
+              <AwardIcon size={24} className="text-pink-600 mb-1" />
+              <p className="text-sm text-gray-500 font-FontNoto">ผลประเมิน</p>
+            </div>
+            <p className="text-base font-bold text-indigo-800 font-FontNoto">ยังไม่มีการประเมิน</p>
+          </div>
         </div>
       </div>
+
       <div className="flex gap-4 border-b border-gray-300 mb-4 mt-6">
         <button
           onClick={() => setActiveTab("profile")}

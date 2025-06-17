@@ -7,8 +7,7 @@ import {
 
 import { useEffect, useState } from 'react';
 import LeaveRequestForm from './components/LeaveRequestForm';
-import GMInbox from './components/GMInbox';
-import HRInbox from './components/HRInbox';
+import LeaveRequestAdmin from './components/LeaveRequestAdmin';
 
 import Login from './components/Login';
 import Navbars from './components/Navbars';
@@ -19,7 +18,6 @@ import BorrowEquipmentsEmp from './components/BorrowEquipmentsEmp';
 import ManageEquipmentsAdmin from './components/ManageEquipmentsAdmin';
 
 import TrendStatistics from './components/TrendStatistics';
-import LeaveStatistics from './components/LeaveStatistics';
 import Allemployee from './components/Allemployee';
 import WorkplanAdmin from "./components/WorkplanAdmin";
 
@@ -30,7 +28,7 @@ import EmpBase from './components/EmpBase';
 import Worktime from './components/Worktime';
 import WorktimeEmp from './components/WorktimeEmp';
 import Workplan from './components/Workplan';
-import WorkplanGM from './components/WorkplanGM';
+
 import CallbackPage from './components/CallbackPage';
 
 import Profile from './components/Profile';
@@ -89,21 +87,18 @@ function App() {
               <Route index element={<EmpHome />} />
 
               <Route path="LeaveRequestForm" element={<LeaveRequestForm />} />
-              <Route path="GMInbox" element={<GMInbox />} />
-              <Route path="HRInbox" element={<HRInbox />} />
+              <Route path="LeaveRequestAdmin" element={<LeaveRequestAdmin />} />
               
               <Route path="Profile" element={<Profile />} />
               <Route path="Worktime" element={<Worktime />} />
               <Route path="WorktimeEmp" element={<WorktimeEmp />} />
               <Route path="Workplan" element={<Workplan />} />
-              <Route path="WorkplanGM" element={<WorkplanGM />} />
               <Route path="WorkplanAdmin" element={<WorkplanAdmin />} />              
               <Route path="Change_password" element={<ChangePassword />} />
               <Route path="Document" element={<Document />} />
               <Route path="Change_profile" element={<ChangeProfile />} />
 
               <Route path="TrendStatistics" element={<TrendStatistics />} />
-              <Route path="LeaveStatistics" element={<LeaveStatistics />} />
               <Route path="Allemployee" element={<Allemployee />} />
               <Route path="EmployeeView" element={<EmployeeView />} />
               <Route path="BorrowEquipmentsEmp" element={<BorrowEquipmentsEmp />} />

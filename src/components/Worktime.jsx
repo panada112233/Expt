@@ -1,7 +1,174 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 import axios from 'axios';
+const thaiMonths = [
+    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+];
+
+const generateExpectedWorkdays = (month, year) => {
+    const holidays = holidaysByYear[year] || {};
+    const compensated = getCompensatedHolidays(year, holidays);
+    const allHolidays = { ...holidays, ...compensated };
+
+    const workdays = [];
+    const totalDays = new Date(year, month, 0).getDate();
+
+    for (let day = 1; day <= totalDays; day++) {
+        const date = new Date(year, month - 1, day);
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const dateStr = `${yyyy}-${mm}-${dd}`;
+        const key = `${mm}-${dd}`;
+
+        const dayOfWeek = date.getDay(); // 0 = อาทิตย์, 6 = เสาร์
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        const isHoliday = Boolean(allHolidays[key]);
+
+        if (!isWeekend && !isHoliday) {
+            workdays.push(dateStr);
+        }
+    }
+
+    return [...new Set(workdays)];
+};
+
+const holidaysByYear = {
+    2024: {
+        "01-01": "วันขึ้นปีใหม่",
+        "04-06": "วันจักรี",
+        "04-13": "วันสงกรานต์",
+        "04-14": "วันสงกรานต์",
+        "04-15": "วันสงกรานต์",
+        "05-01": "วันแรงงาน",
+        "05-04": "วันฉัตรมงคล",
+        "06-03": "วันเฉลิมราชินี",
+        "07-28": "วันเฉลิมพระเจ้าอยู่หัว",
+        "08-12": "วันแม่แห่งชาติ",
+        "10-13": "วันคล้ายวันสวรรคต ร.9",
+        "10-23": "วันปิยมหาราช",
+        "12-05": "วันพ่อแห่งชาติ",
+        "12-10": "วันรัฐธรรมนูญ",
+        "12-31": "วันสิ้นปี"
+    },
+    2025: {
+        "01-01": "วันขึ้นปีใหม่",
+        "02-12": "วันมาฆบูชา",
+        "04-06": "วันจักรี",
+        "04-13": "วันสงกรานต์",
+        "04-14": "วันสงกรานต์",
+        "04-15": "วันสงกรานต์",
+        "05-01": "วันแรงงาน",
+        "05-04": "วันฉัตรมงคล",
+        "05-11": "วันวิสาขบูชา",
+        "06-03": "วันเฉลิมราชินี",
+        "07-10": "วันอาสาฬหบูชา",
+        "07-11": "วันเข้าพรรษา",
+        "07-28": "วันเฉลิมพระเจ้าอยู่หัว",
+        "08-12": "วันแม่แห่งชาติ",
+        "10-13": "วันคล้ายวันสวรรคต ร.9",
+        "10-23": "วันปิยมหาราช",
+        "12-05": "วันพ่อแห่งชาติ",
+        "12-10": "วันรัฐธรรมนูญ",
+        "12-31": "วันสิ้นปี"
+    },
+    2026: {
+        "01-01": "วันขึ้นปีใหม่",
+        "01-02": "วันหยุดพิเศษ (ครม.)",
+        "03-03": "วันมาฆบูชา",
+        "04-06": "วันจักรี",
+        "04-13": "วันสงกรานต์",
+        "04-14": "วันสงกรานต์",
+        "04-15": "วันสงกรานต์",
+        "05-01": "วันแรงงาน",
+        "05-04": "วันฉัตรมงคล",
+        "05-31": "วันวิสาขบูชา",
+        "06-03": "วันเฉลิมราชินี",
+        "07-28": "วันเฉลิมพระเจ้าอยู่หัว",
+        "07-29": "วันอาสาฬหบูชา",
+        "07-30": "วันเข้าพรรษา",
+        "08-12": "วันแม่แห่งชาติ",
+        "10-13": "วันคล้ายวันสวรรคต ร.9",
+        "10-23": "วันปิยมหาราช",
+        "12-05": "วันพ่อแห่งชาติ",
+        "12-10": "วันรัฐธรรมนูญ",
+        "12-31": "วันสิ้นปี"
+    },
+    2027: {
+        "01-01": "วันขึ้นปีใหม่",
+        "02-21": "วันมาฆบูชา",
+        "04-06": "วันจักรี",
+        "04-13": "วันสงกรานต์",
+        "04-14": "วันสงกรานต์",
+        "04-15": "วันสงกรานต์",
+        "05-01": "วันแรงงาน",
+        "05-04": "วันฉัตรมงคล",
+        "05-20": "วันวิสาขบูชา",
+        "06-03": "วันเฉลิมราชินี",
+        "07-18": "วันอาสาฬหบูชา",
+        "07-20": "วันเข้าพรรษา",
+        "07-28": "วันเฉลิมพระเจ้าอยู่หัว",
+        "08-12": "วันแม่แห่งชาติ",
+        "10-13": "วันคล้ายวันสวรรคต ร.9",
+        "10-23": "วันปิยมหาราช",
+        "12-05": "วันพ่อแห่งชาติ",
+        "12-10": "วันรัฐธรรมนูญ",
+        "12-31": "วันสิ้นปี"
+    }
+};
+
+// Template วันหยุดที่เหมือนกันทุกปี 2028-2034
+const baseHolidayTemplate = {
+    "01-01": "วันขึ้นปีใหม่",
+    "04-06": "วันจักรี",
+    "04-13": "วันสงกรานต์",
+    "04-14": "วันสงกรานต์",
+    "04-15": "วันสงกรานต์",
+    "05-01": "วันแรงงาน",
+    "05-04": "วันฉัตรมงคล",
+    "06-03": "วันเฉลิมราชินี",
+    "07-28": "วันเฉลิมพระเจ้าอยู่หัว",
+    "08-12": "วันแม่แห่งชาติ",
+    "10-13": "วันคล้ายวันสวรรคต ร.9",
+    "10-23": "วันปิยมหาราช",
+    "12-05": "วันพ่อแห่งชาติ",
+    "12-10": "วันรัฐธรรมนูญ",
+    "12-31": "วันสิ้นปี"
+};
+
+// เพิ่มปี 2028–2034 โดยใช้ template เดียวกัน
+for (let year = 2028; year <= 2034; year++) {
+    holidaysByYear[year] = { ...baseHolidayTemplate };
+}
+const getCompensatedHolidays = (year, holidays) => {
+    const compensated = {};
+    const usedDates = new Set(Object.keys(holidays));
+
+    Object.entries(holidays).forEach(([key, name]) => {
+        const [mm, dd] = key.split('-');
+        const date = new Date(`${year}-${mm}-${dd}`);
+        const day = date.getDay();
+
+        if (day === 0 || day === 6) {
+            let next = new Date(date);
+            let attempt = 0;
+            while (attempt++ < 10) {
+                next.setDate(next.getDate() + 1);
+                const newKey = `${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
+                if (!usedDates.has(newKey) && next.getDay() !== 0 && next.getDay() !== 6) {
+                    compensated[newKey] = `ชดเชย${name}`;
+                    usedDates.add(newKey);
+                    break;
+                }
+            }
+        }
+    });
+
+    return compensated;
+};
+
 
 const Worktime = () => {
     const [worktimes, setWorktimes] = useState([]);
@@ -20,6 +187,9 @@ const Worktime = () => {
     const [showCheckinForm, setShowCheckinForm] = useState(true);
     const [simpleModal, setSimpleModal] = useState(false);
     const [modalTitle, setModalTitle] = useState('ลงเวลาเข้างาน');
+    const expectedWorkdays = useMemo(() => {
+        return generateExpectedWorkdays(monthFilter, yearFilter);
+    }, [monthFilter, yearFilter]);
 
 
     const [checkinStatus, setCheckinStatus] = useState({
@@ -27,144 +197,7 @@ const Worktime = () => {
         color: 'bg-red-200 text-red-600',
     });
 
-    const thaiMonths = [
-        "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
-        "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
-    ];
 
-    const holidaysByYear = {
-        2024: {
-            "01-01": "วันขึ้นปีใหม่",
-            "04-06": "วันจักรี",
-            "04-13": "วันสงกรานต์",
-            "04-14": "วันสงกรานต์",
-            "04-15": "วันสงกรานต์",
-            "05-01": "วันแรงงาน",
-            "05-04": "วันฉัตรมงคล",
-            "06-03": "วันเฉลิมราชินี",
-            "07-28": "วันเฉลิมพระเจ้าอยู่หัว",
-            "08-12": "วันแม่แห่งชาติ",
-            "10-13": "วันคล้ายวันสวรรคต ร.9",
-            "10-23": "วันปิยมหาราช",
-            "12-05": "วันพ่อแห่งชาติ",
-            "12-10": "วันรัฐธรรมนูญ",
-            "12-31": "วันสิ้นปี"
-        },
-        2025: {
-            "01-01": "วันขึ้นปีใหม่",
-            "02-12": "วันมาฆบูชา",
-            "04-06": "วันจักรี",
-            "04-13": "วันสงกรานต์",
-            "04-14": "วันสงกรานต์",
-            "04-15": "วันสงกรานต์",
-            "05-01": "วันแรงงาน",
-            "05-04": "วันฉัตรมงคล",
-            "05-11": "วันวิสาขบูชา",
-            "06-03": "วันเฉลิมราชินี",
-            "07-10": "วันอาสาฬหบูชา",
-            "07-11": "วันเข้าพรรษา",
-            "07-28": "วันเฉลิมพระเจ้าอยู่หัว",
-            "08-12": "วันแม่แห่งชาติ",
-            "10-13": "วันคล้ายวันสวรรคต ร.9",
-            "10-23": "วันปิยมหาราช",
-            "12-05": "วันพ่อแห่งชาติ",
-            "12-10": "วันรัฐธรรมนูญ",
-            "12-31": "วันสิ้นปี"
-        },
-        2026: {
-            "01-01": "วันขึ้นปีใหม่",
-            "01-02": "วันหยุดพิเศษ (ครม.)",
-            "03-03": "วันมาฆบูชา",
-            "04-06": "วันจักรี",
-            "04-13": "วันสงกรานต์",
-            "04-14": "วันสงกรานต์",
-            "04-15": "วันสงกรานต์",
-            "05-01": "วันแรงงาน",
-            "05-04": "วันฉัตรมงคล",
-            "05-31": "วันวิสาขบูชา",
-            "06-03": "วันเฉลิมราชินี",
-            "07-28": "วันเฉลิมพระเจ้าอยู่หัว",
-            "07-29": "วันอาสาฬหบูชา",
-            "07-30": "วันเข้าพรรษา",
-            "08-12": "วันแม่แห่งชาติ",
-            "10-13": "วันคล้ายวันสวรรคต ร.9",
-            "10-23": "วันปิยมหาราช",
-            "12-05": "วันพ่อแห่งชาติ",
-            "12-10": "วันรัฐธรรมนูญ",
-            "12-31": "วันสิ้นปี"
-        },
-        2027: {
-            "01-01": "วันขึ้นปีใหม่",
-            "02-21": "วันมาฆบูชา",
-            "04-06": "วันจักรี",
-            "04-13": "วันสงกรานต์",
-            "04-14": "วันสงกรานต์",
-            "04-15": "วันสงกรานต์",
-            "05-01": "วันแรงงาน",
-            "05-04": "วันฉัตรมงคล",
-            "05-20": "วันวิสาขบูชา",
-            "06-03": "วันเฉลิมราชินี",
-            "07-18": "วันอาสาฬหบูชา",
-            "07-20": "วันเข้าพรรษา",
-            "07-28": "วันเฉลิมพระเจ้าอยู่หัว",
-            "08-12": "วันแม่แห่งชาติ",
-            "10-13": "วันคล้ายวันสวรรคต ร.9",
-            "10-23": "วันปิยมหาราช",
-            "12-05": "วันพ่อแห่งชาติ",
-            "12-10": "วันรัฐธรรมนูญ",
-            "12-31": "วันสิ้นปี"
-        }
-    };
-
-    // Template วันหยุดที่เหมือนกันทุกปี 2028-2034
-    const baseHolidayTemplate = {
-        "01-01": "วันขึ้นปีใหม่",
-        "04-06": "วันจักรี",
-        "04-13": "วันสงกรานต์",
-        "04-14": "วันสงกรานต์",
-        "04-15": "วันสงกรานต์",
-        "05-01": "วันแรงงาน",
-        "05-04": "วันฉัตรมงคล",
-        "06-03": "วันเฉลิมราชินี",
-        "07-28": "วันเฉลิมพระเจ้าอยู่หัว",
-        "08-12": "วันแม่แห่งชาติ",
-        "10-13": "วันคล้ายวันสวรรคต ร.9",
-        "10-23": "วันปิยมหาราช",
-        "12-05": "วันพ่อแห่งชาติ",
-        "12-10": "วันรัฐธรรมนูญ",
-        "12-31": "วันสิ้นปี"
-    };
-
-    // เพิ่มปี 2028–2034 โดยใช้ template เดียวกัน
-    for (let year = 2028; year <= 2034; year++) {
-        holidaysByYear[year] = { ...baseHolidayTemplate };
-    }
-    const getCompensatedHolidays = (year, holidays) => {
-        const compensated = {};
-        const usedDates = new Set(Object.keys(holidays));
-
-        Object.entries(holidays).forEach(([key, name]) => {
-            const [mm, dd] = key.split('-');
-            const date = new Date(`${year}-${mm}-${dd}`);
-            const day = date.getDay();
-
-            if (day === 0 || day === 6) {
-                let next = new Date(date);
-                let attempt = 0;
-                while (attempt++ < 10) {
-                    next.setDate(next.getDate() + 1);
-                    const newKey = `${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
-                    if (!usedDates.has(newKey) && next.getDay() !== 0 && next.getDay() !== 6) {
-                        compensated[newKey] = `ชดเชย${name}`;
-                        usedDates.add(newKey);
-                        break;
-                    }
-                }
-            }
-        });
-
-        return compensated;
-    };
     const getWorkingDaysInMonth = (month, year) => {
         const holidays = holidaysByYear[year] || {};
         const compensated = getCompensatedHolidays(year, holidays);
@@ -322,7 +355,6 @@ const Worktime = () => {
 
         navigator.geolocation.getCurrentPosition(
             async (position) => {
-                console.log(position.coords);
                 const { latitude, longitude } = position.coords;
                 const finalLocation =
                     ['ลาป่วย', 'ลากิจส่วนตัว'].includes(location)
@@ -456,7 +488,6 @@ const Worktime = () => {
             const worktimeRes = await axios.get('https://192.168.1.188/hrwebapi/api/Worktime');
             setWorktimes(worktimeRes.data);
         } catch (error) {
-            console.error('เกิดข้อผิดพลาดในการโหลดข้อมูล:', error);
         }
     };
     const generateLeaveDates = (start, end) => {
@@ -634,19 +665,74 @@ const Worktime = () => {
         }, 0);
         return (totalMinutes / 60 / workingDayCount || 0).toFixed(1);
     })();
-
+    const todayStr = new Date().toISOString().split("T")[0];
     const daysSummary = {
-        มาตรงเวลา: filteredWorktimes.filter(w => {
-            const rawLate = calculateRawLateMinutes(w.checkIn, w.date);
-            return w.checkIn && rawLate <= 0 && !w.location?.includes('ลา');
-        }).length,
-        มาสาย: filteredWorktimes.filter(w => {
-            const rawLate = calculateRawLateMinutes(w.checkIn, w.date);
-            return w.checkIn && rawLate > 0 && !w.location?.includes('ลา');
-        }).length,
-        ขาดงาน: filteredWorktimes.filter(w => !w.checkIn && !w.location?.includes('ลา')).length,
-        ลางาน: filteredWorktimes.filter(w => w.location?.includes('ลา')).length
+        มาตรงเวลา: 0,
+        มาสาย: 0,
+        ขาดงาน: 0,
+        ลางาน: 0
     };
+
+    expectedWorkdays.forEach(dateStr => {
+        if (dateStr > todayStr) return;
+
+        const entry = filteredWorktimes.find(w => {
+            const formatted = w.date.split("T")[0];
+            return formatted === dateStr;
+        });
+
+        if (!entry) {
+
+            daysSummary.ขาดงาน++;
+            return;
+        }
+
+        const locationText = (entry.location || '').toLowerCase().replace(/\s/g, '');
+        const leaveType = locationText.includes('ครึ่งวันเช้า')
+            ? 'morning'
+            : locationText.includes('ครึ่งวันบ่าย')
+                ? 'afternoon'
+                : locationText.includes('ลาทั้งวัน') || locationText.includes('เต็มวัน')
+                    ? 'full'
+                    : '';
+
+        if (leaveType === 'full') {
+            daysSummary.ลางาน++;
+            return;
+        }
+
+        if (!entry.checkIn || entry.checkIn.trim() === '') {
+            daysSummary.ขาดงาน++;
+            return;
+        }
+
+        const timeParts = entry.checkIn.split(':');
+        if (timeParts.length < 2) {
+            daysSummary.ขาดงาน++;
+            return;
+        }
+
+        const checkIn = new Date(entry.date);
+        checkIn.setHours(Number(timeParts[0]));
+        checkIn.setMinutes(Number(timeParts[1]));
+        checkIn.setSeconds(0);
+
+        const expected = new Date(entry.date);
+        if (leaveType === 'morning') {
+            expected.setHours(13, 0, 0);
+        } else {
+            expected.setHours(8, 30, 0);
+        }
+
+        const diff = (checkIn - expected) / (1000 * 60);
+        if (diff > 0) {
+
+            daysSummary.มาสาย++;
+        } else {
+
+            daysSummary.มาตรงเวลา++;
+        }
+    });
 
     const pieData = Object.entries(daysSummary).map(([name, value]) => ({ name, value }));
     const pieColors = ['#34d399', '#facc15', '#f87171', '#60a5fa'];
@@ -1009,7 +1095,6 @@ const Worktime = () => {
                                         fontSize: '13px'
                                     }}
                                 />
-
                             </PieChart>
                         </div>
                         <div className="mt-4 space-y-1 text-sm text-gray-700 font-FontNoto">

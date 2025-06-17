@@ -7,6 +7,9 @@ import bin from '../assets/icons8-bin-24.png';
 import calendar from '../assets/calendar1.png';
 import calenda from '../assets/calendar.png';
 import note from '../assets/post-it.png';
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
+
 import 'aos/dist/aos.css';
 
 const Workplan = () => {
@@ -46,7 +49,6 @@ const Workplan = () => {
         return today.toISOString().split('T')[0]; // รูปแบบ yyyy-MM-dd
     });
 
-
     const thaiDayNames = {
         "sunday": "วันอาทิตย์",
         "monday": "วันจันทร์",
@@ -81,9 +83,115 @@ const Workplan = () => {
         });
     };
 
+    const handleExportDaily = async () => {
+        const selected = new Date(historyDate);
+        const dateKey = selected.toISOString().split('T')[0];
+
+        const dailyData = allUsers
+            .map(user => {
+                const todayPlan = allPlans.find(p => p.userID === user.userID && p.date.startsWith(dateKey));
+
+                const yesterday = new Date(selected);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yKey = yesterday.toISOString().split('T')[0];
+                const yesterdayPlan = allPlans.find(p => p.userID === user.userID && p.date.startsWith(yKey));
+
+                if (!todayPlan || !todayPlan.eveningTask || todayPlan.eveningTask.trim() === "") return null;
+
+                return {
+                    วันที่: selected.toLocaleDateString("th-TH"),
+                    ชื่อ: `${user.firstName} ${user.lastName}`,
+                    ตำแหน่ง: roleMapping[user.role] || "",
+                    แผนงานวันนี้: todayPlan.eveningTask || "-",
+                    แผนงานย้อนหลัง: yesterdayPlan?.eveningTask || "-"
+
+                };
+            })
+            .filter(Boolean);
+
+        if (dailyData.length === 0) {
+            alert("ไม่มีข้อมูลแผนงานของวันนี้");
+            return;
+        }
+
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet("Daily Plan");
+
+        sheet.columns = [
+            { header: "วันที่", key: "วันที่", width: 20 },
+            { header: "ชื่อ", key: "ชื่อ", width: 25 },
+            { header: "ตำแหน่ง", key: "ตำแหน่ง", width: 20 },
+            { header: "แผนงานวันนี้", key: "แผนงานวันนี้", width: 50 },
+            { header: "แผนงานย้อนหลัง", key: "แผนงานย้อนหลัง", width: 50 },
+        ];
+
+        dailyData.forEach(row => {
+            sheet.addRow(row);
+        });
+
+        sheet.eachRow(row => {
+            row.height = 80;
+            row.eachCell(cell => {
+                cell.alignment = { wrapText: true, vertical: 'top' };
+            });
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        saveAs(new Blob([buffer]), `แผนงาน_รายวัน_${dateKey}.xlsx`);
+    };
+
+    const handleExportMonthly = async () => {
+        const monthPlans = allPlans
+            .filter(p => {
+                const d = new Date(p.date);
+                return d.getMonth() === month && d.getFullYear() === year;
+            })
+            .sort((a, b) => new Date(a.date) - new Date(b.date)); // ✅ เรียงตามวันที่
+
+        const formatted = monthPlans.map(p => {
+            const user = allUsers.find(u => u.userID === p.userID);
+            return {
+                วันที่: new Date(p.date).toLocaleDateString("th-TH", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                }),
+                ชื่อ: `${user?.firstName || ""} ${user?.lastName || ""}`,
+                ตำแหน่ง: roleMapping[user?.role] || "",
+                แผนงานวันนี้: p.eveningTask || "",
+                แผนงานย้อนหลัง: p.morningTask || ""
+            };
+        });
+
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet("Monthly Plan");
+
+        sheet.columns = [
+            { header: "วันที่", key: "วันที่", width: 20 },
+            { header: "ชื่อ", key: "ชื่อ", width: 25 },
+            { header: "ตำแหน่ง", key: "ตำแหน่ง", width: 20 },
+            { header: "แผนงานวันนี้", key: "แผนงานวันนี้", width: 50 },
+            { header: "แผนงานย้อนหลัง", key: "แผนงานย้อนหลัง", width: 50 },
+        ];
+
+        formatted.forEach(row => {
+            sheet.addRow(row);
+        });
+
+        sheet.eachRow(row => {
+            row.height = 80;
+            row.eachCell(cell => {
+                cell.alignment = { wrapText: true, vertical: 'top' };
+            });
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        saveAs(new Blob([buffer]), `แผนงาน_รายเดือน_${year}-${month + 1}.xlsx`);
+    };
+
+
     const getCompensatedHolidays = (year, holidays) => {
         const compensated = {};
-        // สร้าง Set ของวันที่มีการใช้งานแล้ว (ทั้งวันหยุดปกติและวันหยุดชดเชย)
         const usedDates = new Set(Object.keys(holidays));
 
         Object.entries(holidays).forEach(([key, name]) => {
@@ -302,7 +410,7 @@ const Workplan = () => {
 
                     const role = userData.role;
                     const mapped = roleMapping[role] || "ไม่ทราบตำแหน่ง";
-                    setRoleText(mapped);
+                    setRoleText(role);
                 }
 
                 // 🔹 โหลดแผนงานทั้งหมดของผู้ใช้
@@ -717,208 +825,227 @@ const Workplan = () => {
             </div>
 
             {activeTab === "history" && (
-                <div className="w-full max-w-8xl mx-auto bg-gradient-to-br from-blue-50 via-cyan-50 to-white rounded-3xl p-6 shadow-md items-center justify-center">
-                    {/* สร้างตัวแปรก่อนใช้ */}
-                    {(() => {
-                        const selectedDate = new Date(historyDate);
-                        const day = selectedDate.getDay(); // 0=อาทิตย์, 1=จันทร์, ..., 6=เสาร์
+                <>
 
-                        // ❌ ถ้าเป็นเสาร์หรืออาทิตย์ ไม่แสดงเลย
-                        if (day === 0 || day === 6) {
-                            return null;
-                        }
+                    <div className="w-full max-w-8xl mx-auto bg-gradient-to-br from-blue-50 via-cyan-50 to-white rounded-3xl p-6 shadow-md items-center justify-center">
+                        {/* สร้างตัวแปรก่อนใช้ */}
+                        {(() => {
+                            const selectedDate = new Date(historyDate);
+                            const day = selectedDate.getDay(); // 0=อาทิตย์, 1=จันทร์, ..., 6=เสาร์
 
-                        const yesterday = new Date(selectedDate);
-                        let previousLabel = "";
+                            // ❌ ถ้าเป็นเสาร์หรืออาทิตย์ ไม่แสดงเลย
+                            if (day === 0 || day === 6) {
+                                return null;
+                            }
 
-                        if (day === 1) {
-                            // จันทร์ → ใช้วันศุกร์
-                            yesterday.setDate(selectedDate.getDate() - 3);
-                            previousLabel = "ศุกร์";
-                        } else {
-                            // ปกติ → ใช้เมื่อวาน
-                            yesterday.setDate(selectedDate.getDate() - 1);
-                            previousLabel = yesterday.toLocaleDateString("th-TH", {
-                                weekday: "long",
-                            }).replace("วัน", "");
-                        }
+                            const yesterday = new Date(selectedDate);
+                            let previousLabel = "";
 
-                        const selectedKey = selectedDate.toISOString().split("T")[0];
-                        const yesterdayKey = yesterday.toISOString().split("T")[0];
+                            if (day === 1) {
+                                // จันทร์ → ใช้วันศุกร์
+                                yesterday.setDate(selectedDate.getDate() - 3);
+                                previousLabel = "ศุกร์";
+                            } else {
+                                // ปกติ → ใช้เมื่อวาน
+                                yesterday.setDate(selectedDate.getDate() - 1);
+                                previousLabel = yesterday.toLocaleDateString("th-TH", {
+                                    weekday: "long",
+                                }).replace("วัน", "");
+                            }
 
-                        const rolePriority = {
-                            GM: 1,
-                            HEAD_BA: 2,
-                            Hr: 3,
-                            SENIOR_DEV: 4,
-                            Dev: 5,
-                            BA: 6,
-                            TESTER: 7,
-                            JUNIOR_DEV: 8,
-                        };
+                            const selectedKey = selectedDate.toISOString().split("T")[0];
+                            const yesterdayKey = yesterday.toISOString().split("T")[0];
 
-                        const usersWithPlans = allUsers
-                            .filter((user) =>
-                                `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
-                            )
-                            .map((user) => {
-                                const todayPlan = allPlans.find(
-                                    (p) => p.userID === user.userID && p.date.startsWith(selectedKey)
-                                );
-                                const yestPlan = allPlans.find(
-                                    (p) => p.userID === user.userID && p.date.startsWith(yesterdayKey)
-                                );
+                            const rolePriority = {
+                                GM: 1,
+                                HEAD_BA: 2,
+                                Hr: 3,
+                                SENIOR_DEV: 4,
+                                Dev: 5,
+                                BA: 6,
+                                TESTER: 7,
+                                JUNIOR_DEV: 8,
+                            };
 
-                                return {
-                                    userID: user.userID,
-                                    fullName: `${user.firstName} ${user.lastName}`,
-                                    role: user.role,
-                                    morningTask: yestPlan?.eveningTask || "-",
-                                    eveningTask: todayPlan?.eveningTask || "",
-                                };
-                            })
-                            .filter((rec) => rec.eveningTask && rec.eveningTask.trim() !== "")
-                            .sort((a, b) => (rolePriority[a.role] || 99) - (rolePriority[b.role] || 99));
-                        return (
-                            <div className="relative  font-FontNoto mb-8  animate-fade-in ">
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-                                    {/* ซ้าย: วันที่ + คนลงแผน */}
-                                    <div>
-                                        <h3 className="font-semibold text-lg font-FontNoto text-black">
-                                            {(() => {
-                                                const daysInThai = ["วันอาทิตย์", "วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัสบดี", "วันศุกร์", "วันเสาร์"];
-                                                const dayName = daysInThai[selectedDate.getDay()];
-                                                const todayCount = usersWithPlans.filter(p =>
-                                                    p.eveningTask && p.eveningTask.trim() !== "-"
-                                                ).length;
+                            const usersWithPlans = allUsers
+                                .filter((user) =>
+                                    `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
+                                )
+                                .map((user) => {
+                                    const todayPlan = allPlans.find(
+                                        (p) => p.userID === user.userID && p.date.startsWith(selectedKey)
+                                    );
+                                    const yestPlan = allPlans.find(
+                                        (p) => p.userID === user.userID && p.date.startsWith(yesterdayKey)
+                                    );
+
+                                    return {
+                                        userID: user.userID,
+                                        fullName: `${user.firstName} ${user.lastName}`,
+                                        role: user.role,
+                                        morningTask: yestPlan?.eveningTask || "-",
+                                        eveningTask: todayPlan?.eveningTask || "",
+                                    };
+                                })
+                                .filter((rec) => rec.eveningTask && rec.eveningTask.trim() !== "")
+                                .sort((a, b) => (rolePriority[a.role] || 99) - (rolePriority[b.role] || 99));
+                            return (
+                                <div className="relative  font-FontNoto mb-8  animate-fade-in ">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                                            <h3 className="font-semibold text-lg font-FontNoto text-black text-center sm:text-left">
+                                                {(() => {
+                                                    const daysInThai = ["วันอาทิตย์", "วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัสบดี", "วันศุกร์", "วันเสาร์"];
+                                                    const dayName = daysInThai[selectedDate.getDay()];
+                                                    const todayCount = usersWithPlans.filter(p =>
+                                                        p.eveningTask && p.eveningTask.trim() !== "-"
+                                                    ).length;
+
+                                                    return (
+                                                        <>
+                                                            วันที่ : {dayName} ที่ {selectedDate.toLocaleDateString("th-TH", {
+                                                                day: "2-digit",
+                                                                month: "long",
+                                                                year: "numeric",
+                                                            })}
+                                                            {todayCount > 0 && (
+                                                                <span className="text-green-700 font-FontNoto font-bold ml-2">
+                                                                    ลงแผนงานแล้ว {todayCount} คน
+                                                                </span>
+                                                            )}
+                                                        </>
+                                                    );
+                                                })()}
+                                            </h3>
+                                            {["GM", "Hr", "HEAD_BA"].includes(roleText) && (
+                                                <div className="flex gap-2 justify-center sm:justify-end flex-wrap">
+                                                    <button
+                                                        className="btn btn-sm btn-success !text-white font-FontNoto"
+                                                        onClick={handleExportDaily}
+                                                    >
+                                                        Excel รายวัน
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-sm btn-success !text-white font-FontNoto"
+                                                        onClick={handleExportMonthly}
+                                                    >
+                                                        Excel รายเดือน
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                                            <input
+                                                type="date"
+                                                value={historyDate}
+                                                onChange={(e) => setHistoryDate(e.target.value)}
+                                                className="input input-bordered font-FontNoto w-full sm:w-40 !bg-white text-black"
+                                                style={{ colorScheme: "light" }}
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder="ค้นหาชื่อพนักงาน..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="input input-bordered font-FontNoto w-full sm:w-64 !bg-white text-black"
+                                            />
+                                        </div>
+                                    </div>
+
+
+                                    <div className="overflow-x-auto">
+                                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                                            {usersWithPlans.map((rec, idx) => {
+                                                const morningLines = rec.morningTask?.split("\n") || [];
+                                                const eveningLines = rec.eveningTask?.split("\n") || [];
+
+                                                const toggleShow = (field) => {
+                                                    const key = `${rec.userID}-${field}`;
+                                                    setShowMoreMap((prev) => ({
+                                                        ...prev,
+                                                        [key]: !prev[key],
+                                                    }));
+                                                };
+
+                                                const isShowAllMorning = showMoreMap[`${rec.userID}-morning`];
+                                                const isShowAllEvening = showMoreMap[`${rec.userID}-evening`];
 
                                                 return (
-                                                    <>
-                                                        วันที่ : {dayName} ที่ {selectedDate.toLocaleDateString("th-TH", {
-                                                            day: "2-digit",
-                                                            month: "long",
-                                                            year: "numeric",
-                                                        })}
-                                                        {todayCount > 0 && (
-                                                            <span className="text-green-700 font-FontNoto font-bold ml-2"> ลงแผนงานแล้ว {todayCount} คน</span>
-                                                        )}
-                                                    </>
-                                                );
-                                            })()}
-                                        </h3>
-                                    </div>
+                                                    <div
+                                                        key={idx}
+                                                        className="rounded-2xl border border-gray-200 bg-white p-5 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                                                    >
+                                                        {/* ชื่อพนักงาน + รูปโปรไฟล์ */}
+                                                        <div className="flex items-center mb-3 bg-gray-200 rounded-2xl">
+                                                            <img
+                                                                src={`https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${rec.userID}`}
+                                                                alt={rec.fullName}
+                                                                className="w-10 h-10 rounded-full border border-gray-300 mr-3 object-cover font-FontNoto"
+                                                            />
+                                                            <div>
+                                                                <p className="font-bold text-black font-FontNoto">
+                                                                    {rec.fullName}
+                                                                    {(() => {
+                                                                        const user = allUsers.find((u) => u.userID === rec.userID);
+                                                                        return user?.nickname ? ` (${user.nickname})` : "";
+                                                                    })()}
+                                                                </p>
 
-                                    {/* ขวา: ช่องเลือกวันที่ + ค้นหา */}
-                                    <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                                        <input
-                                            type="date"
-                                            value={historyDate}
-                                            onChange={(e) => setHistoryDate(e.target.value)}
-                                            className="input input-bordered font-FontNoto w-full sm:w-40 !bg-white text-black"
-                                            style={{ colorScheme: "light" }}
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="ค้นหาชื่อพนักงาน..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="input input-bordered font-FontNoto w-full sm:w-64 !bg-white text-black"
-                                        />
-                                    </div>
-                                </div>
+                                                                <p className="text-sm text-gray-600 font-FontNoto">
+                                                                    {roleMapping[allUsers.find((u) => u.userID === rec.userID)?.role] || "-"}
+                                                                </p>
+                                                            </div>
+                                                        </div>
 
-                                <div className="overflow-x-auto">
-                                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                                        {usersWithPlans.map((rec, idx) => {
-                                            const morningLines = rec.morningTask?.split("\n") || [];
-                                            const eveningLines = rec.eveningTask?.split("\n") || [];
-
-                                            const toggleShow = (field) => {
-                                                const key = `${rec.userID}-${field}`;
-                                                setShowMoreMap((prev) => ({
-                                                    ...prev,
-                                                    [key]: !prev[key],
-                                                }));
-                                            };
-
-                                            const isShowAllMorning = showMoreMap[`${rec.userID}-morning`];
-                                            const isShowAllEvening = showMoreMap[`${rec.userID}-evening`];
-
-                                            return (
-                                                <div
-                                                    key={idx}
-                                                    className="rounded-2xl border border-gray-200 bg-white p-5 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
-                                                >
-                                                    {/* ชื่อพนักงาน + รูปโปรไฟล์ */}
-                                                    <div className="flex items-center mb-3 bg-gray-200 rounded-2xl">
-                                                        <img
-                                                            src={`https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${rec.userID}`}
-                                                            alt={rec.fullName}
-                                                            className="w-10 h-10 rounded-full border border-gray-300 mr-3 object-cover font-FontNoto"
-                                                        />
-                                                        <div>
-                                                            <p className="font-bold text-black font-FontNoto">
-                                                                {rec.fullName}
-                                                                {(() => {
-                                                                    const user = allUsers.find((u) => u.userID === rec.userID);
-                                                                    return user?.nickname ? ` (${user.nickname})` : "";
-                                                                })()}
+                                                        {/* แผนงานเมื่อวาน */}
+                                                        <div className="mb-3 min-h-[100px]">
+                                                            <p className="text-sm font-semibold font-FontNoto mb-1">
+                                                                เมื่อวัน{previousLabel}
                                                             </p>
+                                                            <ul className="list-disc list-inside text-sm text-black font-FontNoto space-y-1">
+                                                                {(isShowAllMorning ? morningLines : morningLines.slice(0, 3)).map((task, i) => (
+                                                                    <li key={i}>{task}</li>
+                                                                ))}
+                                                            </ul>
+                                                            {morningLines.length > 3 && (
+                                                                <button
+                                                                    className="text-blue-600 underline text-sm mt-1 font-FontNoto"
+                                                                    onClick={() => toggleShow("morning")}
+                                                                >
+                                                                    {isShowAllMorning ? "ดูน้อยลง" : "ดูเพิ่มเติม"}
+                                                                </button>
+                                                            )}
+                                                        </div>
 
-                                                            <p className="text-sm text-gray-600 font-FontNoto">
-                                                                {roleMapping[allUsers.find((u) => u.userID === rec.userID)?.role] || "-"}
+                                                        {/* แผนงานวันนี้ */}
+                                                        <div className="min-h-[100px]">
+                                                            <p className="text-sm font-semibold font-FontNoto mb-1">
+                                                                วันนี้ ({selectedDate.toLocaleDateString("th-TH", { weekday: "long" }).replace("วัน", "")})
                                                             </p>
+                                                            <ul className="list-disc list-inside text-sm text-green-700 font-FontNoto space-y-1">
+                                                                {(isShowAllEvening ? eveningLines : eveningLines.slice(0, 3)).map((task, i) => (
+                                                                    <li key={i}>{task}</li>
+                                                                ))}
+                                                            </ul>
+                                                            {eveningLines.length > 3 && (
+                                                                <button
+                                                                    className="text-blue-600 underline text-sm mt-1 font-FontNoto"
+                                                                    onClick={() => toggleShow("evening")}
+                                                                >
+                                                                    {isShowAllEvening ? "ดูน้อยลง" : "ดูเพิ่มเติม"}
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
-
-                                                    {/* แผนงานเมื่อวาน */}
-                                                    <div className="mb-3 min-h-[100px]">
-                                                        <p className="text-sm font-semibold font-FontNoto mb-1">
-                                                            เมื่อวัน{previousLabel}
-                                                        </p>
-                                                        <ul className="list-disc list-inside text-sm text-black font-FontNoto space-y-1">
-                                                            {(isShowAllMorning ? morningLines : morningLines.slice(0, 3)).map((task, i) => (
-                                                                <li key={i}>{task}</li>
-                                                            ))}
-                                                        </ul>
-                                                        {morningLines.length > 3 && (
-                                                            <button
-                                                                className="text-blue-600 underline text-sm mt-1 font-FontNoto"
-                                                                onClick={() => toggleShow("morning")}
-                                                            >
-                                                                {isShowAllMorning ? "ดูน้อยลง" : "ดูเพิ่มเติม"}
-                                                            </button>
-                                                        )}
-                                                    </div>
-
-                                                    {/* แผนงานวันนี้ */}
-                                                    <div className="min-h-[100px]">
-                                                        <p className="text-sm font-semibold font-FontNoto mb-1">
-                                                            วันนี้ ({selectedDate.toLocaleDateString("th-TH", { weekday: "long" }).replace("วัน", "")})
-                                                        </p>
-                                                        <ul className="list-disc list-inside text-sm text-green-700 font-FontNoto space-y-1">
-                                                            {(isShowAllEvening ? eveningLines : eveningLines.slice(0, 3)).map((task, i) => (
-                                                                <li key={i}>{task}</li>
-                                                            ))}
-                                                        </ul>
-                                                        {eveningLines.length > 3 && (
-                                                            <button
-                                                                className="text-blue-600 underline text-sm mt-1 font-FontNoto"
-                                                                onClick={() => toggleShow("evening")}
-                                                            >
-                                                                {isShowAllEvening ? "ดูน้อยลง" : "ดูเพิ่มเติม"}
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        );
-                    })()}
-                </div>
+                            );
+                        })()}
+                    </div>
+                </>
             )}
 
             {activeTab === "calendar" && (
