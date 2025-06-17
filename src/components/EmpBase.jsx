@@ -260,12 +260,6 @@ const EmpBase = () => {
                     to="/EmpHome/Allemployee"
                     className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
                   >
-                    ระบบลางานพนักงาน
-                  </Link>
-                  <Link
-                    to="/EmpHome/Allemployee"
-                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
-                  >
                     ระบบยืม-คืนอุปกรณ์
                   </Link>
                 </>

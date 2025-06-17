@@ -88,7 +88,7 @@ const WorkplanAdmin = () => {
                     ตรวจสอบแผนที่พนักงานลงไว้ในแต่ละวัน
                 </p>
             </div>
-            <div className="w-full max-w-8xl mx-auto bg-gradient-to-br from-blue-50 via-cyan-50 to-white rounded-3xl p-6 shadow-md items-center justify-center">
+            <div className="w-full max-w-8xl mx-auto bg-white rounded-3xl p-6 shadow-md items-center justify-center">
                 {/* สร้างตัวแปรก่อนใช้ */}
                 {(() => {
                     const selectedDate = new Date(historyDate);

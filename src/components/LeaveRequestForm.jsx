@@ -860,7 +860,7 @@ const LeaveRequestForm = () => {
                                             <div className="flex items-center">
                                                 <label className="mr-2 font-bold">เอกสารแนบ:</label>
                                                 <a
-                                                    href={`https://localhost:7039${selectedLeave.filePath}`}
+                                                    href={`https://192.168.1.188${selectedLeave.filePath}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="text-blue-600 underline"
