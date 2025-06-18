@@ -11,7 +11,6 @@ const LandingAfterLogin = () => {
     const navigate = useNavigate();
     const [currentTime, setCurrentTime] = useState(new Date());
     const [userName, setUserName] = useState('ผู้ใช้งาน');
-    const [isLineLinked, setIsLineLinked] = useState(false);
     const [worktimes, setWorktimes] = useState([]);
     const [profileImage, setProfileImage] = useState(null);
     const [todayWorktime, setTodayWorktime] = useState(null);
@@ -28,20 +27,12 @@ const LandingAfterLogin = () => {
     const [showLeaveForm, setShowLeaveForm] = useState(false);
 
     const userID = sessionStorage.getItem('userId');
-    // const LINE_CLIENT_ID = "2007354605"; // <-- ใส่ ID ของคุณ
-    // const REDIRECT_URI = encodeURIComponent("http://localhost:5173/callback");
-
-    const handleLineLogin = () => {
-        const LINE_LOGIN_URL = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=random123&scope=profile%20openid%20email`;
-        window.location.href = LINE_LOGIN_URL;
-    };
 
     const generateLeaveDates = (start, end) => {
         const dates = [];
         let currentDate = new Date(start);
         const lastDate = new Date(end);
 
-        // ตรวจสอบว่า start และ end เป็นวันที่ที่ถูกต้อง
         if (isNaN(currentDate.getTime()) || isNaN(lastDate.getTime())) {
             return [];
         }
@@ -96,7 +87,6 @@ const LandingAfterLogin = () => {
                 const leaveType = item.location?.split('|')[1]?.trim(); // เช่น "ครึ่งวันเช้า", "เต็มวัน"
 
                 if (leaveDate >= today) {
-                    // ⛔ ถ้าวันนี้ลา "ครึ่งวันเช้า" และตอนนี้เป็น "บ่าย" แล้ว ให้ข้าม
                     if (leaveDate === today && leaveType === 'ครึ่งวันเช้า' && now.getHours() >= 12) {
                         continue;
                     }
@@ -126,18 +116,15 @@ const LandingAfterLogin = () => {
 
     const fetchData = async (userId) => {
         try {
-            const profileImgUrl = `https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${userId}`;
+            const profileImgUrl = `https://localhost:7039/api/Files/GetProfileImage?userID=${userId}`;
             setProfileImage(profileImgUrl);
 
-            const userRes = await axios.get(`https://192.168.1.188/hrwebapi/api/Users/Getbyid/${userId}`);
+            const userRes = await axios.get(`https://localhost:7039/api/Users/Getbyid/${userId}`);
             const userData = userRes.data;
             setUserName(`${userData.firstName} ${userData.lastName}`);
-            setIsLineLinked(typeof userData.lineUserId === "string" && userData.lineUserId.trim() !== "");
 
             const today = new Date().toISOString().split("T")[0];
-
-            // ✅ โหลด worktimes ของทุก user
-            const worktimeRes = await axios.get("https://192.168.1.188/hrwebapi/api/Worktime");
+            const worktimeRes = await axios.get("https://localhost:7039/api/Worktime");
             setWorktimes(worktimeRes.data); // ✅ ใส่ทั้งหมด
 
             const userWorktimes = worktimeRes.data.filter(item => item.userID === parseInt(userId));
@@ -146,11 +133,9 @@ const LandingAfterLogin = () => {
                 item.date.startsWith(today)
             );
             setTodayWorktime(userWork || {});
-            // แก้ไขการตรวจสอบประเภทการลาในฟังก์ชัน fetchData
             const leaveKeywords = ['ป่วย', 'กิจส่วนตัว', 'บวช', 'พักร้อน', 'ลาคลอด'];
             const todayLeaveData = userWorktimes.find(item => {
                 if (item.date !== today) return false;
-                // ตรวจสอบว่า location มีคำที่เกี่ยวข้องกับการลาหรือไม่
                 const loc = item.location?.toLowerCase().replace(/\s/g, '') || '';
                 return leaveKeywords.some(keyword =>
                     loc.includes(keyword.toLowerCase().replace(/\s/g, ''))
@@ -282,7 +267,7 @@ const LandingAfterLogin = () => {
                         formData.append('longitude', longitude);
                         formData.append('address', address);
 
-                        await axios.post('https://192.168.1.188/hrwebapi/api/Worktime/CheckIn', formData);
+                        await axios.post('https://localhost:7039/api/Worktime/CheckIn', formData);
 
                         setModalMessage(
                             <div className="flex flex-col items-center justify-center text-center">
@@ -353,7 +338,7 @@ const LandingAfterLogin = () => {
             formData.append('userID', userID);
 
             // ส่งคำขอไปที่ API
-            const response = await axios.post('https://192.168.1.188/hrwebapi/api/Worktime/CheckOut', formData);
+            const response = await axios.post('https://localhost:7039/api/Worktime/CheckOut', formData);
 
             setModalMessage(
                 <div className="flex flex-col items-center justify-center text-center">
@@ -397,15 +382,6 @@ const LandingAfterLogin = () => {
                     <img src={imgPat} alt="clock1" className="w-8 h-8" />
                     <span className="font-FontNoto text-black">{currentTime.toLocaleTimeString('th-TH', { hour12: false })}</span>
                 </div>
-                {!isLineLinked && (
-                    <button
-                        onClick={handleLineLogin}
-                        className="mb-4 px-2 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-md transition duration-300 font-FontNoto"
-                    >
-                        เชื่อมบัญชี LINE
-                    </button>
-
-                )}
                 <div className="flex flex-wrap justify-center gap-6 sm:gap-10 bg-bg-transparent  p-4 sm:p-8 rounded-xl w-[80%] max-w-md sm:max-w-lg lg:max-w-2xl mx-auto">
                     {/* กล่องที่ 1: เวลาเข้า-ออกงาน */}
                     <div

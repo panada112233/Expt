@@ -72,8 +72,7 @@ const EmpBase = () => {
   };
 
   const fetchProfileImageAndUserData = async (id) => {
-    // แยกการดึงข้อมูลรูปภาพและข้อมูลผู้ใช้ออกจากกัน
-    // ดึงข้อมูลรูปภาพ
+
     try {
       const profileResponse = await axios.get(
         `https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${id}`
