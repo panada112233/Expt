@@ -116,15 +116,15 @@ const LandingAfterLogin = () => {
 
     const fetchData = async (userId) => {
         try {
-            const profileImgUrl = `https://localhost:7039/api/Files/GetProfileImage?userID=${userId}`;
+            const profileImgUrl = `https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${userId}`;
             setProfileImage(profileImgUrl);
 
-            const userRes = await axios.get(`https://localhost:7039/api/Users/Getbyid/${userId}`);
+            const userRes = await axios.get(`https://192.168.1.188/hrwebapi/api/Users/Getbyid/${userId}`);
             const userData = userRes.data;
             setUserName(`${userData.firstName} ${userData.lastName}`);
 
             const today = new Date().toISOString().split("T")[0];
-            const worktimeRes = await axios.get("https://localhost:7039/api/Worktime");
+            const worktimeRes = await axios.get("https://192.168.1.188/hrwebapi/api/Worktime");
             setWorktimes(worktimeRes.data); // ✅ ใส่ทั้งหมด
 
             const userWorktimes = worktimeRes.data.filter(item => item.userID === parseInt(userId));
@@ -267,7 +267,7 @@ const LandingAfterLogin = () => {
                         formData.append('longitude', longitude);
                         formData.append('address', address);
 
-                        await axios.post('https://localhost:7039/api/Worktime/CheckIn', formData);
+                        await axios.post('https://192.168.1.188/hrwebapi/api/Worktime/CheckIn', formData);
 
                         setModalMessage(
                             <div className="flex flex-col items-center justify-center text-center">
@@ -338,7 +338,7 @@ const LandingAfterLogin = () => {
             formData.append('userID', userID);
 
             // ส่งคำขอไปที่ API
-            const response = await axios.post('https://localhost:7039/api/Worktime/CheckOut', formData);
+            const response = await axios.post('https://192.168.1.188/hrwebapi/api/Worktime/CheckOut', formData);
 
             setModalMessage(
                 <div className="flex flex-col items-center justify-center text-center">
