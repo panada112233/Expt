@@ -214,12 +214,12 @@ const EmpBase = () => {
                   >
                     ระบบบันทึกเข้าออกงาน
                   </Link>
-                  <Link
-                    to="/EmpHome/Document"
+                  {/* <Link
+                    to="/EmpHome"
                     className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
                   >
                     จัดการเอกสาร
-                  </Link>
+                  </Link> */}
                   <Link
                     to="/EmpHome/LeaveRequestForm"
                     className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
@@ -314,15 +314,6 @@ const EmpBase = () => {
                           รายการยืม-คืนอุปกรณ์
                         </Link>
                       </li>
-                      {/* <li>
-                        <Link
-                          to="/EmpHome/TrendStatistics"
-                          onClick={() => setIsSidebarOpen(false)}
-                          className="flex items-center justify-between px-4 py-2 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
-                        >
-                          กราฟเอกสารรายปี
-                        </Link>
-                      </li> */}
                       <li>
                         <Link
                           to="/EmpHome/Allemployee"

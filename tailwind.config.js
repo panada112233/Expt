@@ -34,11 +34,12 @@ module.exports = {
     themes: [
       {
         mytheme: {
-          primary: "#FF7A00",
+          primary: "#3B82F6",
+          "--chkfg": "white",
           secondary: "#FFFFFF",
           accent: "#1A1A1A",
           neutral: "#3D4451",
-          "base-100": "#1A1A1A",
+          "base-100": "#FFFFFF",
           info: "#3ABFF8",
           success: "#36D399",
           warning: "#FBBD23",

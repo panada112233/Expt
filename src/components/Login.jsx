@@ -11,6 +11,7 @@ const Login = ({ setIsLoggedIn }) => {
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(!!localStorage.getItem('savedEmail'));
     const [error, setError] = useState('');
+
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
@@ -22,62 +23,46 @@ const Login = ({ setIsLoggedIn }) => {
 
         const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
 
-        const url = isEmail
-            ? "https://192.168.1.188/hrwebapi/api/Users/Login"
-            : "https://192.168.1.188/hrwebapi/api/Admin/login";
+        const tryUserLogin = async () => {
+            const data = {
+                identifier: identifier,
+                passwordHash: password
+            };
 
-        const data = isEmail
-            ? { email: identifier, passwordHash: password }
-            : { username: identifier, password };
+            try {
+                const res = await axios.post("https://192.168.1.188/hrwebapi/api/Users/Login", data);
+                const result = res.data;
 
-        try {
-            const response = await axios.post(url, data);
-
-            if (response.status === 200) {
-                const res = response.data;
-
-                if (res === null) {
-                    setError('ไม่พบข้อมูล role ของพนักงาน');
-                    return;
-                }
-
+                // Save session
                 if (rememberMe) {
                     localStorage.setItem('savedEmail', identifier);
                 } else {
                     localStorage.removeItem('savedEmail');
                 }
 
-                localStorage.setItem('userinfo', JSON.stringify(res));
-                localStorage.setItem('userID', res.userid);
-                sessionStorage.setItem('userId', res.userid);
-                if (isEmail) {
-                    sessionStorage.setItem('role', res.role);
-                }
-                sessionStorage.setItem('isAdmin', !isEmail);
+                localStorage.setItem('userinfo', JSON.stringify(result));
+                localStorage.setItem('userID', result.userid);
+                sessionStorage.setItem('userId', result.userid);
+                sessionStorage.setItem('role', result.role);
+                sessionStorage.setItem('isAdmin', result.role?.toLowerCase() === "admin");
 
                 setIsLoggedIn(true);
 
-                // ✅ ส่วนที่เปลี่ยน: redirect ตาม role
-                if (isEmail) {
-                    if (res.role === "ADMIN") {
-                        navigate("/EmpHome/Allemployee");
-                    } else {
-                        navigate("/LandingAfterLogin");
-                    }
+                if (result.role?.toLowerCase() === "admin") {
+                    navigate("/EmpHome/Allemployee");
                 } else {
-                    navigate("/AdminDashboard");
+                    navigate("/LandingAfterLogin");
+                }
+
+            } catch (err) {
+                if (err.response?.status === 401) {
+                } else {
+                    setError("เกิดข้อผิดพลาด กรุณาลองใหม่");
+                    setIsLoading(false);
                 }
             }
-
-        } catch (err) {
-            if (err.response && err.response.status === 401) {
-                setError('ชื่อผู้ใช้/อีเมล หรือรหัสผ่านไม่ถูกต้อง');
-            } else {
-                setError('เกิดข้อผิดพลาด กรุณาลองใหม่');
-            }
-        } finally {
-            setIsLoading(false);
-        }
+        };
+        await tryUserLogin();
     };
 
     return (
@@ -87,7 +72,6 @@ const Login = ({ setIsLoggedIn }) => {
                 THE EXPERTISE CO,LTD.
             </h1>
 
-            {/* กรอบฟอร์ม login */}
             <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg space-y-6">
                 <h2 className="text-2xl font-bold text-center text-blue-700 font-FontNoto">เข้าสู่ระบบ</h2>
 
@@ -156,7 +140,11 @@ const Login = ({ setIsLoggedIn }) => {
                             id="rememberMe"
                             checked={rememberMe}
                             onChange={(e) => setRememberMe(e.target.checked)}
-                            className="checkbox checkbox-primary"
+                            className="checkbox checkbox-primary accent-blue-600"
+                            style={{
+                                '--chkbg': '#2563eb',
+                                '--chkfg': 'white'
+                            }}
                         />
                         <label htmlFor="rememberMe" className="text-sm text-gray-700 cursor-pointer font-FontNoto">
                             จำอีเมลของฉัน

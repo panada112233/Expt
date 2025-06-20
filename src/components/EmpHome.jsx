@@ -1,349 +1,601 @@
-import React, { useState, useEffect } from "react";
-import { Bar } from "react-chartjs-2";
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
-
-const EmpHome = () => {
-  const [userName, setUserName] = useState("กำลังโหลด...");
-
-  const [statistics, setStatistics] = useState({
-    totalDocuments: 0,
-    totalExperience: 0,
-    totalEducations: 0,
+function EmpHome() {
+  const [documents, setDocuments] = useState([]);
+  const [newDocument, setNewDocument] = useState({
+    category: '',
+    file: null,
+    description: '',
   });
-  const [categoryCounts, setCategoryCounts] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState(""); // เช่น "01"
-  const [selectedYear, setSelectedYear] = useState("");   // เช่น "2024"
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredDocuments, setFilteredDocuments] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedFilePath, setSelectedFilePath] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hrdocument, sethrdocunet] = useState([]);
+  const [deleteDocumentId, setDeleteDocumentId] = useState(null);
+  const [deleteType, setDeleteType] = useState(null);
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [activeTab, setActiveTab] = useState('approvedLeave');
 
-  const months = [
-    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
-    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
-  ];
+  const [allLeaveDocuments, setAllLeaveDocuments] = useState([]);
 
-  const years = Array.from({ length: 11 }, (_, i) => 2024 + i); // 2024-2034
+
   const categoryMapping = {
     sick: "ใบลาป่วย",
     personal: "ใบลากิจ",
     vacation: "ใบลาพักร้อน",
     maternity: "ใบลาคลอด",
     ordain: "ใบลาบวช",
-    Doc: "เอกสารส่วนตัว",
-    Others: "อื่นๆ",
+    Others: 'อื่นๆ',
+    Doc: 'เอกสารส่วนตัว',
   };
 
-
-  const iconMapping = {
-    "ใบลาป่วย": "https://img.icons8.com/ios-filled/50/survival-bag.png",
-    "ใบลากิจ": "https://img.icons8.com/ios-filled/50/leave-house.png",
-    "ใบลาพักร้อน": "https://img.icons8.com/ios-filled/50/beach.png",
-    "ใบลาคลอด": "https://img.icons8.com/glyph-neue/64/mothers-health.png",
-    "ใบลาบวช": "https://img.icons8.com/external-ddara-fill-ddara/64/external-monk-religion-buddha-Buddhist-meditation-Buddhism-goodness-avatar-ddara-fill-ddara.png",
-    "เอกสารส่วนตัว": "https://img.icons8.com/ios-filled/50/document.png",
-    "อื่นๆ": "https://img.icons8.com/ios-filled/50/briefcase.png",
+  const getCategoryName = (leaveTypeId) => {
+    return categoryMapping[leaveTypeId.toUpperCase()] || "ไม่ระบุหมวดหมู่";
   };
 
+  const userID = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+
+  const fetchDocuments = async () => {
+    try {
+      const response = await fetch(`https://192.168.1.188/hrwebapi/api/Files/Document?userID=${userID}`);
+      const data = await response.json();
+      setDocuments(data);
+      setFilteredDocuments(data);
+    } catch (error) {
+      alert("ไม่สามารถโหลดข้อมูลเอกสารได้");
+    }
+  };
+  const loadLeaveJsonAndCreatePDF = async (filePath) => {
+    try {
+      // 👉 โหลด JSON ไฟล์ก่อน
+      const response = await axios.get(`https://192.168.1.188/hrwebapi/api/Files${filePath}`);
+      const data = response.data;
+
+      // 👉 ดึงข้อมูลล่าสุดจาก backend ด้วย userID และ id จาก JSON
+      const latestReq = await axios.get(`https://192.168.1.188/hrwebapi/api/LeaveRequest/User/${data.userID}`);
+      const updated = latestReq.data.find(r => r.id === data.id);
+      if (updated) {
+        Object.assign(data, updated); // ผสมข้อมูลใหม่ใส่ data เดิม
+      }
+
+      const userRes = await axios.get(`https://192.168.1.188/hrwebapi/api/User/${data.userID}`);
+      const user = userRes.data;
+
+      const statRes = await axios.get(`https://192.168.1.188/hrwebapi/api/LeaveRequest/stats/${data.userID}?excludeId=${data.id}`);
+      const leaveStats = statRes.data.stats || {};
+      const lastLeave = statRes.data.lastLeave;
+      const [contactAddress, contactPhone] = (data.contact || "").split(" / ");
+
+      const enrichedForm = {
+        ...data,
+        writtenDate: data.createdAt,
+        fullName: `${user.firstName} ${user.lastName}`,
+        department: user.role || "-",
+        joinDate: user.jDate?.split("T")[0] || "-",
+        contactAddress: contactAddress || "-",
+        contactPhone: contactPhone || "-",
+        leaveStats,
+        lastLeaveType: lastLeave?.leaveType || "-",
+        lastLeaveStart: lastLeave?.startDate || "-",
+        lastLeaveEnd: lastLeave?.endDate || "-",
+        lastLeaveDays: lastLeave?.totalDays || 0,
+        gmComment: data.gmComment || "-",
+        hrComment: data.hrComment || "-" // ✅ ใช้ของล่าสุด
+      };
+
+      createPDF(enrichedForm);
+    } catch (error) {
+      console.error("❌ Error loading and enriching leave JSON:", error);
+      alert("ไม่สามารถโหลดข้อมูลใบลาจากไฟล์ได้");
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const id = sessionStorage.getItem("userId"); // ดึง userId จาก sessionStorage
-        if (!id) {
-          console.error("User ID ไม่ถูกตั้งค่าใน sessionStorage");
-          setIsLoading(false);
-          return;
-        }
+    fetchDocuments();
 
-        const userRequest = axios.get(`https://192.168.1.188/hrwebapi/api/Users/Getbyid/${id}`);
-        const documentsRequest = axios.get(`https://192.168.1.188/hrwebapi/api/Files/Document`, {
-          params: { userID: id }
-        });
-        const educationsRequest = axios.get(`https://192.168.1.188/hrwebapi/api/Educations/Getbyid/${id}`);
-        const experiencesRequest = axios.get(`https://192.168.1.188/hrwebapi/api/WorkExperiences/Getbyid/${id}`);
+  }, []);
 
-        const [userResponse, documentsResponse, educationsResponse, experiencesResponse] = await Promise.all([
-          userRequest,
-          documentsRequest,
-          educationsRequest,
-          experiencesRequest
-        ]);
+  const handleOpenModal = async (filePathOrDoc) => {
+    if (typeof filePathOrDoc === "object" && filePathOrDoc !== null) {
+      // กรณีส่ง doc object มา
+      setSelectedFilePath(null);
+      setSelectedDocument(filePathOrDoc);
+      setSelectedDoc(filePathOrDoc);
+      setPassword("");
+      setIsModalOpen(true);
 
-        if (userResponse.status === 200) {
-          const userData = userResponse.data;
-          setUserName(`${userData.firstName} ${userData.lastName}`);
-        }
-
-        if (
-          documentsResponse.status === 200 &&
-          educationsResponse.status === 200 &&
-          experiencesResponse.status === 200
-        ) {
-          setStatistics({
-            totalDocuments: documentsResponse.data.length,
-            totalEducations: educationsResponse.data.length,
-            totalExperience: experiencesResponse.data.length,
-          });
-
-          // กรองเอกสารตามเดือน/ปีที่เลือก
-          let filteredDocuments = documentsResponse.data;
-          if (selectedMonth && selectedYear) {
-            filteredDocuments = filteredDocuments.filter(doc => {
-              const date = new Date(doc.uploadDate);
-              return (
-                date.getMonth() + 1 === parseInt(selectedMonth) &&
-                date.getFullYear() === parseInt(selectedYear)
-              );
-            });
-          }
-
-          // นับจำนวนแต่ละประเภท
-          const counts = filteredDocuments.reduce((acc, doc) => {
-            const category = categoryMapping[doc.category] || 'อื่นๆ';
-            acc[category] = (acc[category] || 0) + 1;
-            return acc;
-          }, {});
-
-          setCategoryCounts(counts);
-        }
-      } catch (error) {
-        console.error("เกิดข้อผิดพลาดระหว่างดึงข้อมูล:", error);
-      } finally {
-        setIsLoading(false);
+      if (filePathOrDoc.documentId) {
+        await fetchHistory(filePathOrDoc.documentId);
       }
-    };
-    fetchData();
-  }, [selectedMonth, selectedYear]);
-
-
-  const customOrder = [
-    'ใบลาป่วย', // เอกสารที่ต้องการให้แสดงแรก
-    'ใบลากิจ',
-    'ใบลาพักร้อน',
-    'ใบลาคลอด',
-    'ใบลาบวช',
-    'เอกสารส่วนตัว',
-    'อื่นๆ',
-  ];
-
-  const colors = [
-    "#66E2A0", // เขียวมิ้นต์สดขึ้น
-    "#66D1D1", // ฟ้าอมเขียวพาสเทลเข้ม
-    "#FFA07A", // ส้มอมชมพูสดใส
-    "#FF85A2", // ชมพูพาสเทลสดใส
-    "#FFD18C", // ครีมพีชอบอุ่น
-    "#B088F9", // ม่วงลาเวนเดอร์ชัดขึ้น
-    "#6FA3EF", // ฟ้าพาสเทลเข้ม
-  ];
-
-
-  // จัดลำดับข้อมูลตามลำดับที่กำหนดใน customOrder
-  const sortedCategoryCounts = customOrder.map(category => ({
-    category,
-    count: categoryCounts[category] || 0, // ตรวจสอบถ้ามีประเภทเอกสารใน categoryCounts หรือไม่
-  }));
-
-  // เตรียมข้อมูลสำหรับกราฟ
-  const chartData = {
-    labels: sortedCategoryCounts.map(item => item.category), // ประเภทเอกสาร
-    datasets: [
-      {
-        label: 'จำนวนเอกสาร',
-        data: sortedCategoryCounts.map(item => item.count), // จำนวนเอกสารในแต่ละประเภท
-        backgroundColor: sortedCategoryCounts.map((_, index) => colors[index % colors.length]), // ใช้สีแบบวนลูป
-        borderColor: "rgba(0,0,0,0.6)", // เพิ่มเงาให้ขอบ
-        barThickness: 30, // ควบคุมขนาดแท่ง
-        hoverBackgroundColor: sortedCategoryCounts.map((_, index) => colors[index % colors.length]), // สี hover
-        hoverBorderColor: "rgba(0,0,0,0.7)", // ขอบ hover
-      },
-    ],
+    } else if (typeof filePathOrDoc === "string") {
+      // กรณีส่งแค่ path string มา
+      setSelectedFilePath(filePathOrDoc);
+      setSelectedDocument(null);
+      setSelectedDoc(null);
+      setPassword("");
+      setIsModalOpen(true);
+    } else {
+      // กรณีข้อมูลไม่ถูกต้อง
+      alert("ไม่พบข้อมูลเอกสาร");
+    }
   };
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: true,
-        position: "top",
-        labels: {
-          generateLabels: function (chart) {
-            return customOrder.map((category, index) => ({
-              text: category, // ชื่อของประเภทเอกสาร
-              fillStyle: colors[index % colors.length], // สีพื้นหลัง
-              strokeStyle: colors[index % colors.length], // สีขอบ
-              lineWidth: 1,
-              hidden: false, // ไม่ซ่อน Legend
-              font: {
-                family: 'Noto Sans Thai, sans-serif', // ใช้ฟอนต์ Noto Sans Thai
-              },
-            }));
-          },
+
+  const handlePasswordSubmit = async () => {
+    try {
+      const response = await axios.post('https://192.168.1.188/hrwebapi/api/Files/VerifyPassword', {
+        userID: selectedDoc.userID,
+        password: inputPassword
+      });
+      if (response.data.isValid) {
+        setShowPasswordPrompt(false);
+        setErrorPassword("");
+        setInputPassword("");
+        if (selectedDoc?.filePath) {
+          window.open(`https://192.168.1.188/hrwebapi/api/Files${selectedDoc.filePath}`, '_blank');
+        } else {
+
+          createPDF(selectedDoc);
+        }
+      } else {
+        setErrorPassword("รหัสไม่ถูกต้อง");
+      }
+    } catch (error) {
+      setErrorPassword("เกิดข้อผิดพลาดในการตรวจสอบรหัสผ่าน");
+    }
+  };
+
+  const handleVerifyPassword = async () => {
+    if (!password) {
+      alert('กรุณาใส่รหัสผ่าน');
+      return;
+    }
+
+    const userIDToUse = selectedDocument?.userID || userID;
+
+    try {
+      const data = JSON.stringify({
+        userID: userIDToUse,
+        passwordHash: password,
+      });
+
+      const config = {
+        method: 'post',
+        url: 'https://192.168.1.188/hrwebapi/api/Files/VerifyPassword',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      },
-      tooltip: {
-        callbacks: {
-          label: function (tooltipItem) {
-            const category = tooltipItem.label; // ประเภทเอกสาร
-            const count = tooltipItem.raw; // จำนวนเอกสาร
-            return `${category}: ${count} เอกสาร`; // แสดงข้อความใน Tooltip
-          },
-        },
-        // กำหนดฟอนต์ใน tooltip
-        titleFont: {
-          family: 'Noto Sans Thai, sans-serif', // ฟอนต์ใน Title ของ Tooltip
-        },
-        bodyFont: {
-          family: 'Noto Sans Thai, sans-serif', // ฟอนต์ในเนื้อหาของ Tooltip
-        },
-        footerFont: {
-          family: 'Noto Sans Thai, sans-serif', // ฟอนต์ใน Footer ของ Tooltip (ถ้ามี)
-        },
-      },
-      title: {
-        display: true,
-        text: "จำนวนเอกสารในแต่ละประเภท",
-        font: {
-          size: 16, // ขนาดฟอนต์ใน Title
-          family: 'Noto Sans Thai, sans-serif', // ฟอนต์ใน Title
-        },
-      },
-    },
-    scales: {
-      x: {
-        ticks: {
-          callback: function (value, index, values) {
-            return this.getLabelForValue(value).split(' ').join('\n'); // ทำให้ตัวหนังสือหมุน
-          },
-          font: {
-            size: 12, // ขนาดฟอนต์ในแกน X
-            family: 'Noto Sans Thai, sans-serif', // ฟอนต์ในแกน X
-          },
-          maxRotation: 45,
-          minRotation: 45, // ให้ตัวหนังสือเอียง
-        },
-      },
-      y: {
-        ticks: {
-          font: {
-            size: 12, // ขนาดฟอนต์ในแกน Y
-            family: 'Noto Sans Thai, sans-serif', // ฟอนต์ในแกน Y
-          },
-        },
-      },
-    },
+        data: data,
+      };
+
+      const response = await axios.request(config);
+
+      if (response.data.isValid) {
+        // ✅ แก้ตรงนี้
+        if (selectedDocument?.filePath) {
+          const fileExt = selectedDocument.filePath.split('.').pop().toLowerCase();
+          if (fileExt === "json") {
+            await loadLeaveJsonAndCreatePDF(selectedDocument.filePath); // 🔄 โหลด JSON + enrich + สร้าง PDF
+          } else {
+            window.open('https://192.168.1.188/hrwebapi/api/Files' + selectedDocument.filePath, '_blank');
+          }
+        } else if (selectedDocument) {
+          createPDF(selectedDocument);
+        }
+
+        setIsModalOpen(false);
+        setErrorPassword('');
+        setInputPassword('');
+      } else {
+        setErrorPassword('รหัสไม่ถูกต้อง');
+      }
+    } catch (error) {
+      console.error('Error verifying password:', error);
+      setErrorPassword('เกิดข้อผิดพลาดในการตรวจสอบรหัสผ่าน');
+    }
+  };
+
+  const handleAddDocument = async (e) => {
+    e.preventDefault();
+
+    if (isSubmitting) return; // ป้องกันการกดซ้ำ
+    setIsSubmitting(true);
+
+    const formData = new FormData();
+    formData.append('File', newDocument.file);
+    formData.append('Category', newDocument.category);
+    formData.append('Description', newDocument.description);
+    formData.append('UserID', userID);
+
+    try {
+      const response = await fetch('https://192.168.1.188/hrwebapi/api/Files/Create', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Response:', result);
+        setModalMessage('สร้างเอกสารสำเร็จ');
+        setIsSuccessModalOpen(true); // เปิดโมเดลสำเร็จ
+        await fetchDocuments(); // โหลดข้อมูลใหม่
+
+        setNewDocument({
+          category: '',
+          file: null,
+          description: '',
+        });
+      } else {
+        console.error('Error creating document:', response.statusText);
+        setModalMessage('เกิดข้อผิดพลาดในการสร้างเอกสาร');
+        setIsErrorModalOpen(true); // เปิดโมเดลล้มเหลว
+      }
+    } catch (error) {
+      console.error('Error creating document:', error);
+      setModalMessage('เกิดข้อผิดพลาดในการสร้างเอกสาร');
+      setIsErrorModalOpen(true); // เปิดโมเดลล้มเหลว
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSearch = () => {
+    const lowerSearchTerm = searchTerm.trim().toLowerCase();
+
+    if (lowerSearchTerm === "") {
+      if (activeTab === "approvedLeave") {
+        sethrdocunet([...allLeaveDocuments]);
+      } else {
+        setFilteredDocuments([...documents]);
+      }
+      return;
+    }
+
+    if (activeTab === "approvedLeave") {
+      const filteredLeaves = allLeaveDocuments.filter(
+        (doc) =>
+          (doc.category && doc.category.toLowerCase().includes(lowerSearchTerm)) ||
+          (doc.description && doc.description.toLowerCase().includes(lowerSearchTerm))
+      );
+      sethrdocunet(filteredLeaves);
+    } else {
+      const filteredUploads = documents.filter(
+        (doc) =>
+          (doc.category && doc.category.toLowerCase().includes(lowerSearchTerm)) ||
+          (doc.description && doc.description.toLowerCase().includes(lowerSearchTerm))
+      );
+      setFilteredDocuments(filteredUploads);
+    }
+  };
+
+  useEffect(() => {
+    const fetchLeaveDocs = async () => {
+      const res = await axios.get("https://192.168.1.188/hrwebapi/api/Files/Document?userID=" + userID);
+      const data = res.data;
+
+      const leaveOnly = data.filter(doc =>
+        ["sick", "personal", "vacation", "maternity", "ordain"].includes(doc.category)
+      );
+
+      setAllLeaveDocuments(leaveOnly);
+      sethrdocunet(leaveOnly); // set ตัวกรองเริ่มต้น
+    };
+
+    if (activeTab === "approvedLeave") {
+      fetchLeaveDocs();
+    }
+  }, [activeTab]);
+
+
+  const handleDeleteDocument = async () => {
+    if (!deleteDocumentId || !deleteType) return;
+
+    let apiUrl = deleteType === "upload"
+      ? `https://192.168.1.188/hrwebapi/api/Files/${deleteDocumentId}` // ลบเอกสารที่อัปโหลด
+      : `https://192.168.1.188/hrwebapi/api/Document/DeleteDocument/${deleteDocumentId}`; // ลบเอกสารใบลา
+
+    try {
+      const response = await fetch(apiUrl, { method: "DELETE" });
+
+      if (response.ok) {
+        if (deleteType === "upload") {
+          setDocuments((prev) => prev.filter((doc) => doc.fileID !== deleteDocumentId));
+          setFilteredDocuments((prev) => prev.filter((doc) => doc.fileID !== deleteDocumentId));
+        } else {
+          sethrdocunet((prev) => prev.filter((doc) => doc.documentId !== deleteDocumentId));
+        }
+      } else {
+        console.error("Error deleting document:", response.statusText);
+      }
+    } catch (error) {
+    } finally {
+      handleCloseDeleteModal();
+    }
+  };
+  const handleOpenDeleteModal = (id, type) => {
+    setDeleteDocumentId(id);
+    setDeleteType(type);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setDeleteDocumentId(null);
+    setDeleteType(null);
+    setIsDeleteModalOpen(false);
+  };
+
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile && selectedFile.type.match('application/*')) {
+      setNewDocument({ ...newDocument, file: selectedFile });
+    } else {
+      alert('กรุณาอัปโหลดไฟล์ที่ถูกต้อง เช่น PDF หรือ Word');
+    }
   };
 
   return (
-    <div className="">
-      <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
-        <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
-          จำนวนเอกสารของฉัน
+    <div className="flex flex-col w-full">
+      <div className="w-full bg-gradient-to-r from-cyan-100 via-blue-100 to-blue-50 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+        <h1 className="text-xl sm:text-2xl text-cyan-950 font-bold font-FontNoto leading-snug">
+          จัดการเอกสารพนักงาน
         </h1>
-        <p className="text-xs sm:text-sm mt-1 font-FontNoto">กราฟแสดงข้อมูลเอกสาร ใบลาและเอกสารอัปโหลด</p>
+        <p className="text-xs sm:text-sm mt-1 text-cyan-950 font-FontNoto">ตรวจสอบไฟล์เอกสารที่อัปโหลด</p>
       </div>
+      <h2 className="text-2xl font-bold text-black font-FontNoto"></h2>
+      <div className="">
+        {/* Modal ใส่รหัสผ่าน */}
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-[400px] relative">
+              <h3 className="text-lg font-bold mb-4 font-FontNoto">
+                กรุณาใส่รหัสผ่าน
+              </h3>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="input input-bordered w-full mb-4 font-FontNoto"
+                  placeholder="ใส่รหัสผ่าน"
+                  value={password}
+                  onChange={(e) => {
+                    if (!/[ก-๙]/.test(e.target.value)) {
+                      setPassword(e.target.value);
+                    }
+                  }}
+                  onKeyPress={(e) => {
+                    if (/[ก-๙]/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                />
+                {/* ปุ่มสำหรับแสดง/ซ่อนรหัสผ่าน */}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
+              </div>
 
-      {/* ตัวเลือกเดือนและปี */}
-      <div className="flex items-center justify-end space-x-4 mb-4">
-        <div className="flex items-center gap-2">
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="select select-bordered w-40 text-black font-FontNoto"
-          >
-            <option className="font-FontNoto" value="">ทั้งหมด</option>
-            {months.map((month, index) => (
-              <option className="font-FontNoto" key={index} value={index + 1 < 10 ? `0${index + 1}` : `${index + 1}`}>
-                {month}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
-            className="select select-bordered w-40 text-black font-FontNoto"
-          >
-            <option className="font-FontNoto" value="">ทั้งหมด</option>
-            {years.map((year) => (
-              <option className="font-FontNoto" key={year} value={year}>{year}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* ข้อมูลสถิติ */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 mt-6 w-full px-4 place-items-center">
-
-        {/* แสดงข้อมูลประเภทเอกสาร */}
-        {customOrder.map((category, index) => (
-          <div key={category} className="bg-white border border-black p-4 rounded-lg shadow-md w-full max-w-xs mx-auto flex flex-col">
-            <h3 className="text-lg font-bold font-FontNoto mb-2">{category}</h3>
-            <div className="flex items-center space-x-2"> {/* ใช้ flex และเพิ่มระยะห่างระหว่างไอคอนกับตัวเลข */}
-              <img src={iconMapping[category]} alt={category} className="w-7 h-7" />
-
-              <p className="text-3xl font-FontNoto">{categoryCounts[category] || 0}</p>
+              <div className="flex justify-end space-x-2">
+                <button
+                  className="btn btn-outline btn-warning font-FontNoto"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  className="btn btn-outline btn-primary font-FontNoto"
+                  onClick={handleVerifyPassword}
+                >
+                  ยืนยัน
+                </button>
+              </div>
             </div>
           </div>
-
-        ))}
-      </div>
-      {/* กราฟแสดงข้อมูล */}
-      <div className="mt-10 w-full max-w-screen-md mx-auto p-4 sm:p-6 min-h-[300px]">
-        {isLoading ? (
-          <p className="text-center">กำลังโหลดข้อมูลกราฟ...</p>
-        ) : (
-          <Bar data={chartData} options={chartOptions} height={300} />
         )}
-      </div>
-      <div className="flex flex-col gap-2">
-        <div>
-          <span className="label-text font-FontNoto font-bold">
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-[400px] relative">
+              <h3 className="text-lg font-bold mb-4 font-FontNoto">ยืนยันการลบ</h3>
+              <p className="font-FontNoto">คุณต้องการลบเอกสารนี้หรือไม่?</p>
+              <div className="flex justify-end space-x-2 mt-4">
+                <button
+                  className="btn btn-outline btn-warning font-FontNoto"
+                  onClick={handleCloseDeleteModal}
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  className="btn btn-outline btn-error font-FontNoto"
+                  onClick={handleDeleteDocument}
+                >
+                  ยืนยัน
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Modal สำเร็จ */}
+        {isSuccessModalOpen && (
+          <dialog id="success_modal" className="modal" open>
+            <div className="modal-box">
+              <h3 className="font-bold text-lg font-FontNoto">สำเร็จ</h3>
+              <p className="text-lg font-FontNoto">{modalMessage}</p>
+              <div className="modal-action">
+                <button
+                  className="btn btn-outline btn-error font-FontNoto"
+                  onClick={() => setIsSuccessModalOpen(false)}
+                >
+                  ปิด
+                </button>
+              </div>
+            </div>
+          </dialog>
+        )}
 
-          </span>
+
+        {/* Modal ล้มเหลว */}
+        {isErrorModalOpen && (
+          <dialog id="error_modal" className="modal" open>
+            <div className="modal-box">
+              <h3 className="font-bold text-lg font-FontNoto">ข้อผิดพลาด</h3>
+              <p className="text-lg font-FontNoto">{modalMessage}</p>
+              <div className="modal-action">
+                <button
+                  className="btn btn-outline btn-error font-FontNoto"
+                  onClick={() => setIsErrorModalOpen(false)}
+                >
+                  ปิด
+                </button>
+              </div>
+            </div>
+          </dialog>
+        )}
+
+        {/* Form อัปโหลดเอกสาร */}
+        <form
+          onSubmit={handleAddDocument}
+          className="space-y-4 mb-8 bg-base-100 p-4 rounded-lg shadow"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-FontNoto">ชื่อเอกสาร</span>
+              </label>
+              <input
+                type="text"
+                className="input input-bordered font-FontNoto"
+                placeholder="กรอกชื่อเอกสาร"
+                value={newDocument.description}
+                onChange={(e) =>
+                  setNewDocument({ ...newDocument, description: e.target.value })
+                }
+              />
+            </div>
+            <div className="form-control font-FontNoto">
+              <label className="label">
+                <span className="label-text font-FontNoto">หมวดหมู่เอกสาร</span>
+              </label>
+              <select
+                className="select select-bordered font-FontNoto"
+                value={newDocument.category}
+                onChange={(e) =>
+                  setNewDocument({ ...newDocument, category: e.target.value })
+                }
+              >
+                <option className="font-FontNoto" value="">กรุณาเลือกหมวดหมู่เอกสาร</option>
+                <option className="font-FontNoto" value="Doc">เอกสารส่วนตัว</option>
+                <option className="font-FontNoto" value="Others">อื่นๆ</option>
+              </select>
+            </div>
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-FontNoto">ไฟล์เอกสาร</span>
+              </label>
+              <input
+                type="file"
+                className="file-input file-input-sm file-input-bordered font-FontNoto"
+                onChange={handleFileChange}
+              />
+
+            </div>
+          </div>
+          <div className="relative mt-4 w-full">
+
+            <button
+              className="btn btn-outline btn-primary w-full font-FontNoto relative"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'กำลังอัปโหลด...' : 'อัปโหลดเอกสาร'}
+            </button>
+          </div>
+        </form>
+        <div className="bg-base-100 p-4 rounded-lg shadow mb-8 font-FontNoto max-w-full overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full">
+
+
+            {/* ช่องค้นหาและปุ่มค้นหา */}
+            <div className="flex flex-row gap-2 w-full sm:w-1/3 items-center max-w-full min-w-0">
+              <input
+                type="text"
+                className="input input-bordered flex-grow max-w-full min-w-0 font-FontNoto"
+                placeholder="ค้นหาชื่อเอกสาร..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <button
+                className="btn btn-outline btn-success whitespace-nowrap max-w-[120px] shrink-0 font-FontNoto"
+                onClick={handleSearch}
+              >
+                ค้นหา
+              </button>
+            </div>
+          </div>
         </div>
-        <div>
-          <span className="label-text font-FontNoto font-bold">
-            หมายเหตุ: การลาทุกประเภทต้องได้รับการอนุมัติจากหัวหน้างานก่อนจึงสามารถลาได้
-          </span>
-        </div>
-        <div>
-          <span className="label-text font-FontNoto font-bold">
-            ลาป่วย: แจ้งล่วงหน้าก่อนเวลาเริ่มงาน 08:30 (30 วัน/ปี)
-          </span>
-        </div>
-        <div>
-          <span className="label-text font-FontNoto font-bold">
-            (หากกรณีลาป่วยเกิน 3 วัน แนบใบรับรองแพทย์)
-          </span>
-        </div>
-        <div>
-          <span className="label-text font-FontNoto font-bold">
-            ลากิจส่วนตัว: แจ้งล่วงหน้า 1 วัน (7 วัน/ปี อายุงาน 1 ปี หากไม่ถึงพิจารณาเป็นกรณี)
-          </span>
-        </div>
-        <div>
-          <span className="label-text font-FontNoto font-bold">
-            ลาพักร้อน: แจ้งล่วงหน้า 7 วัน (7 วัน/ปี อายุงานมากกว่า 1 ปี)
-          </span>
-        </div>
-        <div>
-          <span className="label-text font-FontNoto font-bold">
-            ลาคลอดบุตร: แจ้งล่วงหน้า 30 วัน (90 วัน/ปี)
-          </span>
-        </div>
-        <div>
-          <span className="label-text font-FontNoto font-bold">
-            ลาบวช: แจ้งล่วงหน้า 15 วัน (15 วัน/ปี อายุงานมากกว่า 1 ปี)
-          </span>
+
+        <div className="bg-base-100 p-6 rounded-lg shadow-lg font-FontNoto">
+          <h3 className="text-xl font-bold text-black mb-4 font-FontNoto">เอกสารอัปโหลด</h3>
+          <ul className="space-y-4 font-FontNoto">
+            {filteredDocuments
+              .filter(doc => ["Others", "Doc"].includes(doc.category))
+              .sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate)) // ✅ เรียงใหม่อยู่บนสุด
+              .map((doc) => {
+                const fileExtension = doc.filePath ? doc.filePath.split('.').pop().toLowerCase() : "ไม่พบข้อมูล";
+                const uploadDate = doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString('th-TH') : "จาก HR";
+                const fileCategory = doc.category || "ไม่ระบุหมวดหมู่";
+
+                return (
+                  <li key={doc.fileID || Math.random()} className="p-4 bg-white rounded-lg shadow flex justify-between items-center">
+                    <div>
+                      <h4 className="text-lg font-bold font-FontNoto">{doc.description || "เอกสาร"}</h4>
+                      <p className="text-sm text-gray-600 font-FontNoto">หมวดหมู่เอกสาร: {categoryMapping[fileCategory]}</p>
+                      <p className="text-sm text-gray-600 font-FontNoto">วันที่อัปโหลด: {uploadDate}</p>
+                      <p className="text-sm text-gray-600 font-FontNoto">นามสกุลไฟล์: {fileExtension}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        className="btn btn-outline btn-info font-FontNoto"
+                        onClick={() => handleOpenModal(doc)}
+                      >
+                        ดูไฟล์
+                      </button>
+
+                      <button
+                        className="btn btn-outline btn-error font-FontNoto"
+                        onClick={() => handleOpenDeleteModal(doc.fileID, "upload")}
+                      >
+                        ลบ
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+          </ul>
+          {filteredDocuments
+            .filter(doc => ["Others", "Doc"].includes(doc.category))
+            .length === 0 && (
+              <p className="text-gray-500 text-center mt-4 font-FontNoto">ไม่มีเอกสารอัปโหลด</p>
+            )}
         </div>
       </div>
-
     </div>
-
   );
-};
+}
 
 export default EmpHome;

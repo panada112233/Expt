@@ -39,12 +39,12 @@ const BorrowEquipmentsEmp = () => {
   };
 
   return (
-    <div className="">
-      <div className="w-full bg-gradient-to-r from-cyan-900 via-cyan-600 to-slate-500 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
-        <h1 className="text-xl sm:text-2xl font-bold font-FontNoto leading-snug">
+    <div className="flex flex-col w-full">
+      <div className="w-full bg-gradient-to-r from-cyan-100 via-blue-100 to-blue-50 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
+        <h1 className="text-xl sm:text-2xl text-cyan-950 font-bold font-FontNoto leading-snug">
           ยืม-คืน อุปกรณ์สำนักงาน
         </h1>
-        <p className="text-xs sm:text-sm mt-1 font-FontNoto">ตรวจสอบข้อมูลการยืมอุปกรณ์สำนักงาน</p>
+        <p className="text-xs sm:text-sm mt-1 text-cyan-950 font-FontNoto">ตรวจสอบข้อมูลการยืมอุปกรณ์สำนักงาน</p>
       </div>
       <h2 className="text-2xl font-bold mb-4 font-FontNoto">รายการอุปกรณ์ทั้งหมด</h2>
       <div className="overflow-x-auto">

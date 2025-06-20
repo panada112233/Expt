@@ -400,6 +400,145 @@ const LeaveRequestForm = () => {
         }
     };
 
+    const createPDF = (form) => {
+        if (!form) {
+            alert("ไม่พบข้อมูลเอกสาร");
+            return;
+        }
+
+        const formatDate = (date) => {
+            try {
+                if (!date) return "-";
+                const d = new Date(date);
+                if (isNaN(d)) return "-";
+                return new Intl.DateTimeFormat("th-TH", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit"
+                }).format(d);
+            } catch {
+                return "-";
+            }
+        };
+
+        const docDefinition = {
+            content: [
+                { text: "แบบฟอร์มใบลา", style: "header" },
+                { text: `วันที่ : ${formatDate(form.writtenDate)}`, alignment: "right", margin: [0, 0, 0, 10] },
+                { text: `เรื่อง : ขออนุญาติลา : ${form.leaveType || '-'}`, margin: [0, 0, 0, 10] },
+                { text: `เรียน หัวหน้าแผนก/ฝ่ายบุคคล`, margin: [0, 0, 0, 10] },
+                {
+                    table: {
+                        widths: ["auto", "*"],
+                        body: [
+                            ["ข้าพเจ้า :", `${form.fullName || '-'} ตำแหน่ง ${roleMapping[form.department] || '-'}`],
+                            ["ขอลา :", `${form.leaveType || '-'} เนื่องจาก ${form.reason || '-'}`],
+                            ["ตั้งแต่วันที่ :", ` ${formatDate(form.startDate)} ถึงวันที่ :${formatDate(form.endDate)} มีกำหนด : ${form.totalDays || '0'} วัน | ช่วงเวลา : ${form.timeType || '-'}`],
+                            ["ข้าพเจ้าได้ลา :", `${form.lastLeaveType || '-'} ครั้งสุดท้าย ตั้งแต่วันที่ : ${formatDate(form.lastLeaveStart)} ถึงวันที่ : ${formatDate(form.lastLeaveEnd)} รวม ${form.lastLeaveDays || '0'} วัน`]
+                        ]
+                    },
+                    layout: "noBorders",
+                    margin: [0, 0, 0, 20]
+                },
+                {
+                    text: `ในระหว่างลา ติดต่อข้าพเจ้าได้ที่ : ${form.contactAddress || '-'}, เบอร์ติดต่อ ${form.contactPhone || '-'}`,
+                    margin: [0, 0, 0, 20]
+                },
+                {
+                    text: `สถิติการลาในปีนี้ (วันเริ่มงาน: ${formatDate(form.joinDate)})`, style: "subheader", margin: [0, 0, 0, 10]
+                },
+                {
+                    table: {
+                        widths: ["*", "*", "*", "*"],
+                        body: [
+                            [
+                                { text: "ประเภทลา", style: "tableHeader" },
+                                { text: "ลามาแล้ว", style: "tableHeader" },
+                                { text: "ลาครั้งนี้", style: "tableHeader" },
+                                { text: "รวมเป็น", style: "tableHeader" }
+                            ],
+                            ...Object.entries(form.leaveStats || {}).map(([type, stats]) => [
+                                labelMap[type] || type,
+                                stats.used || 0,
+                                stats.current || 0,
+                                stats.total || 0
+                            ])
+                        ]
+                    },
+                    layout: "lightHorizontalLines",
+                    margin: [0, 0, 0, 20]
+                },
+                {
+                    columns: [
+                        { width: '*', text: '' },
+                        { width: '*', text: '' },
+                        { width: '*', text: `ลงชื่อ ....${form.fullName || '-'}.....`, alignment: "center" },
+                    ],
+                    margin: [0, 20, 0, 0]
+                },
+                {
+                    columns: [
+                        { width: '*', text: '' },
+                        { width: '*', text: '' },
+                        { width: '*', text: `(${form.fullName || '-'})`, alignment: "center" },
+                    ],
+                    margin: [0, 0, 0, 0]
+                },
+                {
+                    columns: [
+                        { width: '*', text: '' },
+                        { width: '*', text: '' },
+                        { width: '*', text: "พนักงาน", alignment: "center" },
+                    ],
+                    margin: [0, 0, 0, 10]
+                },
+                {
+                    columns: [
+                        { width: '*', text: '' },
+                        { width: '*', text: '' },
+                        { width: '*', text: "ขอแสดงความนับถือ", alignment: "center" },
+                    ],
+                    margin: [0, 0, 0, 10]
+                },
+                {
+                    columns: [
+                        { width: '33.33%', text: `ลงชื่อ ....${(form.gmComment || '-').replace('อนุมัติ ', '')}.....`, alignment: "center" },
+                        { width: '33.33%', text: `ลงชื่อ ....${(form.headComment || '-').replace('อนุมัติ ', '')}.....`, alignment: "center" },
+                        { width: '33.33%', text: `ลงชื่อ ....${(form.hrComment || '-').replace('อนุมัติ ', '')}.....`, alignment: "center" },
+                    ],
+                    margin: [0, 10, 0, 0]
+                },
+                {
+                    columns: [
+                        { width: '33.33%', text: `(${(form.gmComment || '-').replace('อนุมัติ ', '')})`, alignment: "center" },
+                        { width: '33.33%', text: `(${(form.headComment || '-').replace('อนุมัติ ', '')})`, alignment: "center" },
+                        { width: '33.33%', text: `(${(form.hrComment || '-').replace('อนุมัติ ', '')})`, alignment: "center" },
+                    ],
+                    margin: [0, 0, 0, 0]
+                },
+                {
+                    columns: [
+                        { width: '33.33%', text: "ผู้จัดการทั่วไป", alignment: "center" },
+                        { width: '33.33%', text: "หัวหน้าฝ่ายนักวิเคราะห์ธุรกิจ", alignment: "center" },
+                        { width: '33.33%', text: "ทรัพยากรบุคคล", alignment: "center" },
+                    ],
+                    margin: [0, 5, 0, 0]
+                }
+
+            ],
+            styles: {
+                header: { fontSize: 18, bold: true, alignment: "center" },
+                subheader: { fontSize: 16, bold: true },
+                tableHeader: { bold: true }
+            },
+            defaultStyle: {
+                font: "THSarabunNew",
+                fontSize: 16
+            }
+        };
+
+        pdfMake.createPdf(docDefinition).download("ใบลาที่อนุมัติแล้ว.pdf");
+    };
 
     return (
         <div className="flex flex-col w-full">
@@ -636,14 +775,61 @@ const LeaveRequestForm = () => {
                                                             })}
                                                         </div>
                                                     </div>
-                                                    <div className="mt-4 flex justify-end">
+                                                    <div className="mt-4 flex justify-end gap-2">
                                                         <button
-                                                            className="px-4 py-1.5 text-white bg-blue-600 hover:bg-blue-700 rounded-md text-sm font-FontNoto"
+                                                            className="px-4 py-1.5 text-white bg-blue-600 hover:bg-blue-700 rounded-md text-sm font-FontNoto w-fit"
                                                             onClick={() => showLeaveDetail(leave)}
                                                         >
                                                             แสดงรายละเอียด
                                                         </button>
+
+                                                        {leave.status === "ApprovedByHR" && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    if (!selectedLeaveStats) {
+                                                                        alert("กรุณากด 'แสดงรายละเอียด' ก่อนดาวน์โหลด เพื่อให้ข้อมูลการลาครั้งก่อนแสดงถูกต้อง");
+                                                                        return;
+                                                                    }
+
+                                                                    const fullName = form.fullName || "ไม่พบข้อมูล";
+                                                                    const department = form.department || "ไม่พบข้อมูล";
+
+                                                                    createPDF({
+                                                                        ...leave,
+                                                                        writtenDate: leave.createdAt,
+                                                                        fullName,
+                                                                        department,
+                                                                        joinDate: form.joinDate || leave.user?.jDate?.split("T")[0] || "-",
+                                                                        contact: leave.contact || "",
+                                                                        contactAddress: leave.contact?.split(" / ")[0] || "",
+                                                                        contactPhone: leave.contact?.split(" / ")[1] || "",
+                                                                        timeType: leave.timeType || "",
+                                                                        reason: leave.reason || "",
+                                                                        totalDays:
+                                                                            leave.timeType?.includes("ครึ่ง")
+                                                                                ? 0.5
+                                                                                : Math.floor(
+                                                                                    (new Date(leave.endDate) - new Date(leave.startDate)) /
+                                                                                    (1000 * 60 * 60 * 24)
+                                                                                ) + 1,
+                                                                        leaveStats: selectedLeaveStats,
+
+                                                                        headComment: leave.headBAComment || "-",
+                                                                        gmComment: leave.gmComment || "-",
+                                                                        hrComment: leave.hrComment || "-",
+                                                                        lastLeaveType: form.lastLeaveType || "-",
+                                                                        lastLeaveStart: form.lastLeaveStart || "-",
+                                                                        lastLeaveEnd: form.lastLeaveEnd || "-",
+                                                                        lastLeaveDays: form.lastLeaveDays || 0
+                                                                    });
+                                                                }}
+                                                                className="px-4 py-1.5 text-white bg-green-600 hover:bg-green-700 rounded-md text-sm font-FontNoto w-fit"
+                                                            >
+                                                                ดาวน์โหลด
+                                                            </button>
+                                                        )}
                                                     </div>
+
                                                 </div>
                                             );
                                         })
@@ -745,7 +931,6 @@ const LeaveRequestForm = () => {
                                     </div>
 
                                     <div className="space-y-2 text-sm font-FontNoto text-black">
-                                        {/* เรื่อง + ช่วงเวลา */}
                                         <div className="flex flex-wrap sm:flex-nowrap gap-4">
                                             <div className="flex items-center w-full sm:w-1/2">
                                                 <label className="mr-2 font-bold">เรื่อง : ขออนุญาต</label>
@@ -763,14 +948,12 @@ const LeaveRequestForm = () => {
                                                 </div>
                                             </div>
                                         </div>
-
                                         <div className="flex items-center">
                                             <label className="font-bold">เรียน:</label>
                                             <div className="flex-1 text-black bg-white  px-3 py-1.5">
                                                 หัวหน้าแผนก / ฝ่ายบุคคล
                                             </div>
                                         </div>
-
                                         <div className="flex flex-wrap sm:flex-nowrap gap-4">
                                             <div className="flex items-center w-full sm:w-1/2">
                                                 <label className="font-bold mr-2">ข้าพเจ้า :</label>
@@ -795,7 +978,6 @@ const LeaveRequestForm = () => {
                                                 {selectedLeave.reason}
                                             </div>
                                         </div>
-                                        {/* ตั้งแต่ - ถึง - จำนวนวันลา */}
                                         <div className="flex flex-wrap sm:flex-nowrap gap-4">
                                             <div className="flex items-center w-full sm:w-1/3">
                                                 <label className="mr-2 font-bold">ตั้งแต่วันที่ :</label>
@@ -891,8 +1073,6 @@ const LeaveRequestForm = () => {
                                             </div>
                                             <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
                                                 <p className="font-bold text-center mb-2">ผู้จัดการทั่วไป</p>
-
-                                                {/* ✅ ลายมือชื่อ */}
                                                 <div className="mb-2 flex items-center whitespace-nowrap">
                                                     <span className="text-gray-600 mr-2">ลายมือชื่อ:</span>
                                                     <span className="inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1 px-2 text-black whitespace-nowrap">
@@ -901,8 +1081,6 @@ const LeaveRequestForm = () => {
                                                             : "รอดำเนินการ"}
                                                     </span>
                                                 </div>
-
-                                                {/* ✅ วันที่ */}
                                                 <div className="mb-2 flex items-center gap-2 whitespace-nowrap">
                                                     <span className="text-gray-600 mr-2 whitespace-nowrap">วันที่:</span>
                                                     <input
@@ -918,7 +1096,6 @@ const LeaveRequestForm = () => {
                                                     />
                                                 </div>
 
-                                                {/* ✅ แสดงสถานะ */}
                                                 <div className="flex gap-4 mt-2">
                                                     {selectedLeave?.gmApprovedAt || selectedLeave?.status?.startsWith("Rejected") ? (
                                                         selectedLeave.status?.startsWith("Rejected") ? (
@@ -946,12 +1123,8 @@ const LeaveRequestForm = () => {
                                                     )}
                                                 </div>
                                             </div>
-
-
                                             <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
                                                 <p className="font-bold text-center mb-2">หัวหน้าฝ่ายนักวิเคราะห์ธุรกิจ</p>
-
-                                                {/* ✅ ลายมือชื่อ */}
                                                 <div className="mb-2 flex items-center">
                                                     <span className="text-gray-600 mr-2 whitespace-nowrap">ลายมือชื่อ:</span>
                                                     <span className="inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1 px-2 text-black whitespace-nowrap">
@@ -961,7 +1134,6 @@ const LeaveRequestForm = () => {
                                                     </span>
                                                 </div>
 
-                                                {/* ✅ วันที่ */}
                                                 <div className="mb-2 flex items-center gap-2">
                                                     <span className="text-gray-600 mr-2 whitespace-nowrap">วันที่:</span>
                                                     <input
@@ -977,7 +1149,6 @@ const LeaveRequestForm = () => {
                                                     />
                                                 </div>
 
-                                                {/* ✅ สถานะ */}
                                                 <div className="flex gap-4 mt-2">
                                                     {selectedLeave?.headBAApprovedAt || selectedLeave?.status?.startsWith("Rejected") ? (
                                                         selectedLeave.status?.startsWith("Rejected") ? (
@@ -1008,8 +1179,6 @@ const LeaveRequestForm = () => {
 
                                             <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
                                                 <p className="font-bold text-center mb-2">ฝ่ายทรัพยากรบุคคล</p>
-
-                                                {/* ✅ ลายมือชื่อ */}
                                                 <div className="mb-2 flex items-center">
                                                     <span className="text-gray-600 mr-2 whitespace-nowrap">ลายมือชื่อ:</span>
                                                     <span className="inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1 px-2 text-black whitespace-nowrap">
@@ -1019,7 +1188,6 @@ const LeaveRequestForm = () => {
                                                     </span>
                                                 </div>
 
-                                                {/* ✅ วันที่ */}
                                                 <div className="mb-2 flex items-center gap-2">
                                                     <span className="text-gray-600 mr-2 whitespace-nowrap">วันที่:</span>
                                                     <input
@@ -1034,8 +1202,6 @@ const LeaveRequestForm = () => {
                                                         style={{ minWidth: '100px' }}
                                                     />
                                                 </div>
-
-                                                {/* ✅ สถานะ */}
                                                 <div className="flex gap-4 mt-2">
                                                     {selectedLeave?.hrApprovedAt || selectedLeave?.status?.startsWith("Rejected") ? (
                                                         selectedLeave.status?.startsWith("Rejected") ? (
@@ -1063,14 +1229,12 @@ const LeaveRequestForm = () => {
                                                     )}
                                                 </div>
                                             </div>
-
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     )}
-
                 </>
             )}
 
