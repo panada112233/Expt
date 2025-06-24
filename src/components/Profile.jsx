@@ -1100,7 +1100,7 @@ function Profile() {
                       <div className="space-y-4">
                         <h2 className="text-lg font-semibold border-b border-gray-300 pb-2 mb-4">ข้อมูลการทำงาน</h2>
 
-                        {(currentUserRole === "ADMIN" && isEditMode) ? (
+                        {((currentUserRole === "ADMIN" || currentUserRole === "Hr") && isEditMode) ? (
                           <>
                             <div className="flex items-center gap-2">
                               <label className="w-32 text-sm font-medium whitespace-nowrap">รหัสพนักงาน :</label>
@@ -1134,7 +1134,7 @@ function Profile() {
                               </select>
                             </div>
 
-                            {currentUserRole === "ADMIN" && (
+                            {(currentUserRole === "ADMIN" || currentUserRole === "Hr") && (
                               <div className="flex items-center gap-2">
                                 <label className="w-32 text-sm font-medium whitespace-nowrap">สถานะงาน :</label>
                                 {!isEditMode ? (
@@ -1175,7 +1175,7 @@ function Profile() {
                           <>
                             <p><strong>รหัสพนักงาน :</strong> {employee.employeeCode}</p>
                             <p><strong>ตำแหน่ง :</strong> {roleMapping[employee.role]}</p>
-                            {currentUserRole === "ADMIN" && (
+                            {(currentUserRole === "ADMIN" || currentUserRole === "Hr") && (
                               <p><strong>สถานะงาน :</strong> {designationMap[employee.designation] || "ไม่ระบุ"}</p>
                             )}
                             <p><strong>วันที่เริ่มงาน :</strong> {formatThaiDate(employee.JDate)}</p>

@@ -182,7 +182,7 @@ const LeaveRequestAdmin = () => {
 
         filteredAll.forEach(item => {
             const key = Object.keys(labelMap).find(k => labelMap[k] === item.leaveType);
-            if (key && item.status === "ApprovedByGM") {
+            if (key && item.status === "ApprovedByHR") {
                 summary[key].approved += 1;
             }
         });
@@ -505,7 +505,7 @@ const LeaveRequestAdmin = () => {
 
             {showModal && selectedLeave && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 overflow-y-auto font-FontNoto px-2 py-4">
-                    <div className="relative bg-white rounded-2xl border border-gray-300 w-full max-w-2xl sm:max-w-3xl md:max-w-4xl mx-auto p-4 sm:p-6 shadow-md max-h-[90vh] overflow-y-auto">
+                    <div className="relative bg-white rounded-2xl border border-gray-300 w-full max-w-2xl sm:max-w-3xl md:max-w-5xl mx-auto p-4 sm:p-6 shadow-md max-h-[90vh] overflow-y-auto">
                         <div className="absolute top-0 left-0 w-full h-1 rounded-t-lg" />
                         <button
                             onClick={() => setShowModal(false)}

@@ -857,8 +857,8 @@ const Workplan = () => {
 
                             const rolePriority = {
                                 GM: 1,
-                                HEAD_BA: 2,
-                                Hr: 3,
+                                Hr: 2,
+                                HEAD_BA: 3,
                                 SENIOR_DEV: 4,
                                 Dev: 5,
                                 BA: 6,
