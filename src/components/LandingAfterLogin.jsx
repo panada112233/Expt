@@ -74,7 +74,6 @@ const LandingAfterLogin = () => {
                 leaveRanges.push([...currentRange]);
                 currentRange = [sortedLeaveDates[i]];
             }
-
         }
         leaveRanges.push([...currentRange]);
 
@@ -108,8 +107,8 @@ const LandingAfterLogin = () => {
             setCurrentTime(new Date());
         }, 1000);
         AOS.init({
-            duration: 500, // ความเร็ว animation
-            once: true,     // เล่นแค่ครั้งเดียว
+            duration: 500,
+            once: true,
         });
         return () => clearInterval(interval);
     }, []);
@@ -122,13 +121,10 @@ const LandingAfterLogin = () => {
             const userRes = await axios.get(`https://192.168.1.188/hrwebapi/api/Users/Getbyid/${userId}`);
             const userData = userRes.data;
             setUserName(`${userData.firstName} ${userData.lastName}`);
-
             const today = new Date().toISOString().split("T")[0];
             const worktimeRes = await axios.get("https://192.168.1.188/hrwebapi/api/Worktime");
-            setWorktimes(worktimeRes.data); // ✅ ใส่ทั้งหมด
-
+            setWorktimes(worktimeRes.data);
             const userWorktimes = worktimeRes.data.filter(item => item.userID === parseInt(userId));
-
             const userWork = userWorktimes.find(item =>
                 item.date.startsWith(today)
             );
@@ -173,7 +169,6 @@ const LandingAfterLogin = () => {
         }
     };
     const leaveKeywords = ['ป่วย', 'กิจส่วนตัว', 'บวช', 'พักร้อน', 'ลาคลอด'];
-
     const leaveDates = worktimes
         .filter(item => {
             if (!item.date || !item.location) return false;
@@ -278,15 +273,12 @@ const LandingAfterLogin = () => {
 
                         setSimpleModal(true);
                         setModalOpen(true);
-
-                        // ปิดอัตโนมัติใน 3 วินาที
                         setTimeout(() => {
                             setModalOpen(false);
                             setModalMessage('');
                             setModalConfirmAction(null);
                             setSimpleModal(false);
                         }, 3000);
-
 
                         await fetchData(userID);
                     } catch (error) {
@@ -322,7 +314,6 @@ const LandingAfterLogin = () => {
         return `${d.getDate()} ${monthsThai[d.getMonth()]} ${d.getFullYear() + 543}`;
     };
 
-    // กำหนดช่วงวันที่ลา (ถ้ามี)
     const leaveRange = leaveDates.length > 0
         ? `${formatThaiDate(leaveDates[0])} - ${formatThaiDate(leaveDates[leaveDates.length - 1])}`
         : new Date().toLocaleDateString('th-TH', {
@@ -333,11 +324,8 @@ const LandingAfterLogin = () => {
 
     const handleCheckOut = async () => {
         try {
-            // ส่งคำขอเพื่อทำการเช็คเอาท์
             const formData = new FormData();
             formData.append('userID', userID);
-
-            // ส่งคำขอไปที่ API
             const response = await axios.post('https://192.168.1.188/hrwebapi/api/Worktime/CheckOut', formData);
 
             setModalMessage(
@@ -349,8 +337,6 @@ const LandingAfterLogin = () => {
 
             setSimpleModal(true);
             setModalOpen(true);
-
-            // ปิดอัตโนมัติใน 3 วินาที
             setTimeout(() => {
                 setModalOpen(false);
                 setModalMessage('');
@@ -373,7 +359,6 @@ const LandingAfterLogin = () => {
         }
     };
 
-
     return (
         <div className="flex flex-col min-h-screen bg-gradient-to-r from-blue-100 via-white to-blue-200">
             <div className="flex flex-col items-center justify-center flex-1 py-10">
@@ -383,7 +368,6 @@ const LandingAfterLogin = () => {
                     <span className="font-FontNoto text-black">{currentTime.toLocaleTimeString('th-TH', { hour12: false })}</span>
                 </div>
                 <div className="flex flex-wrap justify-center gap-6 sm:gap-10 bg-bg-transparent  p-4 sm:p-8 rounded-xl w-[80%] max-w-md sm:max-w-lg lg:max-w-2xl mx-auto">
-                    {/* กล่องที่ 1: เวลาเข้า-ออกงาน */}
                     <div
                         data-aos="zoom-in"
                         data-aos-duration="1200"
@@ -401,7 +385,6 @@ const LandingAfterLogin = () => {
                         </h1>
 
                     </div>
-                    {/* กล่องที่ 2: Profile */}
                     <div
                         data-aos="zoom-in"
                         data-aos-duration="1200"
@@ -444,7 +427,6 @@ const LandingAfterLogin = () => {
                                                 ? 'ลงเวลาเลิกงาน'
                                                 : 'ลงเวลาเข้างาน'}
                                     </h3>
-
                                 </div>
                                 <button
                                     onClick={() => {
@@ -471,8 +453,6 @@ const LandingAfterLogin = () => {
                                     <p className="text-gray-700 mb-4 whitespace-pre-wrap font-FontNoto">{modalMessage}</p>
                                 );
                             }
-
-                            // ✅ แยกเฉพาะกรณี "ครึ่งวันเช้า" เท่านั้น ที่ไม่ให้เช็คเอาท์
                             if (
                                 nextLeaveDate === today &&
                                 leaveType === 'ครึ่งวันเช้า' &&
@@ -513,7 +493,6 @@ before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
                                     </>
                                 );
                             }
-                            // กรณีวันนี้ลา (เต็มวัน หรือ ครึ่งวัน) และยังไม่ได้เช็คอิน
                             if (todayLeave) {
                                 return (
                                     <div className="text-red-600 font-FontNoto mb-4 font-bold">
@@ -527,8 +506,6 @@ before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
                                     </div>
                                 );
                             }
-
-                            // กรณีลางานล่วงหน้า (ไม่ใช่ครึ่งวันเช้า + เช็คอินแล้ว)
                             if (nextLeave) {
                                 return (
                                     <div className="text-red-600 font-FontNoto mb-4 font-bold">
@@ -542,8 +519,6 @@ before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
                                     </div>
                                 );
                             }
-
-                            // กรณีเช็คอินแล้วแต่ยังไม่ได้เช็คเอาท์
                             if (todayWorktime?.checkIn) {
                                 return (
                                     <>
@@ -573,8 +548,6 @@ before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
                                     </>
                                 );
                             }
-
-                            // กรณียังไม่ได้เช็คอินเลย แสดงฟอร์มเลือกประเภทงาน และปุ่มเช็คอิน
                             return (
                                 <>
                                     <div className="mb-3">
@@ -589,7 +562,6 @@ before:bg-red-500 hover:bg-red-700 hover:before:bg-red-700"
                                                 if (['ลาพักร้อน', 'ลาคลอด', 'ลาบวช'].includes(selected)) {
                                                     setLeaveType('เต็มวัน');
                                                 } else if (!['ลาป่วย', 'ลากิจส่วนตัว'].includes(selected)) {
-                                                    // ✅ รีเซต leaveType เฉพาะกรณีไม่ใช่ประเภทที่ต้องเลือกช่วงเวลา
                                                     setLeaveType('');
                                                 }
 

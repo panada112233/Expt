@@ -11,7 +11,6 @@ const generateExpectedWorkdays = (month, year) => {
     const holidays = holidaysByYear[year] || {};
     const compensated = getCompensatedHolidays(year, holidays);
     const allHolidays = { ...holidays, ...compensated };
-
     const workdays = [];
     const totalDays = new Date(year, month, 0).getDate();
 
@@ -119,7 +118,6 @@ const holidaysByYear = {
     }
 };
 
-// Template วันหยุดที่เหมือนกันทุกปี 2028-2034
 const baseHolidayTemplate = {
     "01-01": "วันขึ้นปีใหม่",
     "04-06": "วันจักรี",
@@ -138,7 +136,6 @@ const baseHolidayTemplate = {
     "12-31": "วันสิ้นปี"
 };
 
-// เพิ่มปี 2028–2034 โดยใช้ template เดียวกัน
 for (let year = 2028; year <= 2034; year++) {
     holidaysByYear[year] = { ...baseHolidayTemplate };
 }
@@ -168,8 +165,6 @@ const getCompensatedHolidays = (year, holidays) => {
 
     return compensated;
 };
-
-
 const Worktime = () => {
     const [worktimes, setWorktimes] = useState([]);
     const [userName, setUserName] = useState('พนักงาน');
@@ -191,12 +186,10 @@ const Worktime = () => {
         return generateExpectedWorkdays(monthFilter, yearFilter);
     }, [monthFilter, yearFilter]);
 
-
     const [checkinStatus, setCheckinStatus] = useState({
         text: 'ยังไม่ได้ลงเวลาเข้างาน',
         color: 'bg-red-200 text-red-600',
     });
-
 
     const getWorkingDaysInMonth = (month, year) => {
         const holidays = holidaysByYear[year] || {};
@@ -241,7 +234,6 @@ const Worktime = () => {
             });
         }
     }, [worktimes, userId]);
-
 
     useEffect(() => {
         const id = sessionStorage.getItem('userId');
@@ -304,7 +296,7 @@ const Worktime = () => {
         if (!id) return;
         setUserId(id);
         fetchData(id);
-        fetchUpcomingLeaves(id); // <--- เรียกฟังก์ชันที่โหลดวันลาล่วงหน้า
+        fetchUpcomingLeaves(id);
     }, []);
 
     const handleCheckIn = () => {
@@ -384,8 +376,6 @@ const Worktime = () => {
                         formData.append('address', address);
 
                         await axios.post('https://192.168.1.188/hrwebapi/api/Worktime/CheckIn', formData);
-
-                        // ✅ ปรับให้แสดง popup แบบสวยงาม
                         setModalMessage(
                             <div className="flex flex-col items-center justify-center text-center">
                                 <img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" alt="checkin" className="w-10 h-10 mb-2" />
@@ -394,8 +384,6 @@ const Worktime = () => {
                         );
 
                         setSimpleModal(true);
-
-                        // ✅ ปิดอัตโนมัติ
                         setTimeout(() => {
                             setModalOpen(false);
                             setModalMessage('');
@@ -429,7 +417,6 @@ const Worktime = () => {
         try {
             await axios.post('https://192.168.1.188/hrwebapi/api/Worktime/CheckOut', formData);
 
-            // ✅ แสดงข้อความสำเร็จสำหรับเช็คเอาท์
             setModalMessage(
                 <div className="flex flex-col items-center justify-center text-center">
                     <img src="https://cdn-icons-png.flaticon.com/512/1828/1828490.png" alt="checkout" className="w-16 h-16 mb-4" />
@@ -443,9 +430,7 @@ const Worktime = () => {
             );
 
             setSimpleModal(true);
-            setModalConfirmAction(null); // ✅ ล้าง confirm action
-
-            // ✅ ปิด modal อัตโนมัติหลัง 3 วินาที
+            setModalConfirmAction(null);
             setTimeout(() => {
                 setModalOpen(false);
                 setModalMessage('');
@@ -455,7 +440,6 @@ const Worktime = () => {
             fetchData(userId); // รีโหลดข้อมูล
 
         } catch (error) {
-            // ✅ แสดงข้อความข้อผิดพลาด
             setModalMessage(
                 <div className="flex flex-col items-center justify-center text-center">
                     <h3 className="text-lg font-bold font-FontNoto text-red-600 mb-2">
@@ -468,8 +452,6 @@ const Worktime = () => {
             );
             setSimpleModal(true);
             setModalConfirmAction(null);
-
-            // ✅ ปิด modal หลัง 2 วินาที กรณีเกิดข้อผิดพลาด  
             setTimeout(() => {
                 setModalOpen(false);
                 setModalMessage('');
@@ -513,10 +495,8 @@ const Worktime = () => {
         checkIn.setHours(Number(timeParts[0]));
         checkIn.setMinutes(Number(timeParts[1]));
         checkIn.setSeconds(0);
-
         const expected = new Date(dateStr);
 
-        // กรณีลาครึ่งวันเช้า (เริ่มงานบ่าย 1 โมง)
         if (leaveType === 'morning') {
             expected.setHours(13, 0, 0); // ถ้าลาครึ่งวันเช้า เริ่มงานบ่าย 1
         } else if (leaveType === 'full') {
@@ -577,7 +557,6 @@ const Worktime = () => {
         }
 
         if (totalMinutes <= 0) return '0 ชม. 0 น.';
-
         const hours = Math.floor(totalMinutes / 60);
         const minutes = Math.round(totalMinutes % 60);
 
@@ -590,7 +569,6 @@ const Worktime = () => {
             const date = new Date(item.date);
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
-            // ข้ามวันหยุดสุดสัปดาห์ และวันที่ไม่มีข้อมูลเช็คอิน
             if (isWeekend || !item.checkIn) return;
             const locationText = (item.location || '').toLowerCase().replace(/\s/g, '');
             const leaveType = locationText.includes('ครึ่งวันเช้า')
@@ -600,8 +578,6 @@ const Worktime = () => {
                     : locationText.includes('ลาทั้งวัน') || locationText.includes('ลาป่วย-เต็มวัน') || locationText.includes('ลากิจทั้งวัน') || locationText.includes('ลากิจส่วนตัว-เต็มวัน')
                         ? 'full'
                         : '';
-
-            // ข้ามกรณีลาทั้งวัน (ไม่ต้องนับวันลาทั้งวัน)
             if (leaveType === 'full') return;
 
             const timeParts = item.checkIn.split(':');
@@ -647,8 +623,6 @@ const Worktime = () => {
         return matchMonth && matchYear && matchUser;
     }).sort((a, b) => new Date(b.date) - new Date(a.date));
 
-
-    // สถิติเพื่อแสดงในกล่องสรุป
     const totalDaysInMonth = new Date(yearFilter, monthFilter, 0).getDate();
     const workingDayCount = filteredWorktimes.length;
     const standardWorkingDays = getWorkingDaysInMonth(monthFilter, yearFilter);
@@ -746,11 +720,8 @@ const Worktime = () => {
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
-
-
     const workingDays = filteredWorktimes.filter(item => !item.location?.includes('ลา'));
     const leaveDays = filteredWorktimes.filter(item => item.location?.includes('ลา'));
-
 
     return (
         <div className=" ">
@@ -784,7 +755,6 @@ const Worktime = () => {
                                     (item) => item.userID === parseInt(userId) && item.date.startsWith(today)
                                 );
 
-                                // ถ้ามีเช็คอินแล้วแต่ยังไม่มีเช็คเอาท์
                                 if (todayWork && todayWork.checkIn && !todayWork.checkOut) {
                                     return (
                                         <button
@@ -894,7 +864,6 @@ const Worktime = () => {
                                                         <>
                                                             <td className="py-2 font-FontNoto whitespace-nowrap">-</td>
                                                             <td className="py-2 font-FontNoto whitespace-nowrap">
-                                                                {/* ✅ แก้ตรงนี้ */}
                                                                 {locationText.split('|')[0]?.trim() || '-'}<br />
                                                                 <span className="text-sm text-gray-600 font-FontNoto">
                                                                     {locationText.split('|')[1]?.trim() || ''}
@@ -914,9 +883,6 @@ const Worktime = () => {
                                                             item.photoPath || '-'
                                                         )}
                                                     </td>
-
-
-
                                                     <td className="py-2 font-FontNoto whitespace-nowrap">{shouldShowTime ? item.checkIn || '-' : '-'}</td>
                                                     <td className="py-2 font-FontNoto whitespace-nowrap">{shouldShowTime ? item.checkOut || '-' : '-'}</td>
                                                     <td className="py-2 font-FontNoto whitespace-nowrap">
@@ -989,10 +955,8 @@ const Worktime = () => {
                     </div>
                 </div>
                 <div className="flex flex-col gap-4 w-full lg:w-[25%] xl:w-[20%]">
-                    {/* กล่อง 1 */}
                     <div className="bg-white shadow-md rounded-xl p-5 flex-1">
                         <h3 className="text-md font-bold font-FontNoto mb-3">สรุปการทำงาน/เดือน</h3>
-                        {/* สรุปเวลาสายทั้งเดือน */}
                         <div className="mb-4 text-sm font-FontNoto text-red-700 font-semibold">
                             {(() => {
                                 const { hours, minutes } = getTotalLateTimeThisMonth();
@@ -1065,11 +1029,8 @@ const Worktime = () => {
                         </div>
                     </div>
 
-                    {/* กล่อง 2 */}
                     <div className="bg-white shadow-md rounded-xl p-5 flex-1 font-FontNoto">
                         <h3 className="text-md font-bold font-FontNoto mb-3">สรุปวันทำงาน/เดือน</h3>
-
-                        {/* ครอบ PieChart ด้วย div จัดกลาง */}
                         <div className="flex justify-center items-center">
                             <PieChart width={280} height={220}>
                                 <Pie
@@ -1111,9 +1072,8 @@ const Worktime = () => {
                                 </div>
                             ))}
                         </div>
-
                     </div>
-                    {/* กล่อง 3 */}
+
                     <div className="bg-white shadow-md rounded-xl p-5 flex-1">
                         <h3 className="text-md font-bold font-FontNoto mb-2">ข้อมูลการทำงาน</h3>
                         <div className="text-sm text-gray-700 font-FontNoto">เวลาทำงาน: <span className="font-bold">08:30 - 17:30 น.</span></div>
@@ -1127,7 +1087,6 @@ const Worktime = () => {
                 {modalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                         <div className="bg-white p-6 rounded-xl shadow-xl max-w-md w-full font-FontNoto text-gray-700 relative">
-                            {/* ปุ่มปิดมุมขวาบน */}
                             <button
                                 className="absolute top-2 right-2 text-red-500 font-bold"
                                 onClick={() => {
@@ -1141,13 +1100,9 @@ const Worktime = () => {
                             >
                                 ✖
                             </button>
-
-                            {/* ถ้าไม่มี modalMessage แสดงฟอร์มเช็คอิน */}
                             {!modalMessage ? (
                                 <>
                                     <h2 className="text-lg font-bold font-FontNoto mb-4 text-center">ลงเวลาเข้างาน</h2>
-
-                                    {/* ประเภทการทำงาน */}
                                     <div className="mb-3">
                                         <label className="block text-sm mb-1 font-FontNoto">ประเภทการทำงาน</label>
                                         <select
@@ -1172,8 +1127,6 @@ const Worktime = () => {
                                             ))}
                                         </select>
                                     </div>
-
-                                    {/* ช่วงเวลาการลา */}
                                     {['ลาป่วย', 'ลากิจส่วนตัว'].includes(location) && (
                                         <div className="mb-4">
                                             <label className="block text-sm mb-1 font-FontNoto">เลือกช่วงเวลา</label>
@@ -1188,8 +1141,6 @@ const Worktime = () => {
                                             </select>
                                         </div>
                                     )}
-
-
                                     <div className="text-right mt-4">
                                         <button
                                             onClick={handleCheckinConfirm}
@@ -1207,12 +1158,10 @@ const Worktime = () => {
 
                                 <div className="text-center">
                                     {simpleModal ? (
-                                        /* แสดงผลลัพธ์สำเร็จ */
                                         <div className="text-center">
                                             {modalMessage}
                                         </div>
                                     ) : (
-                                        /* แสดง Modal ยืนยัน */
                                         <>
                                             <h3 className="text-lg font-bold font-FontNoto mb-4">{modalTitle}</h3>
                                             <div className="text-left mb-4">
@@ -1242,7 +1191,6 @@ const Worktime = () => {
                 )}
             </div>
         </div>
-
     );
 };
 

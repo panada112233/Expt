@@ -70,9 +70,7 @@ const Allemployee = () => {
 
     const handleDeleteUser = async () => {
         try {
-            // เปลี่ยนจาก DELETE เป็น PUT เพื่อ soft delete
             await axios.put(`https://192.168.1.188/hrwebapi/api/Users/Resign/${userToDelete}`);
-
             setUsers(users.filter((user) => user.userID !== userToDelete));
             setFilteredUsers(filteredUsers.filter((user) => user.userID !== userToDelete));
             document.getElementById('delete_modal').close();
@@ -89,29 +87,21 @@ const Allemployee = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-
-        // เงื่อนไขสำหรับการอนุญาตเฉพาะภาษาไทยและช่องว่าง
-        const noThaiPattern = /^[^\u0E00-\u0E7F]*$/; // ห้ามตัวอักษรภาษาไทย
-        const emailPattern = /^[^\u0E00-\u0E7F\s]+$/; // อนุญาตเฉพาะภาษาอังกฤษและไม่มีช่องว่าง
-
-        // ตรวจสอบอีเมล (ห้ามภาษาไทย)
+        const noThaiPattern = /^[^\u0E00-\u0E7F]*$/;
+        const emailPattern = /^[^\u0E00-\u0E7F\s]+$/; 
         if (name === "email" && !emailPattern.test(value) && value !== "") {
             return;
         }
-
-        // ตรวจสอบรหัสผ่าน (ห้ามภาษาไทย)
         if ((name === "passwordHash" || name === "confirmPassword") && !noThaiPattern.test(value) && value !== "") {
             return;
         }
 
         if (name === "contact") {
-            const phonePattern = /^[0-9]{0,10}$/; // ยอมรับเฉพาะตัวเลขสูงสุด 10 หลัก
+            const phonePattern = /^[0-9]{0,10}$/;
             if (!phonePattern.test(value)) {
-                return; // ไม่บันทึกค่าที่ไม่ผ่านเงื่อนไข
+                return; 
             }
         }
-
-        // หากผ่านทุกเงื่อนไข ให้บันทึกค่าลงใน state
         setUser((prevUser) => ({
             ...prevUser,
             [name]: value,
@@ -158,16 +148,14 @@ const Allemployee = () => {
         e.preventDefault();
         setLoading(true);
         setError(null);
-        const noThaiRegex = /^[^\u0E00-\u0E7F]*$/; // สำหรับตรวจสอบห้ามภาษาไทย
-        const emailRegex = /^[^\u0E00-\u0E7F]+$/; // ห้ามตัวอักษรภาษาไทย
+        const noThaiRegex = /^[^\u0E00-\u0E7F]*$/;
+        const emailRegex = /^[^\u0E00-\u0E7F]+$/;
 
         if (user.contact.length !== 10) {
             setError("กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก");
             setLoading(false);
             return;
         }
-
-        // ตรวจสอบว่า Role ถูกเลือกหรือไม่
         if (!user.role) {
             setError("กรุณาเลือกตำแหน่ง");
             setLoading(false);
@@ -237,7 +225,6 @@ const Allemployee = () => {
     }, []);
 
     const loggedInUser = JSON.parse(localStorage.getItem("userinfo"));
-
     const handleViewDetails = (user) => {
         navigate(`/EmpHome/Profile`, { state: { userID: user.userID } });
     };
@@ -298,8 +285,6 @@ const Allemployee = () => {
                             } คน
                         </span>
                     </button>
-
-
                     <button className="flex items-center gap-2 bg-red-100 text-red-600 px-4 py-2 rounded-full font-FontNoto">
                         ลาออก:{" "}
                         <span className="font-bold">
@@ -317,17 +302,14 @@ const Allemployee = () => {
                         <span className="font-bold">
                             {
                                 users.filter(u =>
-                                    u.isActive !== false && // 👈 กรองผู้ถูกลบ
+                                    u.isActive !== false &&
                                     u.designation === "EXPIRED"
                                 ).length
                             } คน
                         </span>
                     </button>
                 </div>
-
-
                 <div className="flex flex-wrap gap-4 mt-4 mb-4 bg-gray-100 rounded-lg p-2">
-                    {/* ตำแหน่ง */}
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full sm:w-auto">
                         <label className="text-sm text-gray-700 font-FontNoto whitespace-nowrap">ตำแหน่ง</label>
                         <select
@@ -362,8 +344,6 @@ const Allemployee = () => {
                             <option>ลาออก</option>
                         </select>
                     </div>
-
-                    {/* ประเภทการทำงาน */}
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full sm:w-auto">
                         <label className="text-sm text-gray-700 font-FontNoto whitespace-nowrap">ประเภทการทำงาน</label>
                         <select
@@ -394,9 +374,9 @@ const Allemployee = () => {
                             .filter((user) => {
                                 const isAdmin = user.role === "ADMIN";
                                 const isResignedOrExpired = ["RESIGNED", "EXPIRED"].includes(user.designation);
-                                const isInactive = user.isActive === false; // 👈 เพิ่มตัวนี้
+                                const isInactive = user.isActive === false;
 
-                                if (isInactive) return false; // 👈 กรองผู้ใช้ที่ถูกลบออก
+                                if (isInactive) return false;
 
                                 const showStatus =
                                     (selectedDesignation === "ทั้งหมด" && !isResignedOrExpired) ||
@@ -735,7 +715,6 @@ const Allemployee = () => {
                                 </div>
 
                                 <div className="flex flex-row gap-4">
-                                    {/* Password Field */}
                                     <div className="w-1/2 relative">
                                         <label className="label">
                                             <span className="label-text font-FontNoto">รหัสผ่าน</span>
@@ -814,8 +793,6 @@ const Allemployee = () => {
                     </div>
                 </div>
             )}
-
-            {/* รูปโปรไฟล์ขยาย */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
                     <div className="relative bg-white rounded-2xl overflow-hidden shadow-2xl max-w-2xl w-full">

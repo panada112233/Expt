@@ -256,10 +256,10 @@ const EmpBase = () => {
                     ระบบบันทึกเข้า-ออกงาน
                   </Link>
                   <Link
-                    to="/EmpHome/Allemployee"
+                    to="/EmpHome/ManageEquipmentsAdmin"
                     className="flex items-center justify-between px-4 py-3 rounded-lg bg-white text-blue-900 hover:bg-cyan-50 hover:text-blue-800 font-FontNoto font-bold shadow transition duration-200 whitespace-nowrap overflow-hidden"
                   >
-                    ระบบยืม-คืนอุปกรณ์
+                    รายการยืม-คืนอุปกรณ์
                   </Link>
                 </>
               ) : (

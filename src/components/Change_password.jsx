@@ -16,8 +16,6 @@ function ChangePassword() {
   const [isThaiOldPassword, setIsThaiOldPassword] = useState(false);
   const [isThaiNewPassword1, setIsThaiNewPassword1] = useState(false);
   const [isThaiNewPassword2, setIsThaiNewPassword2] = useState(false);
-
-
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -62,18 +60,15 @@ function ChangePassword() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-blue-100 via-white to-blue-200 px-4">
-      {/* ข้อความหัวเรื่อง */}
       <h1 className="text-3xl md:text-4xl text-blue-700 font-FontInter p-6">
         THE EXPERTISE CO,LTD.
       </h1>
-
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg space-y-6">
         <h2 className="text-2xl md:text-3xl font-bold text-center text-blue-700 font-FontNoto">
           เปลี่ยนรหัสผ่าน
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* รหัสยืนยัน */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 font-FontNoto">
               รหัสยืนยันจากอีเมลของคุณ
@@ -116,8 +111,6 @@ function ChangePassword() {
               </button>
             </div>
           </div>
-
-          {/* รหัสผ่านใหม่ */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 font-FontNoto">
               รหัสผ่านใหม่
@@ -160,8 +153,6 @@ function ChangePassword() {
               </button>
             </div>
           </div>
-
-          {/* ยืนยันรหัสผ่านใหม่ */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 font-FontNoto">
               ยืนยันรหัสผ่านใหม่
@@ -214,8 +205,6 @@ function ChangePassword() {
           </button>
         </form>
       </div>
-
-      {/* Popup */}
       {popupVisible && (
         <dialog id="popup_modal" className="modal" open>
           <div className="modal-box !bg-white text-black dark:bg-gray-800 dark:text-white">
@@ -223,10 +212,8 @@ function ChangePassword() {
           </div>
         </dialog>
       )}
-
     </div>
   );
-
 }
 
 export default ChangePassword;

@@ -18,8 +18,6 @@ const WorktimeEmp = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [showAllLeave, setShowAllLeave] = useState(false);
     const [showAllFullAttendance, setShowAllFullAttendance] = useState(false);
-
-
     const [showAllNeverLate, setShowAllNeverLate] = useState(false);
 
     const itemsPerPage = 10;
@@ -87,7 +85,6 @@ const WorktimeEmp = () => {
             };
         });
 
-        // รวมเวลาที่มาสายต่อคน
         const lateStats = getUserLateStatistics().filter(stat => stat.totalLateMinutes > 0);
         const lateSummarySheet = lateStats.map(stat => ({
             "ชื่อ-นามสกุล": stat.name,
@@ -106,7 +103,6 @@ const WorktimeEmp = () => {
         const data = new Blob([excelBuffer], { type: "application/octet-stream" });
         saveAs(data, "Worktime_Report.xlsx");
     };
-
 
     const handleEdit = (record) => {
         setEditingRecord(record);
@@ -171,8 +167,6 @@ const WorktimeEmp = () => {
                     break;
                 }
             }
-
-            // ✅ ตรวจว่ามีอย่างน้อย 1 วันที่ checkIn ไม่ว่าง
             const hasAtLeastOneCheckIn = userWorktimes.some(item => !!item.checkIn);
 
             if (isFullAttendance && hasAtLeastOneCheckIn) {
@@ -187,7 +181,6 @@ const WorktimeEmp = () => {
 
     const fullAttendanceUsers = getUsersWithFullAttendance();
 
-
     const calculateLateMinutes = (checkInTime, dateStr, leaveType = '') => {
         if (!checkInTime) return '0 นาที';
 
@@ -200,8 +193,6 @@ const WorktimeEmp = () => {
         checkIn.setSeconds(0);
 
         const expected = new Date(dateStr);
-
-        // กรณีลาครึ่งวันเช้า (เริ่มงานบ่าย 1 โมง)
         if (leaveType === 'morning') {
             expected.setHours(13, 0, 0); // ถ้าลาครึ่งวันเช้า เริ่มงานบ่าย 1
         } else if (leaveType === 'full') {
@@ -246,8 +237,6 @@ const WorktimeEmp = () => {
         }
 
         const diffMinutes = (checkIn - expected) / (1000 * 60);
-
-        // ถ้าเท่ากันหรือมาก่อน 8:30 → ไม่สาย
         return diffMinutes > 0 ? Math.ceil(diffMinutes) : 0;
     };
 
@@ -269,7 +258,6 @@ const WorktimeEmp = () => {
 
         let totalMinutes = diffMs / (1000 * 60);
 
-        // ถ้าลาครึ่งวัน ไม่หักเวลา 1 ชั่วโมง
         if (leaveType !== 'morning' && leaveType !== 'afternoon') {
             totalMinutes -= 60; // หักเวลาออก 1 ชั่วโมง (60 นาที) สำหรับกรณีที่ไม่ได้ลา
         }
@@ -304,7 +292,6 @@ const WorktimeEmp = () => {
         currentPage * itemsPerPage
     );
 
-    // สำหรับแสดงสถิติและข้อมูลสรุป
     const getUserLateStatistics = () => {
         const stats = {};
 
@@ -414,10 +401,8 @@ const WorktimeEmp = () => {
             <h2 className="text-base sm:text-lg text-cyan-950 font-bold font-FontNoto leading-snug">
                 แจ้งเตือนการทำงานต่อเดือน
             </h2>
-            {/* การ์ดสรุปข้อมูล */}
             <div className="overflow-x-auto sm:overflow-visible">
                 <div className="flex overflow-x-auto sm:flex-wrap sm:gap-4 space-x-4 sm:space-x-0 snap-x snap-mandatory font-FontNoto px-3 py-3">
-                    {/* การ์ด คนที่มาสายมากที่สุด */}
                     <div className="snap-start flex-shrink-0 w-[90%] sm:w-[350px] mx-auto sm:mx-0 group rounded-xl bg-white p-4 shadow-md transition duration-300 cursor-pointer hover:translate-y-[3px] hover:shadow-xl relative overflow-hidden min-h-[160px]">
                         <div className="absolute right-4 top-1/2 -translate-y-1/2 transform opacity-80 group-hover:scale-110 transition duration-300 text-red-500">
                             <FcAlarmClock className="w-10 h-10" />
@@ -447,8 +432,6 @@ const WorktimeEmp = () => {
                             )}
                         </div>
                     </div>
-
-                    {/* การ์ด พนักงานที่ไม่มาสายเลย */}
                     <div className="snap-start flex-shrink-0 w-[90%] sm:w-[350px] mx-auto sm:mx-0 group rounded-xl bg-white p-4 shadow-md transition duration-300 cursor-pointer hover:translate-y-[3px] hover:shadow-xl relative overflow-hidden min-h-[160px]">
                         <div className="absolute right-4 top-1/2 -translate-y-1/2 transform opacity-80 group-hover:scale-110 transition duration-300 text-green-500">
                             <FcOk className="w-10 h-10" />
@@ -540,8 +523,6 @@ const WorktimeEmp = () => {
                     </div>
                 </div>
             </div>
-
-            {/* ตัวกรองข้อมูล */}
             <h2 className="text-lg font-bold font-FontNoto  py-4">ตารางลงเวลาเข้า-ออกงานของพนักงาน</h2>
             <div className="flex flex-wrap sm:flex-nowrap items-center justify-between mb-4 bg-white p-4 rounded-xl shadow gap-4">
 
@@ -595,7 +576,6 @@ const WorktimeEmp = () => {
                     </div>
                 </div>
             </div>
-            {/* ตารางข้อมูล */}
             <div className="bg-white p-2 rounded-xl shadow-lg relative">
                 <h2 className="text-lg font-bold font-FontNoto mb-4">ประวัติการลงเวลา</h2>
                 <div className="overflow-x-auto">
@@ -701,7 +681,6 @@ const WorktimeEmp = () => {
                         </div>
                     )}
                     <div className="flex justify-between items-center mt-4 font-FontNoto text-sm">
-                        {/* ปุ่ม < ซ้ายสุด */}
                         <button
                             className="btn btn-sm border border-blue-400 !text-blue-600 hover:bg-blue-100"
                             onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
@@ -709,8 +688,6 @@ const WorktimeEmp = () => {
                         >
                             &lt;
                         </button>
-
-                        {/* ปุ่มหมายเลขตรงกลาง */}
                         <div className="flex gap-1">
                             {[...Array(Math.ceil(filteredWorktimes.length / itemsPerPage)).keys()].map(i => (
                                 <button
@@ -725,8 +702,6 @@ const WorktimeEmp = () => {
                                 </button>
                             ))}
                         </div>
-
-                        {/* ปุ่ม > ขวาสุด */}
                         <button
                             className="btn btn-sm border border-blue-400 !text-blue-600 hover:bg-blue-100"
                             onClick={() => setCurrentPage(p => Math.min(p + 1, Math.ceil(filteredWorktimes.length / itemsPerPage)))}
@@ -802,7 +777,6 @@ const WorktimeEmp = () => {
                 </div>
             )}
 
-            {/* โมดัลยืนยันการลบ */}
             {deleteRecordID && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4 overflow-y-auto"

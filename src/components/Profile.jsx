@@ -19,19 +19,17 @@ const roleMapping = {
   ADMIN: "Admin",
 };
 
-
-// ฟังก์ชันแปลง Date object เป็น 'DD-MM-YYYY' พร้อมจัดการ Time Zone และปีพุทธศักราช
 const formatDateForDisplay = (date) => {
   if (!date) return null;
 
   const nDate = new Date(date);
   if (isNaN(nDate)) return "";
 
-  const day = String(nDate.getDate()).padStart(2, '0'); // วันที่
-  const month = String(nDate.getMonth() + 1).padStart(2, '0'); // เดือน
-  const year = nDate.getFullYear(); // ปี
+  const day = String(nDate.getDate()).padStart(2, '0');
+  const month = String(nDate.getMonth() + 1).padStart(2, '0');
+  const year = nDate.getFullYear();
 
-  return `${year}-${month}-${day}`; // คืนค่าในรูปแบบ DD-MM-YYYY
+  return `${year}-${month}-${day}`;
 };
 
 function Profile() {
@@ -78,7 +76,7 @@ function Profile() {
 
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMessage, setModalMessage] = useState(""); // เก็บข้อความใน Modal
+  const [modalMessage, setModalMessage] = useState("");
   const [activeTab, setActiveTab] = useState("profile");
   const location = useLocation();
   const passedUserID = location.state?.userID;
@@ -144,7 +142,7 @@ function Profile() {
     RESIGNED: "ลาออก",
     EXPIRED: "หมดสัญญา",
   };
-  // ฟังก์ชันคำนวณอายุการทำงานจากวันที่เริ่มงาน
+
   const calculateWorkDuration = (startDateStr) => {
     if (!startDateStr) return "-";
 
@@ -169,7 +167,6 @@ function Profile() {
     return `${years} ปี ${months} เดือน ${days} วัน`;
   };
 
-  // แปลงวันเป็น พ.ศ.
   const formatThaiDate = (dateStr) => {
     if (!dateStr) return "-";
     const date = new Date(dateStr);
@@ -222,7 +219,7 @@ function Profile() {
 
         reader.onerror = reject;
 
-        reader.readAsDataURL(imageBlob); // แปลง Blob เป็น Base64
+        reader.readAsDataURL(imageBlob);
       });
     } catch (error) {
       console.error("Error converting image to Base64: ", error);
@@ -266,10 +263,8 @@ function Profile() {
 
           const [inH, inM] = item.checkIn.split(':').map(Number);
           const [outH, outM] = item.checkOut.split(':').map(Number);
-
           const inDate = new Date(item.date);
           inDate.setHours(inH, inM, 0);
-
           const outDate = new Date(item.date);
           outDate.setHours(outH, outM, 0);
 
@@ -330,8 +325,6 @@ function Profile() {
           setMessages([{ tags: "error", text: errorMessage }]);
         }
       };
-
-      // เรียกใช้งานฟังก์ชัน
       fetchProfileImage();
 
     } else {
@@ -367,8 +360,6 @@ function Profile() {
     }
   }, [userID]);
 
-
-  // อัปเดตข้อมูลใน state เมื่อผู้ใช้แก้ไขฟอร์ม
   const handleChange = (e) => {
     const { name, value } = e.target;
     setEmployee({ ...employee, [name]: value });
@@ -386,7 +377,6 @@ function Profile() {
     return age >= 0 ? age : "-";
   };
 
-  // ส่งข้อมูลที่แก้ไขกลับไปอัปเดตในฐานข้อมูล
   const handleSubmit = (e) => {
     e.preventDefault();
     const userID = employee.userID;
@@ -413,7 +403,7 @@ function Profile() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(employee), // ข้อมูลทั้งหมดที่ต้องการอัปเดต
+      body: JSON.stringify(employee),
     })
       .then((response) => response.json())
       .then((data) => {
@@ -423,12 +413,12 @@ function Profile() {
         } else {
           setModalMessage("มีข้อผิดพลาดเกิดขึ้น โปรดลองอีกครั้ง");
         }
-        setIsModalOpen(true); // เปิด Modal หลังจากตั้งข้อความ
+        setIsModalOpen(true);
       })
       .catch((err) => {
         console.error("Error updating profile: ", err);
         setModalMessage("มีข้อผิดพลาดเกิดขึ้น โปรดลองอีกครั้ง");
-        setIsModalOpen(true); // เปิด Modal หลังจากเกิดข้อผิดพลาด
+        setIsModalOpen(true);
       });
   };
   const handleFileChange = (e) => {
@@ -476,7 +466,7 @@ function Profile() {
     const { name, value } = e.target;
 
     if (name === "salary" || name === "startDate" || name === "endDate") {
-      const numericOnly = value.replace(/[^0-9]/g, "").slice(0, 4); // เอาแค่ตัวเลข 4 หลัก
+      const numericOnly = value.replace(/[^0-9]/g, "").slice(0, 4);
       setNewExperience((prev) => ({ ...prev, [name]: numericOnly }));
     } else {
       setNewExperience((prev) => ({ ...prev, [name]: value }));
@@ -512,7 +502,7 @@ function Profile() {
     try {
       const gpaValue =
         newEducation.gpa === "" || newEducation.gpa === null || isNaN(newEducation.gpa)
-          ? 0 // ✅ ส่ง 0 แทน null ถ้าไม่ได้กรอก
+          ? 0
           : parseFloat(newEducation.gpa);
       if (isEditing) {
         const updated = {
@@ -666,7 +656,6 @@ function Profile() {
     <div className=" ">
       <div className="w-full bg-gradient-to-r from-cyan-100 via-blue-100 to-blue-50 text-white rounded-xl p-4 sm:p-5 md:p-6 mb-6 shadow-lg">
         <div className="flex items-center justify-between flex-wrap gap-4">
-          {/* รูปโปรไฟล์ + ข้อมูลพื้นฐาน */}
           <div className="flex items-center gap-4">
             <div className="relative">
               <img
@@ -1026,8 +1015,6 @@ function Profile() {
                           )}
                         </div>
                       </div>
-
-                      {/* ขวา: ข้อมูลติดต่อ */}
                       <div className="space-y-4">
 
                         <div className="flex items-center gap-4">
@@ -1205,9 +1192,7 @@ function Profile() {
                         )}
                       </div>
                     </div>
-
                   </div>
-
                 </form>
               </>
             )}
@@ -1422,8 +1407,6 @@ function Profile() {
                       placeholder="เกรดเฉลี่ย (0.00 - 4.00)"
                     />
                   </div>
-
-
                   <div className="form-control md:col-span-2">
                     <textarea
                       name="thesis"
@@ -1433,7 +1416,6 @@ function Profile() {
                       placeholder="วิทยานิพนธ์ (ถ้ามี)"
                     />
                   </div>
-
                   <div className="form-control md:col-span-2">
                     <textarea
                       name="activities"
@@ -1456,7 +1438,6 @@ function Profile() {
                       placeholder="ปีที่ศึกษา (เช่น 2565-2569)"
                     />
                   </div>
-                  {/* ปุ่ม */}
                   <div className="flex justify-end gap-2 mt-6">
                     <button
                       type="button"
@@ -1481,7 +1462,6 @@ function Profile() {
 
       {activeTab === "experience" && (
         <>
-          {/* Modal ลบ */}
           {isModalOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
               <div className="bg-white p-6 rounded-2xl shadow-2xl w-96 relative">
@@ -1538,12 +1518,9 @@ function Profile() {
                 ) : (
                   experiences.map((exp, index) => (
                     <div key={index} className="bg-white rounded-xl shadow p-4 border border-gray-200 relative">
-                      {/* วันที่ฝั่งขวาบน */}
                       <div className="absolute top-4 right-4 bg-gray-100 px-3 py-1 rounded-full text-sm text-blue-600 font-FontNoto shadow-sm">
                         {exp.startDate} - {exp.endDate || "ปัจจุบัน"}
                       </div>
-
-                      {/* เนื้อหาหลัก */}
                       <div className="mb-4">
                         <h3 className="text-lg font-bold text-purple-800 font-FontNoto">{exp.jobTitle}</h3>
                         <p className="text-lg font-semibold text-blue-700 font-FontNoto">{exp.companyName}</p>
@@ -1555,8 +1532,6 @@ function Profile() {
                           </ul>
                         )}
                       </div>
-
-                      {/* ปุ่มล่างขวา */}
                       <div className="flex justify-end gap-2">
                         <button
                           className="flex items-center gap-1 text-blue-600 bg-transparent hover:underline font-FontNoto"
@@ -1740,7 +1715,6 @@ function Profile() {
           <div className="modal-box font-FontNoto">
             <h3 className="font-bold text-lg text-blue-700 mb-4">เปลี่ยนรหัสผ่าน</h3>
             <form onSubmit={handleSubmitChangePassword} className="space-y-3">
-              {/* รหัสผ่านปัจจุบัน */}
               <div className="relative">
                 <input
                   type={showOldPassword ? "text" : "password"}
@@ -1773,8 +1747,6 @@ function Profile() {
                   )}
                 </button>
               </div>
-
-              {/* รหัสผ่านใหม่ */}
               <div className="relative">
                 <input
                   type={showNewPassword1 ? "text" : "password"}
@@ -1807,8 +1779,6 @@ function Profile() {
                   )}
                 </button>
               </div>
-
-              {/* ยืนยันรหัสผ่านใหม่ */}
               <div className="relative">
                 <input
                   type={showNewPassword2 ? "text" : "password"}

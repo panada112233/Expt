@@ -13,7 +13,7 @@ const formatDateThai = (dateString) => {
         "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
     ];
     const month = monthNames[date.getMonth()];
-    const year = date.getFullYear() + 543; // แปลงเป็น พ.ศ.
+    const year = date.getFullYear() + 543;
     return `${day} ${month} ${year}`;
 };
 
@@ -30,7 +30,6 @@ const LeaveRequestForm = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
 
-
     const [form, setForm] = useState({
         userID: userId,
         leaveType: "",
@@ -45,7 +44,6 @@ const LeaveRequestForm = () => {
         contactPhone: "",
         fullName: "",
         department: "",
-
         totalDays: 0,
         lastLeaveType: "",
         lastLeaveStart: "",
@@ -159,7 +157,6 @@ const LeaveRequestForm = () => {
             });
 
             if (res.status === 201) {
-                // บันทึกเสร็จแล้ว
                 const newFile = res.data;
                 setForm((prev) => ({
                     ...prev,
@@ -193,8 +190,6 @@ const LeaveRequestForm = () => {
                     const days = isHalfDay
                         ? 0.5
                         : Math.floor((new Date(item.endDate) - new Date(item.startDate)) / (1000 * 60 * 60 * 24)) + 1;
-
-                    // ✅ เฉพาะใบที่อนุมัติ ปีเดียวกัน และ user คนเดียวกัน
                     if (
                         item.status === "ApprovedByHR" &&
                         year === currentYear &&
@@ -251,8 +246,6 @@ const LeaveRequestForm = () => {
             }));
         }
     };
-
-
     const fetchLeaveHistory = async () => {
         try {
             const res = await axios.get(`https://192.168.1.188/hrwebapi/api/LeaveRequest/User/${userId}`);
@@ -271,10 +264,7 @@ const LeaveRequestForm = () => {
                     ordain: { used: 0, current: 0, total: 0 },
                     maternity: { used: 0, current: 0, total: 0 }
                 };
-
                 const currentYear = new Date().getFullYear();
-
-                // ✅ เพิ่มส่วน monthly data สำหรับกราฟประเภทการลา
                 const monthly = Array.from({ length: 12 }, () => ({
                     sick: 0,
                     personal: 0,
@@ -300,9 +290,7 @@ const LeaveRequestForm = () => {
                         if (key && stats[key]) {
                             stats[key].used += days;
                             stats[key].total = stats[key].used;
-
-                            // ✅ เพิ่ม: บันทึกค่าแบบรายเดือน
-                            const monthIndex = leaveStart.getMonth(); // 0-11
+                            const monthIndex = leaveStart.getMonth();
                             monthly[monthIndex][key] += days;
                         }
                     }
@@ -312,7 +300,6 @@ const LeaveRequestForm = () => {
                 if (lastLeave) {
                     let days = (new Date(lastLeave.endDate) - new Date(lastLeave.startDate)) / (1000 * 60 * 60 * 24) + 1;
 
-                    // ตรวจสอบกรณีครึ่งวัน
                     if (lastLeave.timeType === "ครึ่งวันเช้า" || lastLeave.timeType === "ครึ่งวันบ่าย") {
                         days = 0.5;
                     }
@@ -325,8 +312,6 @@ const LeaveRequestForm = () => {
                         lastLeaveType: lastLeave.leaveType
                     }));
                 }
-
-                // ✅ เพิ่ม: ตั้งค่า leaveStats + monthly + leaveHistory
                 setForm(prev => ({
                     ...prev,
                     leaveStats: {
@@ -336,10 +321,8 @@ const LeaveRequestForm = () => {
                     leaveHistory: res.data
                 }));
             } else {
-                // ถ้า status ไม่ใช่ 200
             }
         } catch (error) {
-            // จัดการ error ที่อาจเกิดขึ้น
             console.error("โหลดประวัติการลาล้มเหลว", error);
         }
     };
@@ -355,8 +338,6 @@ const LeaveRequestForm = () => {
         }
 
         let filePath = null;
-
-        // ⬅️ 1. ถ้ามีไฟล์แนบ อัปโหลดก่อน
         if (form.attachment) {
             const fileData = new FormData();
             fileData.append("UserID", form.userID);
@@ -370,7 +351,7 @@ const LeaveRequestForm = () => {
                 });
 
                 if (fileRes.status === 201) {
-                    filePath = fileRes.data.filePath; // ✅ ดึง path จาก response
+                    filePath = fileRes.data.filePath;
                 }
             } catch (uploadErr) {
                 console.error("อัปโหลดไฟล์ไม่สำเร็จ", uploadErr);
@@ -387,12 +368,12 @@ const LeaveRequestForm = () => {
             endDate: form.endDate,
             reason: form.reason,
             contact: form.contact || "",
-            filePath: filePath || null // ✅ ใช้ค่าที่ได้จากการอัปโหลด
+            filePath: filePath || null
         };
 
         try {
             const res = await axios.post("https://192.168.1.188/hrwebapi/api/LeaveRequest", payload);
-            fetchLeaveHistory(); // โหลดใหม่
+            fetchLeaveHistory();
             setShowSuccessModal(true);
         } catch (err) {
             console.error("ส่งใบลาไม่สำเร็จ", err);
@@ -613,7 +594,6 @@ const LeaveRequestForm = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 px-3">
-                        {/* กราฟสถิติประเภทการลา (รายเดือน) */}
                         <div className="bg-white shadow rounded-xl p-4">
                             <h2 className="font-bold text-lg mb-4 text-black font-FontNoto">สถิติประเภทการลา (รายปี)</h2>
                             <ResponsiveContainer width="100%" height={250}>
@@ -643,9 +623,7 @@ const LeaveRequestForm = () => {
                                     <Line type="monotone" dataKey="ลาคลอด" stroke="#a855f7" />
                                 </LineChart>
                             </ResponsiveContainer>
-
                         </div>
-
                         <div className="bg-white shadow rounded-xl p-4">
                             <h2 className="font-bold text-lg mb-4 text-black font-FontNoto">สถิติสถานะใบลา (รายปี)</h2>
 
@@ -743,7 +721,6 @@ const LeaveRequestForm = () => {
                                                                     ? "แก้ไขแบบฟอร์มใบลา"
                                                                     : "รอดำเนินการ"}
                                                     </span>
-
                                                     <div>
                                                         <div className="text-sm font-semibold text-gray-600 mb-1">
                                                             <span className="text-base font-bold text-current">
@@ -829,7 +806,6 @@ const LeaveRequestForm = () => {
                                                             </button>
                                                         )}
                                                     </div>
-
                                                 </div>
                                             );
                                         })
@@ -870,7 +846,6 @@ const LeaveRequestForm = () => {
                         </div>
 
                         <div className="flex flex-col gap-4 w-full lg:w-[25%] xl:w-[35%]">
-
                             <div className="bg-white shadow-md rounded-xl p-5 flex-1">
                                 <h3 className="text-md font-bold font-FontNoto mb-2 text-black">วันหยุดประจำปี 2568</h3>
                                 <ul className="list-disc pl-5 space-y-2 text-sm text-gray-800 font-FontNoto">
@@ -1051,7 +1026,6 @@ const LeaveRequestForm = () => {
                                                 </a>
                                             </div>
                                         )}
-
                                         {selectedLeave.status === "Rejected" && (
                                             <div className="flex items-start">
                                                 <label className="w-28 pt-1 font-bold">เหตุผล:</label>
@@ -1133,7 +1107,6 @@ const LeaveRequestForm = () => {
                                                             : "รอดำเนินการ"}
                                                     </span>
                                                 </div>
-
                                                 <div className="mb-2 flex items-center gap-2">
                                                     <span className="text-gray-600 mr-2 whitespace-nowrap">วันที่:</span>
                                                     <input
@@ -1283,7 +1256,6 @@ const LeaveRequestForm = () => {
                                 className="font-FontNoto px-3 py-2 border border-gray-300 rounded-md bg-white text-black"
                             />
                         </div>
-
                         <div className="flex flex-col w-full mt-2">
                             <label className="font-FontNoto min-w-fit">ตำแหน่ง</label>
                             <input
@@ -1387,7 +1359,6 @@ const LeaveRequestForm = () => {
                                 className="font-FontNoto w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-black"
                             />
                         </div>
-
                         <div className="sm:w-1/2 mt-4 sm:mt-0">
                             <label className="font-FontNoto min-w-fit mb-1">เบอร์โทรศัพท์</label>
                             <input
@@ -1460,7 +1431,6 @@ const LeaveRequestForm = () => {
                                 <span className="text-gray-600 mr-2">ลายมือชื่อ:</span>
                                 <span className="inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1"></span>
                             </div>
-
                             <div className="mb-2 flex items-center gap-2">
                                 <span className="text-gray-600 mr-2 whitespace-nowrap">วันที่:</span>
                                 <input
@@ -1470,7 +1440,6 @@ const LeaveRequestForm = () => {
                                     style={{ minWidth: '150px' }}
                                 />
                             </div>
-
                             <div className="flex gap-4 mt-2">
                                 <label className="flex items-center gap-2 text-green-600 font-semibold">
                                     <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
@@ -1482,10 +1451,8 @@ const LeaveRequestForm = () => {
                                 </label>
                             </div>
                         </div>
-
                         <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
                             <p className="font-bold text-center mb-2">หัวหน้าฝ่ายนักวิเคราะห์ธุรกิจ</p>
-
                             <div className="mb-2 flex items-center">
                                 <span className="text-gray-600 mr-2">ลายมือชื่อ:</span>
                                 <span className="inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1"></span>
@@ -1500,7 +1467,6 @@ const LeaveRequestForm = () => {
                                     style={{ minWidth: '150px' }}
                                 />
                             </div>
-
                             <div className="flex gap-4 mt-2">
                                 <label className="flex items-center gap-2 text-green-600 font-semibold">
                                     <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
@@ -1528,7 +1494,6 @@ const LeaveRequestForm = () => {
                                     style={{ minWidth: '150px' }}
                                 />
                             </div>
-
                             <div className="flex gap-4 mt-2">
                                 <label className="flex items-center gap-2 text-green-600 font-semibold">
                                     <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
@@ -1541,7 +1506,6 @@ const LeaveRequestForm = () => {
                             </div>
                         </div>
                     </div>
-
                     <div className="flex justify-end items-center gap-4 mt-6">
                         <button
                             className="bg-gray-300 hover:bg-gray-500 text-black font-FontNoto px-4 py-2 rounded shadow"

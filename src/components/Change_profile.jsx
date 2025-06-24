@@ -6,9 +6,7 @@ function ChangeProfilePicture() {
   const [currentProfileImage, setCurrentProfileImage] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  // const userObj = JSON.parse(sessionStorage.getItem("usersobj"));
-  const userID = sessionStorage.getItem("userId") || ""; // ดึง userID จาก sessionStorage
+  const userID = sessionStorage.getItem("userId") || "";
 
   if (!userID) {
     return (

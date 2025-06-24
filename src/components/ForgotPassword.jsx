@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -44,18 +43,13 @@ const ForgotPassword = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-blue-100 via-white to-blue-200 px-4">
-      {/* ข้อความหัวเรื่อง */}
       <h1 className="text-3xl md:text-4xl text-blue-700 font-FontInter p-6">
         THE EXPERTISE CO,LTD.
       </h1>
-
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg space-y-6 text-center">
-        {/* หัวข้อฟอร์ม */}
         <h2 className="text-2xl md:text-3xl font-bold text-blue-700 font-FontNoto">
           ลืมรหัสผ่าน ?
         </h2>
-
-        {/* ฟอร์ม */}
         <form onSubmit={handleSubmit} className="space-y-4 text-left">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1 font-FontNoto">อีเมล</label>
@@ -89,7 +83,6 @@ const ForgotPassword = () => {
               </span>
             </div>
           )}
-
           <button
             type="submit"
             className="btn w-full !bg-blue-500 hover:bg-blue-700 !text-white font-bold font-FontNoto"

@@ -20,7 +20,6 @@ const ManageEquipmentsAdmin = () => {
   const [selectedStatus, setSelectedStatus] = useState("ทั้งหมด");
   const [currentPage, setCurrentPage] = useState(1);
 
-
   const borrowerName = users.find(u => u.userID === parseInt(selectedUserId));
   const filteredBorrows = borrows.filter(br => {
     const yearMatch = new Date(br.borrowDate).getFullYear() === parseInt(selectedYear);
@@ -28,7 +27,7 @@ const ManageEquipmentsAdmin = () => {
     return yearMatch && statusMatch;
   });
 
-  const totalPages = Math.ceil(filteredBorrows.length / 5); // หรือจำนวนรายการต่อหน้าอื่นๆ
+  const totalPages = Math.ceil(filteredBorrows.length / 5);
   const paginatedBorrows = filteredBorrows.slice((currentPage - 1) * 5, currentPage * 5);
 
   const openModal = (equipment) => {
@@ -94,7 +93,6 @@ const ManageEquipmentsAdmin = () => {
   };
 
   useEffect(() => { fetchData(); }, []);
-  // ✅ ประกาศตัวแปรสรุป
   const totalBorrowed = borrows.length && borrows.filter(b => !b.returnDate).length;
   const totalReturned = borrows.length && borrows.filter(b => b.returnDate).length;
   const totalAvailable = equipments.length && borrows.length
@@ -114,7 +112,6 @@ const ManageEquipmentsAdmin = () => {
     fetchData();
   };
 
-
   const handleBorrow = (equipment) => {
     if (!selectedUserId) {
       setStatusMessage("กรุณาเลือกพนักงานก่อน");
@@ -128,7 +125,6 @@ const ManageEquipmentsAdmin = () => {
       return;
     }
 
-    // กำหนดอุปกรณ์ที่เลือก แล้วเปิด modal ยืนยัน
     setSelectedEquipment(equipment);
     setIsModalOpen(true);
   };
@@ -156,8 +152,6 @@ const ManageEquipmentsAdmin = () => {
       document.getElementById("status_modal").showModal();
     }
   };
-
-
   const calculateAvailableEquipments = (equipmentId) => {
     const borrowedCount = borrows.filter(br => br.equipmentID === equipmentId && !br.returnDate).length;
     const equipment = equipments.find(eq => eq.equipmentID === equipmentId);
@@ -403,8 +397,6 @@ const ManageEquipmentsAdmin = () => {
         <>
           <div className="bg-white rounded-xl shadow p-4 font-FontNoto">
             <h2 className="text-xl font-bold mb-4">ประวัติการยืม-คืนอุปกรณ์</h2>
-
-            {/* ตัวกรอง */}
             <div className="flex flex-row flex-wrap justify-end items-center gap-2 mb-4 font-FontNoto">
               <div className="flex items-center gap-2 whitespace-nowrap">
                 <label className="text-sm text-gray-600">ปี:</label>
@@ -440,8 +432,6 @@ const ManageEquipmentsAdmin = () => {
                 </select>
               </div>
             </div>
-
-            {/* ตารางข้อมูล */}
             <div className="overflow-x-auto">
               <table className="table w-full text-sm whitespace-nowrap">
                 <thead className="bg-gray-100 text-gray-700 font-FontNoto">
@@ -491,8 +481,6 @@ const ManageEquipmentsAdmin = () => {
                 </tbody>
               </table>
             </div>
-
-            {/* Pagination */}
             <div className="flex justify-center items-center gap-2 mt-6 font-FontNoto flex-wrap">
               <button
                 className={`px-4 py-1 rounded-full border text-sm shadow-sm transition-all duration-150 ${currentPage === 1

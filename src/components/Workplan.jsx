@@ -606,21 +606,17 @@ const Workplan = () => {
 
     const saveOrUpdateTaskToDatabase = async (task) => {
         try {
-            // ✨ สร้างอ็อบเจกต์ใหม่ที่แปลงชื่อ field ให้ตรงกับ backend
             const mappedTask = {
                 ...task,
-                PrivateNote: task.privateNote,     // ✔ แปลงชื่อให้ตรงกับ backend
-                NoteType: task.noteType,            // ✔ ชื่อตรง backend แล้ว
+                PrivateNote: task.privateNote, 
+                NoteType: task.noteType, 
             };
-
-            // ดึงข้อมูลแผนในวันเดียวกัน
             const res = await axios.get(`https://192.168.1.188/hrwebapi/api/Workplan/${task.userID}`);
             const sameDayTasks = res.data.filter(t =>
                 new Date(t.date).toDateString() === new Date(task.date).toDateString()
             );
 
             if (sameDayTasks.length > 0) {
-                // แก้ไขตัวแรก และลบตัวอื่น
                 await axios.put(`https://192.168.1.188/hrwebapi/api/Workplan/${sameDayTasks[0].id}`, {
                     ...mappedTask,
                     id: sameDayTasks[0].id
@@ -641,7 +637,6 @@ const Workplan = () => {
         const key = `${userId}-${year}-${month + 1}-${selectedDate}`;
         const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
 
-        // ตรวจสอบและแปลงค่า privateNote ให้เป็นสตริงถ้าเป็นอาร์เรย์
         let privateNoteValue = taskData.privateNote || "";
         if (Array.isArray(privateNoteValue)) {
             privateNoteValue = privateNoteValue.join('\n');

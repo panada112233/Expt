@@ -25,9 +25,7 @@ function EmpHome() {
   const [deleteType, setDeleteType] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [activeTab, setActiveTab] = useState('approvedLeave');
-
   const [allLeaveDocuments, setAllLeaveDocuments] = useState([]);
-
 
   const categoryMapping = {
     sick: "ใบลาป่วย",
@@ -44,7 +42,6 @@ function EmpHome() {
   };
 
   const userID = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-
   const fetchDocuments = async () => {
     try {
       const response = await fetch(`https://192.168.1.188/hrwebapi/api/Files/Document?userID=${userID}`);
@@ -57,17 +54,13 @@ function EmpHome() {
   };
   const loadLeaveJsonAndCreatePDF = async (filePath) => {
     try {
-      // 👉 โหลด JSON ไฟล์ก่อน
       const response = await axios.get(`https://192.168.1.188/hrwebapi/api/Files${filePath}`);
       const data = response.data;
-
-      // 👉 ดึงข้อมูลล่าสุดจาก backend ด้วย userID และ id จาก JSON
       const latestReq = await axios.get(`https://192.168.1.188/hrwebapi/api/LeaveRequest/User/${data.userID}`);
       const updated = latestReq.data.find(r => r.id === data.id);
       if (updated) {
-        Object.assign(data, updated); // ผสมข้อมูลใหม่ใส่ data เดิม
+        Object.assign(data, updated);
       }
-
       const userRes = await axios.get(`https://192.168.1.188/hrwebapi/api/User/${data.userID}`);
       const user = userRes.data;
 
@@ -90,7 +83,7 @@ function EmpHome() {
         lastLeaveEnd: lastLeave?.endDate || "-",
         lastLeaveDays: lastLeave?.totalDays || 0,
         gmComment: data.gmComment || "-",
-        hrComment: data.hrComment || "-" // ✅ ใช้ของล่าสุด
+        hrComment: data.hrComment || "-"
       };
 
       createPDF(enrichedForm);
@@ -107,7 +100,6 @@ function EmpHome() {
 
   const handleOpenModal = async (filePathOrDoc) => {
     if (typeof filePathOrDoc === "object" && filePathOrDoc !== null) {
-      // กรณีส่ง doc object มา
       setSelectedFilePath(null);
       setSelectedDocument(filePathOrDoc);
       setSelectedDoc(filePathOrDoc);
@@ -118,14 +110,12 @@ function EmpHome() {
         await fetchHistory(filePathOrDoc.documentId);
       }
     } else if (typeof filePathOrDoc === "string") {
-      // กรณีส่งแค่ path string มา
       setSelectedFilePath(filePathOrDoc);
       setSelectedDocument(null);
       setSelectedDoc(null);
       setPassword("");
       setIsModalOpen(true);
     } else {
-      // กรณีข้อมูลไม่ถูกต้อง
       alert("ไม่พบข้อมูลเอกสาร");
     }
   };
@@ -178,13 +168,11 @@ function EmpHome() {
       };
 
       const response = await axios.request(config);
-
       if (response.data.isValid) {
-        // ✅ แก้ตรงนี้
         if (selectedDocument?.filePath) {
           const fileExt = selectedDocument.filePath.split('.').pop().toLowerCase();
           if (fileExt === "json") {
-            await loadLeaveJsonAndCreatePDF(selectedDocument.filePath); // 🔄 โหลด JSON + enrich + สร้าง PDF
+            await loadLeaveJsonAndCreatePDF(selectedDocument.filePath);
           } else {
             window.open('https://192.168.1.188/hrwebapi/api/Files' + selectedDocument.filePath, '_blank');
           }
@@ -207,7 +195,7 @@ function EmpHome() {
   const handleAddDocument = async (e) => {
     e.preventDefault();
 
-    if (isSubmitting) return; // ป้องกันการกดซ้ำ
+    if (isSubmitting) return;
     setIsSubmitting(true);
 
     const formData = new FormData();
@@ -226,8 +214,8 @@ function EmpHome() {
         const result = await response.json();
         console.log('Response:', result);
         setModalMessage('สร้างเอกสารสำเร็จ');
-        setIsSuccessModalOpen(true); // เปิดโมเดลสำเร็จ
-        await fetchDocuments(); // โหลดข้อมูลใหม่
+        setIsSuccessModalOpen(true);
+        await fetchDocuments();
 
         setNewDocument({
           category: '',
@@ -237,12 +225,12 @@ function EmpHome() {
       } else {
         console.error('Error creating document:', response.statusText);
         setModalMessage('เกิดข้อผิดพลาดในการสร้างเอกสาร');
-        setIsErrorModalOpen(true); // เปิดโมเดลล้มเหลว
+        setIsErrorModalOpen(true);
       }
     } catch (error) {
       console.error('Error creating document:', error);
       setModalMessage('เกิดข้อผิดพลาดในการสร้างเอกสาร');
-      setIsErrorModalOpen(true); // เปิดโมเดลล้มเหลว
+      setIsErrorModalOpen(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -287,7 +275,7 @@ function EmpHome() {
       );
 
       setAllLeaveDocuments(leaveOnly);
-      sethrdocunet(leaveOnly); // set ตัวกรองเริ่มต้น
+      sethrdocunet(leaveOnly);
     };
 
     if (activeTab === "approvedLeave") {
@@ -295,13 +283,12 @@ function EmpHome() {
     }
   }, [activeTab]);
 
-
   const handleDeleteDocument = async () => {
     if (!deleteDocumentId || !deleteType) return;
 
     let apiUrl = deleteType === "upload"
-      ? `https://192.168.1.188/hrwebapi/api/Files/${deleteDocumentId}` // ลบเอกสารที่อัปโหลด
-      : `https://192.168.1.188/hrwebapi/api/Document/DeleteDocument/${deleteDocumentId}`; // ลบเอกสารใบลา
+      ? `https://192.168.1.188/hrwebapi/api/Files/${deleteDocumentId}`
+      : `https://192.168.1.188/hrwebapi/api/Document/DeleteDocument/${deleteDocumentId}`;
 
     try {
       const response = await fetch(apiUrl, { method: "DELETE" });
@@ -333,7 +320,6 @@ function EmpHome() {
     setIsDeleteModalOpen(false);
   };
 
-
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile && selectedFile.type.match('application/*')) {
@@ -353,7 +339,6 @@ function EmpHome() {
       </div>
       <h2 className="text-2xl font-bold text-black font-FontNoto"></h2>
       <div className="">
-        {/* Modal ใส่รหัสผ่าน */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-[400px] relative">
@@ -377,7 +362,6 @@ function EmpHome() {
                     }
                   }}
                 />
-                {/* ปุ่มสำหรับแสดง/ซ่อนรหัสผ่าน */}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -430,7 +414,6 @@ function EmpHome() {
             </div>
           </div>
         )}
-        {/* Modal สำเร็จ */}
         {isSuccessModalOpen && (
           <dialog id="success_modal" className="modal" open>
             <div className="modal-box">
@@ -447,9 +430,6 @@ function EmpHome() {
             </div>
           </dialog>
         )}
-
-
-        {/* Modal ล้มเหลว */}
         {isErrorModalOpen && (
           <dialog id="error_modal" className="modal" open>
             <div className="modal-box">
@@ -466,8 +446,6 @@ function EmpHome() {
             </div>
           </dialog>
         )}
-
-        {/* Form อัปโหลดเอกสาร */}
         <form
           onSubmit={handleAddDocument}
           className="space-y-4 mb-8 bg-base-100 p-4 rounded-lg shadow"
@@ -528,9 +506,6 @@ function EmpHome() {
         </form>
         <div className="bg-base-100 p-4 rounded-lg shadow mb-8 font-FontNoto max-w-full overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full">
-
-
-            {/* ช่องค้นหาและปุ่มค้นหา */}
             <div className="flex flex-row gap-2 w-full sm:w-1/3 items-center max-w-full min-w-0">
               <input
                 type="text"
@@ -554,7 +529,7 @@ function EmpHome() {
           <ul className="space-y-4 font-FontNoto">
             {filteredDocuments
               .filter(doc => ["Others", "Doc"].includes(doc.category))
-              .sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate)) // ✅ เรียงใหม่อยู่บนสุด
+              .sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate))
               .map((doc) => {
                 const fileExtension = doc.filePath ? doc.filePath.split('.').pop().toLowerCase() : "ไม่พบข้อมูล";
                 const uploadDate = doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString('th-TH') : "จาก HR";

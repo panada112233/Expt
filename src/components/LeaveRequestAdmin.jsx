@@ -92,7 +92,7 @@ const LeaveRequestAdmin = () => {
                 signature: currentUserName,
             });
             setShowModal(false);
-            fetchLeaveData(); // โหลดข้อมูลใหม่
+            fetchLeaveData();
         } catch (error) {
             console.error("การอนุมัติล้มเหลว", error);
             alert("เกิดข้อผิดพลาดในการอนุมัติ");
@@ -232,8 +232,6 @@ const LeaveRequestAdmin = () => {
         const filtered = data.filter(item => {
             const yearMatch = new Date(item.startDate).getFullYear() === year;
             const stillWaiting = !item.hrApprovedAt;
-
-            // ✅ ยังไม่ถูกปฏิเสธ
             const isNotRejected = item.status !== "Rejected" && item.status !== "RejectedByHR";
 
             return yearMatch && stillWaiting && isNotRejected;
@@ -244,7 +242,7 @@ const LeaveRequestAdmin = () => {
 
     const showDetail = (item, fromPending = false) => {
         setSelectedLeave(item);
-        setFromPendingList(fromPending); // ✅ รับจาก argument
+        setFromPendingList(fromPending);
         setShowModal(true);
     };
     return (
@@ -296,8 +294,6 @@ const LeaveRequestAdmin = () => {
                     })}
                 </div>
             </div>
-
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2">
                 <div className="bg-white shadow rounded-xl p-4">
                     <h2 className="font-bold text-lg mb-4 text-black font-FontNoto">สถิติประเภทการลา (รายปี)</h2>
@@ -344,8 +340,6 @@ const LeaveRequestAdmin = () => {
                                     rejected: 0,
                                     noForm: 0,
                                 }));
-
-                                // ✅ Approved / Rejected จาก leaveHistory
                                 leaveHistory?.forEach((item) => {
                                     const m = new Date(item.startDate).getMonth();
                                     if (item.status === "ApprovedByManager" || item.status === "ApprovedByHR") {
@@ -354,8 +348,6 @@ const LeaveRequestAdmin = () => {
                                         monthlyStatus[m].rejected += 1;
                                     }
                                 });
-
-                                // ✅ Pending จาก pendingRequests
                                 pendingRequests?.forEach((item) => {
                                     const m = new Date(item.startDate).getMonth();
                                     monthlyStatus[m].pending += 1;
@@ -922,7 +914,6 @@ const LeaveRequestAdmin = () => {
                                         />
                                     </div>
                                     <div className="flex gap-4 mt-2">
-                                        {/* ปุ่ม อนุมัติ */}
                                         <label className="flex items-center gap-2 text-green-600 font-semibold cursor-pointer">
                                             <input
                                                 type="radio"
@@ -944,8 +935,6 @@ const LeaveRequestAdmin = () => {
                                             />
                                             อนุมัติ
                                         </label>
-
-                                        {/* ปุ่ม ไม่อนุมัติ */}
                                         <label className="flex items-center gap-2 text-red-600 font-semibold cursor-pointer">
                                             <input
                                                 type="radio"

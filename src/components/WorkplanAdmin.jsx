@@ -35,7 +35,6 @@ const WorkplanAdmin = () => {
     const yesterday = new Date(selectedDate);
     yesterday.setDate(selectedDate.getDate() - (day === 1 ? 3 : 1));
     const previousLabel = day === 1 ? "ศุกร์" : yesterday.toLocaleDateString("th-TH", { weekday: "long" }).replace("วัน", "");
-
     const selectedKey = selectedDate.toISOString().split("T")[0];
     const yesterdayKey = yesterday.toISOString().split("T")[0];
 
@@ -89,12 +88,10 @@ const WorkplanAdmin = () => {
                 </p>
             </div>
             <div className="w-full max-w-8xl mx-auto bg-white rounded-3xl p-6 shadow-md items-center justify-center">
-                {/* สร้างตัวแปรก่อนใช้ */}
                 {(() => {
                     const selectedDate = new Date(historyDate);
-                    const day = selectedDate.getDay(); // 0=อาทิตย์, 1=จันทร์, ..., 6=เสาร์
+                    const day = selectedDate.getDay();
 
-                    // ❌ ถ้าเป็นเสาร์หรืออาทิตย์ ไม่แสดงเลย
                     if (day === 0 || day === 6) {
                         return null;
                     }
@@ -103,11 +100,9 @@ const WorkplanAdmin = () => {
                     let previousLabel = "";
 
                     if (day === 1) {
-                        // จันทร์ → ใช้วันศุกร์
                         yesterday.setDate(selectedDate.getDate() - 3);
                         previousLabel = "ศุกร์";
                     } else {
-                        // ปกติ → ใช้เมื่อวาน
                         yesterday.setDate(selectedDate.getDate() - 1);
                         previousLabel = yesterday.toLocaleDateString("th-TH", {
                             weekday: "long",
@@ -153,7 +148,6 @@ const WorkplanAdmin = () => {
                     return (
                         <div className="relative  font-FontNoto mb-8  animate-fade-in ">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-                                {/* ซ้าย: วันที่ + คนลงแผน */}
                                 <div>
                                     <h3 className="font-semibold text-lg font-FontNoto text-black">
                                         {(() => {
@@ -178,8 +172,6 @@ const WorkplanAdmin = () => {
                                         })()}
                                     </h3>
                                 </div>
-
-                                {/* ขวา: ช่องเลือกวันที่ + ค้นหา */}
                                 <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
                                     <input
                                         type="date"
@@ -220,7 +212,6 @@ const WorkplanAdmin = () => {
                                                 key={idx}
                                                 className="rounded-2xl border border-gray-200 bg-white p-5 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
                                             >
-                                                {/* ชื่อพนักงาน + รูปโปรไฟล์ */}
                                                 <div className="flex items-center mb-3 bg-gray-200 rounded-2xl">
                                                     <img
                                                         src={`https://192.168.1.188/hrwebapi/api/Files/GetProfileImage?userID=${rec.userID}`}
@@ -234,8 +225,6 @@ const WorkplanAdmin = () => {
                                                         </p>
                                                     </div>
                                                 </div>
-
-                                                {/* แผนงานเมื่อวาน */}
                                                 <div className="mb-3 min-h-[100px]">
                                                     <p className="text-sm font-semibold font-FontNoto mb-1">
                                                         เมื่อวัน{previousLabel}
@@ -254,8 +243,6 @@ const WorkplanAdmin = () => {
                                                         </button>
                                                     )}
                                                 </div>
-
-                                                {/* แผนงานวันนี้ */}
                                                 <div className="min-h-[100px]">
                                                     <p className="text-sm font-semibold font-FontNoto mb-1">
                                                         วันนี้ ({selectedDate.toLocaleDateString("th-TH", { weekday: "long" }).replace("วัน", "")})

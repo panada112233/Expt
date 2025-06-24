@@ -46,8 +46,8 @@ const BorrowEquipmentsEmp = () => {
       axios.get("https://192.168.1.188/hrwebapi/api/Equipment/BorrowRecords")
     ]);
     setEquipments(eqRes.data);
-    setAllBorrows(brRes.data); // 👈 ใช้ข้อมูลทั้งหมด
-    setBorrows(brRes.data.filter(b => b.userID === userId)); // 👈 ของเฉพาะ user นี้
+    setAllBorrows(brRes.data); 
+    setBorrows(brRes.data.filter(b => b.userID === userId));
   };
 
   const handleReturn = async (borrowId) => {
@@ -179,7 +179,6 @@ const BorrowEquipmentsEmp = () => {
                   />
                 </div>
               </div>
-
               <div>
                 <label className="font-semibold">รายละเอียดอุปกรณ์</label>
                 <textarea
@@ -189,7 +188,6 @@ const BorrowEquipmentsEmp = () => {
                   rows={2}
                 />
               </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="font-semibold">ชื่อ-นามสกุล</label>

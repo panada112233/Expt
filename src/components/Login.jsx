@@ -11,7 +11,6 @@ const Login = ({ setIsLoggedIn }) => {
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(!!localStorage.getItem('savedEmail'));
     const [error, setError] = useState('');
-
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
@@ -32,8 +31,6 @@ const Login = ({ setIsLoggedIn }) => {
             try {
                 const res = await axios.post("https://192.168.1.188/hrwebapi/api/Users/Login", data);
                 const result = res.data;
-
-                // Save session
                 if (rememberMe) {
                     localStorage.setItem('savedEmail', identifier);
                 } else {
@@ -67,11 +64,9 @@ const Login = ({ setIsLoggedIn }) => {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-blue-100 via-white to-blue-200 px-4">
-            {/* ข้อความด้านนอกกรอบ */}
             <h1 className="text-3xl md:text-4xl  text-blue-700 mb-6 text-center font-FontInter">
                 THE EXPERTISE CO,LTD.
             </h1>
-
             <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg space-y-6">
                 <h2 className="text-2xl font-bold text-center text-blue-700 font-FontNoto">เข้าสู่ระบบ</h2>
 
