@@ -669,8 +669,18 @@ const WorktimeEmp = () => {
                                                 </td>
                                                 <td className="py-2 font-FontNoto text-center whitespace-nowrap">
                                                     <div className="flex justify-center gap-2">
-                                                        <button onClick={() => handleEdit(item)} className="btn btn-xs btn-warning">แก้ไข</button>
-                                                        <button onClick={() => setDeleteRecordID(item.worktimeID)} className="btn btn-xs btn-error">ลบ</button>
+                                                        <button
+                                                            onClick={() => handleEdit(item)}
+                                                            className="bg-yellow-500 hover:bg-yellow-600 text-white font-FontNoto px-3 py-1 rounded shadow text-xs"
+                                                        >
+                                                            แก้ไข
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setDeleteRecordID(item.worktimeID)}
+                                                            className="bg-red-500 hover:bg-red-600 text-white font-FontNoto px-3 py-1 rounded shadow text-xs"
+                                                        >
+                                                            ลบ
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>

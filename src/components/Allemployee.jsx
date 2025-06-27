@@ -726,7 +726,7 @@ const Allemployee = () => {
                                                 placeholder="รหัสผ่าน"
                                                 value={user.passwordHash}
                                                 onChange={handleChange}
-                                                className="input input-bordered font-FontNoto bg-gray-700 text-black w-full py-3 px-4 rounded-md border border-gray-600"
+                                                className="input input-bordered font-FontNoto w-full"
                                                 required
                                             />
                                             <button
@@ -753,7 +753,7 @@ const Allemployee = () => {
                                                 placeholder="ยืนยันรหัสผ่าน"
                                                 value={user.confirmPassword}
                                                 onChange={handleChange}
-                                                className="input input-bordered font-FontNoto bg-gray-700 text-black w-full py-3 px-4 rounded-md border border-gray-600"
+                                                className="input input-bordered font-FontNoto w-full"
                                                 required
                                             />
                                             <button

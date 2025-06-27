@@ -1,5 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import {
+  Laptop,
+  Monitor,
+  Mouse,
+  Projector,
+  Tablet,
+  Server,
+  Keyboard,
+  HardDrive,
+  Camera,
+  Smartphone,
+  Package,
+  Headphones
+
+} from "lucide-react";
 
 const ManageEquipmentsAdmin = () => {
   const [equipments, setEquipments] = useState([]);
@@ -14,11 +29,18 @@ const ManageEquipmentsAdmin = () => {
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
-  const [activeTab, setActiveTab] = useState("assign");
+  const [activeTab, setActiveTab] = useState("manage");
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedStatus, setSelectedStatus] = useState("ทั้งหมด");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showFull, setShowFull] = useState(false);
+  const [confirmType, setConfirmType] = useState("");
+  const [confirmBorrowId, setConfirmBorrowId] = useState(null);
+  const [selectedBorrowDetail, setSelectedBorrowDetail] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState(""); // 👈 เพิ่มตรงนี้
+
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
 
   const borrowerName = users.find(u => u.userID === parseInt(selectedUserId));
   const filteredBorrows = borrows.filter(br => {
@@ -27,8 +49,8 @@ const ManageEquipmentsAdmin = () => {
     return yearMatch && statusMatch;
   });
 
-  const totalPages = Math.ceil(filteredBorrows.length / 5);
-  const paginatedBorrows = filteredBorrows.slice((currentPage - 1) * 5, currentPage * 5);
+  const totalPages = Math.ceil(filteredBorrows.length / 10);
+  const paginatedBorrows = filteredBorrows.slice((currentPage - 1) * 10, currentPage * 10);
 
   const openModal = (equipment) => {
     setSelectedEquipment(equipment);
@@ -39,6 +61,156 @@ const ManageEquipmentsAdmin = () => {
   const openDeleteModal = (equipmentId) => {
     setDeleteTargetId(equipmentId);
     document.getElementById("delete_confirm_modal").checked = true;
+  };
+
+  const getIconByName = (name) => {
+    const lowerName = name.toLowerCase();
+
+    if (
+      lowerName.includes("คอมพิวเตอร์") ||
+      lowerName.includes("computer") ||
+      lowerName.includes("pc") ||
+      lowerName.includes("desktop")
+    ) {
+      return (
+        <div className="flex justify-center items-center">
+          <Monitor size={100} className="text-cyan-600" />
+        </div>
+      );
+    }
+
+    if (
+      lowerName.includes("โน๊ตบุ๊ก") ||
+      lowerName.includes("laptop") ||
+      lowerName.includes("notebook")
+    ) {
+      return (
+        <div className="flex justify-center items-center">
+          <Laptop size={100} className="text-blue-500" />
+        </div>
+      );
+    }
+
+    if (
+      lowerName.includes("จอ") ||
+      lowerName.includes("monitor") ||
+      lowerName.includes("display")
+    ) {
+      return (
+        <div className="flex justify-center items-center">
+          <Monitor size={100} className="text-green-500" />
+        </div>
+      );
+    }
+
+    if (lowerName.includes("เมาส์") || lowerName.includes("mouse")) {
+      return (
+        <div className="flex justify-center items-center">
+          <Mouse size={100} className="text-red-500" />
+        </div>
+      );
+    }
+
+    if (lowerName.includes("โปรเจคเตอร์") || lowerName.includes("projector")) {
+      return (
+        <div className="flex justify-center items-center">
+          <Projector size={100} className="text-purple-500" />
+        </div>
+      );
+    }
+
+    if (lowerName.includes("แท็บเล็ต") || lowerName.includes("tablet")) {
+      return (
+        <div className="flex justify-center items-center">
+          <Tablet size={100} className="text-pink-500" />
+        </div>
+      );
+    }
+
+    if (lowerName.includes("เซิร์ฟเวอร์") || lowerName.includes("server")) {
+      return (
+        <div className="flex justify-center items-center">
+          <Server size={100} className="text-yellow-500" />
+        </div>
+      );
+    }
+
+    if (lowerName.includes("คีย์บอร์ด") || lowerName.includes("keyboard")) {
+      return (
+        <div className="flex justify-center items-center">
+          <Keyboard size={100} className="text-orange-500" />
+        </div>
+      );
+    }
+    if (lowerName.includes("หูฟัง") || lowerName.includes("headphone")) {
+      return (
+        <div className="flex justify-center items-center">
+          <Headphones size={100} className="text-fuchsia-500" />
+        </div>
+      );
+    }
+
+
+    if (
+      lowerName.includes("ฮาร์ดดิสก์") ||
+      lowerName.includes("hard drive") ||
+      lowerName.includes("ssd")
+    ) {
+      return (
+        <div className="flex justify-center items-center">
+          <HardDrive size={100} className="text-gray-500" />
+        </div>
+      );
+    }
+
+    if (lowerName.includes("กล้อง") || lowerName.includes("camera")) {
+      return (
+        <div className="flex justify-center items-center">
+          <Camera size={100} className="text-indigo-500" />
+        </div>
+      );
+    }
+    if (lowerName.includes("ไอโฟน") || lowerName.includes("iphone") || lowerName.includes("โทรศัพท์")) {
+      return (
+        <div className="flex justify-center items-center">
+          <Smartphone size={100} className="text-pink-600" />
+        </div>
+      );
+    }
+    return (
+      <div className="flex justify-center items-center">
+        <Package size={100} className="text-yellow-500" />
+      </div>
+    );
+  };
+
+  const handleReject = async (borrowId, reason) => {
+    try {
+      await axios.post(`https://192.168.1.188/hrwebapi/api/Equipment/RejectRequest/${borrowId}`, {
+        reason,
+      });
+
+      setStatusMessage("ปฏิเสธคำขอยืมเรียบร้อยแล้ว");
+      document.getElementById("status_modal").showModal();
+      fetchData();
+    } catch (error) {
+      console.error("ไม่สามารถปฏิเสธคำขอได้:", error);
+      setStatusMessage("เกิดข้อผิดพลาดขณะปฏิเสธคำขอ");
+      document.getElementById("status_modal").showModal();
+    }
+  };
+
+  const handleApprove = async (borrowId) => {
+    try {
+      await axios.post(`https://192.168.1.188/hrwebapi/api/Equipment/ApproveRequest/${borrowId}`);
+      setStatusMessage("อนุมัติคำขอยืมเรียบร้อยแล้ว");
+      document.getElementById("status_modal").showModal();
+      fetchData();
+    } catch (error) {
+      console.error("ไม่สามารถอนุมัติคำขอได้:", error);
+      setStatusMessage("เกิดข้อผิดพลาดขณะอนุมัติคำขอ");
+      document.getElementById("status_modal").showModal();
+    }
   };
 
   const handleDeleteConfirm = async () => {
@@ -93,14 +265,21 @@ const ManageEquipmentsAdmin = () => {
   };
 
   useEffect(() => { fetchData(); }, []);
-  const totalBorrowed = borrows.length && borrows.filter(b => !b.returnDate).length;
+  const totalBorrowed = borrows.filter(
+    b => b.status.trim() === "กำลังใช้งาน"
+  ).length;
+
   const totalReturned = borrows.length && borrows.filter(b => b.returnDate).length;
-  const totalAvailable = equipments.length && borrows.length
-    ? equipments.reduce((sum, eq) => {
-      const borrowed = borrows.filter(b => b.equipmentID === eq.equipmentID && !b.returnDate).length;
-      return sum + (eq.totalCount - borrowed);
-    }, 0)
-    : 0;
+
+  const totalAvailable = equipments.reduce((sum, eq) => {
+    const borrowed = borrows.filter(
+      b => b.equipmentID === eq.equipmentID && b.status.trim() === "กำลังใช้งาน"
+    ).length;
+
+    const available = eq.totalCount - borrowed;
+    return sum + Math.max(0, available);
+  }, 0);
+
 
   const handleAdd = async () => {
     if (newEq.totalCount <= 0) {
@@ -128,6 +307,14 @@ const ManageEquipmentsAdmin = () => {
     setSelectedEquipment(equipment);
     setIsModalOpen(true);
   };
+
+  const toggleDescription = (equipmentId) => {
+    setExpandedDescriptions((prev) => ({
+      ...prev,
+      [equipmentId]: prev[equipmentId] ? null : true,
+    }));
+  };
+
   const handleConfirmBorrow = async () => {
     if (!selectedUserId || !selectedEquipment) {
       setStatusMessage("ข้อมูลไม่ครบถ้วน กรุณาลองใหม่");
@@ -152,18 +339,21 @@ const ManageEquipmentsAdmin = () => {
       document.getElementById("status_modal").showModal();
     }
   };
-  const calculateAvailableEquipments = (equipmentId) => {
-    const borrowedCount = borrows.filter(br => br.equipmentID === equipmentId && !br.returnDate).length;
-    const equipment = equipments.find(eq => eq.equipmentID === equipmentId);
 
-    if (!equipment) {
-      console.log(`ไม่พบข้อมูลอุปกรณ์สำหรับ ID: ${equipmentId}`);
-      return { borrowedCount: 0, remaining: 0 };
-    }
+  const calculateAvailableEquipments = (equipmentId) => {
+    // ✅ เอาเฉพาะสถานะ "กำลังใช้งาน" เท่านั้นที่นับว่ายืมอยู่จริง
+    const borrowedCount = borrows.filter(br =>
+      br.equipmentID === equipmentId &&
+      br.status.trim() === "กำลังใช้งาน"
+    ).length;
+
+    const equipment = equipments.find(eq => eq.equipmentID === equipmentId);
+    if (!equipment) return { borrowedCount: 0, remaining: 0 };
 
     const remaining = equipment.totalCount - borrowedCount;
     return { borrowedCount, remaining };
   };
+
 
   return (
     <div className="flex flex-col w-full">
@@ -194,244 +384,664 @@ const ManageEquipmentsAdmin = () => {
         </div>
       </div>
       <div className="flex gap-4 border-b border-gray-300 mb-4 mt-3">
-        <button onClick={() => setActiveTab("assign")} className={`py-2 px-4 font-bold font-FontNoto ${activeTab === "assign" ? "border-b-4 border-blue-500 text-blue-600" : "text-gray-500"}`}>เบิกอุปกรณ์</button>
         <button onClick={() => setActiveTab("manage")} className={`py-2 px-4 font-bold font-FontNoto ${activeTab === "manage" ? "border-b-4 border-blue-500 text-blue-600" : "text-gray-500"}`}>จัดการอุปกรณ์</button>
+        <button onClick={() => setActiveTab("assign")} className={`py-2 px-4 font-bold font-FontNoto ${activeTab === "assign" ? "border-b-4 border-blue-500 text-blue-600" : "text-gray-500"}`}>เบิกอุปกรณ์</button>
         <button onClick={() => setActiveTab("history")} className={`py-2 px-4 font-bold font-FontNoto ${activeTab === "history" ? "border-b-4 border-blue-500 text-blue-600" : "text-gray-500"}`}>ประวัติการยืม-คืน</button>
       </div>
-
-      {activeTab === "assign" && (
-        <>
-          <h3 className="text-xl font-bold mt-6 mb-2 font-FontNoto">เบิกอุปกรณ์ให้พนักงาน</h3>
-          <div className="flex flex-col md:flex-row flex-wrap gap-2 items-start md:items-center mb-4">
-            <select
-              className="select select-bordered font-FontNoto w-full md:w-auto"
-              onChange={e => setSelectedUserId(e.target.value)}
-              value={selectedUserId}
-            >
-              <option className="font-FontNoto" value="">-- เลือกพนักงาน --</option>
-              {users.map(u => (
-                <option className="font-FontNoto" key={u.userID} value={u.userID}>
-                  {u.firstName} {u.lastName}
-                </option>
-              ))}
-            </select>
-
-            <select
-              className="select select-bordered font-FontNoto w-full md:w-auto"
-              onChange={e => setSelectedEquipmentId(e.target.value)}
-              value={selectedEquipmentId}
-              disabled={!selectedUserId}
-            >
-              <option className="font-FontNoto" value="">-- เลือกอุปกรณ์ที่ต้องการยืม --</option>
-              {equipments.filter(eq => eq.isAvailable).map(eq => {
-                const { remaining } = calculateAvailableEquipments(eq.equipmentID);
-                return (
-                  <option className="font-FontNoto" key={eq.equipmentID} value={eq.equipmentID}>
-                    {eq.name} (เหลือ {remaining})
-                  </option>
-                );
-              })}
-            </select>
-
-            <button
-              className="btn btn-primary font-FontNoto w-full md:w-auto"
-              onClick={() => {
-                const eq = equipments.find(e => e.equipmentID === parseInt(selectedEquipmentId));
-                handleBorrow(eq);
-              }}
-
-              disabled={!selectedUserId || !selectedEquipmentId}
-            >
-              ยืมอุปกรณ์
-            </button>
+      <dialog id="status_modal" className="modal">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg text-green-600 font-FontNoto">แจ้งเตือน</h3>
+          <p className="py-2 font-FontNoto">{statusMessage}</p>
+          <div className="modal-action">
+            <form method="dialog">
+              <button
+                className="bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 
+                     text-white font-FontNoto px-5 py-2 rounded-lg shadow-lg transition duration-300 ease-in-out"
+              >
+                ปิด
+              </button>
+            </form>
           </div>
-        </>
-      )}
+        </div>
+      </dialog>
+
       {activeTab === "manage" && (
         <>
-          <h2 className="text-2xl font-bold mb-4 font-FontNoto">จัดการอุปกรณ์</h2>
-          <div className="flex flex-col md:flex-row gap-2 mb-4">
-            <input
-              type="text"
-              className="input input-bordered font-FontNoto w-full md:w-auto"
-              placeholder="ชื่ออุปกรณ์"
-              value={newEq.name}
-              onChange={e => setNewEq({ ...newEq, name: e.target.value })}
-            />
-            <input
-              type="text"
-              className="input input-bordered font-FontNoto w-full md:w-auto"
-              placeholder="รายละเอียด"
-              value={newEq.description}
-              onChange={e => setNewEq({ ...newEq, description: e.target.value })}
-            />
-            <input
-              type="number"
-              className="input input-bordered font-FontNoto w-full md:w-auto"
-              placeholder="จำนวนอุปกรณ์"
-              value={newEq.totalCount}
-              onChange={e => setNewEq({ ...newEq, totalCount: parseInt(e.target.value) })}
-            />
-            <button className="btn btn-success font-FontNoto w-full md:w-auto" onClick={handleAdd}>เพิ่ม</button>
+          <div className="bg-white rounded-xl shadow p-4 font-FontNoto">
+            <div className="mb-4 flex flex-row items-center justify-between gap-4 font-FontNoto">
+              <h2 className="text-xl font-bold whitespace-nowrap">จัดการอุปกรณ์</h2>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => document.getElementById("add_equipment_modal").showModal()}
+                  className="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white font-FontNoto"
+                >
+                  เพิ่มอุปกรณ์
+                </button>
+              </div>
+            </div>
+
+            <dialog id="add_equipment_modal" className="modal">
+              <div className="modal-box font-FontNoto">
+                <h3 className="font-bold text-lg mb-3">เพิ่มอุปกรณ์ใหม่</h3>
+
+                <div className="mb-3">
+                  <label className="block mb-1 text-sm font-medium">ชื่ออุปกรณ์</label>
+                  <input
+                    type="text"
+                    className="input input-bordered w-full"
+                    value={newEq.name}
+                    onChange={(e) => setNewEq({ ...newEq, name: e.target.value })}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="block mb-1 text-sm font-medium">รายละเอียด</label>
+                  <textarea
+                    rows={4}
+                    className="textarea textarea-bordered w-full font-FontNoto"
+                    value={newEq.description}
+                    placeholder="• กรอกรายละเอียด"
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      const lines = val.split("\n");
+
+                      if (lines.length === 1 && !lines[0].startsWith("• ")) {
+                        val = "• " + lines[0];
+                      }
+
+                      setNewEq({ ...newEq, description: val });
+                    }}
+                    onKeyDown={(e) => {
+                      const textarea = e.target;
+                      const { selectionStart } = textarea;
+                      const valueBeforeCursor = textarea.value.slice(0, selectionStart);
+                      const currentLine = valueBeforeCursor.split("\n").pop();
+
+                      if (
+                        e.key === "Backspace" &&
+                        currentLine.trim() === "•"
+                      ) {
+                        return;
+                      }
+                      if (
+                        e.key === "Backspace" &&
+                        currentLine === "• "
+                      ) {
+                        e.preventDefault();
+                        return;
+                      }
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const { selectionStart, selectionEnd } = textarea;
+                        const newValue =
+                          newEq.description.slice(0, selectionStart) + "\n• " +
+                          newEq.description.slice(selectionEnd);
+
+                        setNewEq({ ...newEq, description: newValue });
+
+                        setTimeout(() => {
+                          textarea.selectionStart = textarea.selectionEnd = selectionStart + 3;
+                        }, 0);
+                      }
+                    }}
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="block mb-1 text-sm font-medium">จำนวนอุปกรณ์</label>
+                  <input
+                    type="number"
+                    className="input input-bordered w-full"
+                    value={newEq.totalCount}
+                    onChange={(e) =>
+                      setNewEq({ ...newEq, totalCount: parseInt(e.target.value) })
+                    }
+                  />
+                </div>
+
+                <div className="flex justify-end items-center gap-4 mt-4">
+                  <button
+                    className="bg-gray-300 hover:bg-gray-500 text-black font-FontNoto px-4 py-2 rounded shadow"
+                    onClick={() => document.getElementById("add_equipment_modal").close()}
+                  >
+                    ยกเลิก
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      await handleAdd();
+                      document.getElementById("add_equipment_modal").close();
+                    }}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-FontNoto px-4 py-2 rounded shadow"
+                  >
+                    บันทึก
+                  </button>
+                </div>
+
+              </div>
+            </dialog>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 font-FontNoto">
+              {equipments.map(eq => {
+                const { borrowedCount, remaining } = calculateAvailableEquipments(eq.equipmentID);
+
+                return (
+                  <div key={eq.equipmentID} className="bg-white border rounded-xl shadow p-4 flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-center mb-3">
+                        {getIconByName(eq.name)}
+                      </div>
+
+                      <h3 className="text-lg font-bold mb-1">{eq.name}</h3>
+                      <div className="text-sm text-gray-600 whitespace-pre-line mb-2 min-h-[72px]">
+                        {expandedDescriptions[eq.equipmentID] || eq.description.split('\n').length <= 3
+                          ? eq.description
+                          : eq.description.split('\n').slice(0, 3).join('\n') + "\n..."}
+
+                        {eq.description.split('\n').length > 3 && (
+                          <button
+                            onClick={() => toggleDescription(eq.equipmentID)}
+                            className="mt-1 text-blue-600 text-xs underline ml-1"
+                          >
+                            {expandedDescriptions[eq.equipmentID] ? "ย่อ" : "ดูเพิ่มเติม"}
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-sm text-orange-600">กำลังถูกยืม : {borrowedCount} รายการ</p>
+                      <p className="text-sm text-green-600">เหลือใช้งานได้ : {remaining} รายการ</p>
+                    </div>
+
+                    <div className="mt-3 flex justify-end gap-2">
+                      <button
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white font-FontNoto px-4 py-1.5 rounded shadow text-sm"
+                        onClick={() => openModal(eq)}
+                      >
+                        แก้ไข
+                      </button>
+
+                      <button
+                        className="bg-red-500 hover:bg-red-600 text-white font-FontNoto px-4 py-1.5 rounded shadow text-sm"
+                        onClick={() => openDeleteModal(eq.equipmentID)}
+                      >
+                        ลบ
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="overflow-x-auto mb-6 font-FontNoto">
-            <table className="table w-full">
-              <thead>
-                <tr>
-                  <th className="font-FontNoto">ชื่อ</th>
-                  <th className="font-FontNoto">รายละเอียด</th>
-                  <th className="font-FontNoto">จำนวนที่เหลือ</th>
-                  <th className="font-FontNoto">จำนวนที่ยืม</th>
-                  <th className="font-FontNoto">การจัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {equipments.map(eq => {
-                  const { borrowedCount, remaining } = calculateAvailableEquipments(eq.equipmentID);
-                  return (
-                    <tr key={eq.equipmentID}>
-                      <td className="font-FontNoto">{eq.name}</td>
-                      <td className="font-FontNoto">{eq.description}</td>
-                      <td className="font-FontNoto">{remaining}</td>
-                      <td className="font-FontNoto">{borrowedCount}</td>
-                      <td className="space-x-2 font-FontNoto">
-                        <button
-                          className="btn btn-sm btn-info"
-                          onClick={() => openModal(eq)}
-                        >
-                          แก้ไข
-                        </button>
-                        <button
-                          className="btn btn-sm btn-error font-FontNoto"
-                          onClick={() => openDeleteModal(eq.equipmentID)}
-                        >
-                          ลบ
-                        </button>
-
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
           <input type="checkbox" id="delete_confirm_modal" className="modal-toggle" />
           <div className="modal">
-            <div className="modal-box">
-              <h3 className="font-bold text-lg font-FontNoto">ยืนยันการลบ</h3>
-              <p className="py-4 font-FontNoto">คุณแน่ใจหรือไม่ว่าต้องการลบอุปกรณ์นี้?</p>
-              <div className="modal-action ">
-                <label htmlFor="delete_confirm_modal" className="btn font-FontNoto">ยกเลิก</label>
-                <button className="btn btn-error font-FontNoto" onClick={handleDeleteConfirm}>ลบ</button>
+            <div className="modal-box rounded-xl shadow-lg">
+              <h3 className="font-bold text-lg font-FontNoto text-red-600">ยืนยันการลบ</h3>
+              <p className="py-4 font-FontNoto text-gray-700">
+                คุณแน่ใจหรือไม่ว่าต้องการลบอุปกรณ์นี้?
+              </p>
+              <div className="modal-action flex justify-end gap-4 mt-4">
+                <label
+                  htmlFor="delete_confirm_modal"
+                  className="bg-gray-300 hover:bg-gray-500 text-black font-FontNoto px-4 py-2 rounded shadow cursor-pointer"
+                >
+                  ยกเลิก
+                </label>
+
+                <button
+                  className="bg-red-500 hover:bg-red-500 text-white font-FontNoto px-4 py-2 rounded shadow"
+                  onClick={handleDeleteConfirm}
+                >
+                  ลบ
+                </button>
               </div>
             </div>
           </div>
+
           <dialog id="update_modal" className="modal">
-            <div className="modal-box">
-              <h3 className="font-bold text-lg mb-2 font-FontNoto">แก้ไขจำนวนอุปกรณ์</h3>
-              <p className="font-FontNoto">อุปกรณ์: <span className="font-semibold font-FontNoto">{selectedEquipment?.name}</span></p>
-              <input
-                type="number"
-                placeholder="จำนวนที่ต้องการเพิ่ม"
-                className="input input-bordered w-full mt-4 font-FontNoto"
-                value={addAmount}
-                onChange={(e) => setAddAmount(e.target.value)}
-              />
-              <div className="modal-action font-FontNoto">
-                <button className="btn btn-success" onClick={handleUpdateCount}>บันทึก</button>
-                <form method="dialog">
-                  <button className="btn font-FontNoto">ยกเลิก</button>
-                </form>
+            <div className="modal-box font-FontNoto">
+              <h3 className="font-bold text-lg mb-4">แก้ไขอุปกรณ์</h3>
+
+              <div className="mb-3">
+                <label className="block mb-1 text-sm font-medium">ชื่ออุปกรณ์</label>
+                <input
+                  type="text"
+                  className="input input-bordered w-full"
+                  value={selectedEquipment?.name || ""}
+                  onChange={(e) =>
+                    setSelectedEquipment({ ...selectedEquipment, name: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="block mb-1 text-sm font-medium">รายละเอียด</label>
+                <textarea
+                  rows={4}
+                  className="textarea textarea-bordered w-full font-FontNoto"
+                  value={selectedEquipment?.description || ""}
+                  onChange={(e) => {
+                    const lines = e.target.value.split("\n");
+                    const formatted = lines.map(line => {
+                      const trimmed = line.trim();
+                      if (trimmed === "") return "";
+                      if (trimmed.startsWith("•")) return line;
+                      return `• ${trimmed}`;
+                    });
+
+                    setSelectedEquipment({ ...selectedEquipment, description: formatted.join("\n") });
+                  }}
+
+                  onKeyDown={(e) => {
+                    const textarea = e.target;
+                    const { selectionStart } = textarea;
+                    const lines = textarea.value.split("\n");
+                    const currentLineIndex = textarea.value.slice(0, selectionStart).split("\n").length - 1;
+                    const currentLine = lines[currentLineIndex];
+
+                    const isOnlyBullets = currentLine
+                      .replace(/•/g, '')  // ลบ • ออก
+                      .trim() === '';
+
+                    if (e.key === "Backspace" && isOnlyBullets) {
+                      e.preventDefault();
+
+                      lines.splice(currentLineIndex, 1); // ลบบรรทัดนั้นออก
+
+                      const newText = lines.join("\n");
+                      setSelectedEquipment({ ...selectedEquipment, description: newText });
+
+                      setTimeout(() => {
+                        const beforeCursor = lines.slice(0, currentLineIndex).join("\n");
+                        let pos = beforeCursor.length;
+                        if (lines.length === 0 || pos > newText.length) {
+                          pos = 0;
+                        }
+                        textarea.selectionStart = textarea.selectionEnd = pos;
+                      }, 0);
+                      return;
+                    }
+                    if (e.key === "Enter") {
+                      if (lines.length >= 10) {
+                        e.preventDefault();
+                        return;
+                      }
+
+                      e.preventDefault();
+                      const { selectionStart, selectionEnd } = textarea;
+                      const newValue =
+                        textarea.value.slice(0, selectionStart) + "\n• " +
+                        textarea.value.slice(selectionEnd);
+
+                      setSelectedEquipment({ ...selectedEquipment, description: newValue });
+
+                      setTimeout(() => {
+                        textarea.selectionStart = textarea.selectionEnd = selectionStart + 3;
+                      }, 0);
+                    }
+                  }}
+
+                />
+              </div>
+              <div className="mb-3">
+                <label className="block mb-1 text-sm font-medium">จำนวนที่ต้องการเพิ่ม</label>
+                <input
+                  type="number"
+                  placeholder="จำนวนที่ต้องการเพิ่ม"
+                  className="input input-bordered w-full font-FontNoto"
+                  value={addAmount}
+                  onChange={(e) => setAddAmount(e.target.value)}
+                />
+              </div>
+
+              <div className="flex justify-end items-center gap-4 mt-4 font-FontNoto">
+                <button
+                  className="bg-gray-300 hover:bg-gray-500 text-black px-4 py-2 rounded shadow"
+                  onClick={() => document.getElementById("update_modal").close()}
+                >
+                  ยกเลิก
+                </button>
+
+                <button
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow"
+                  onClick={async () => {
+                    await axios.post("https://192.168.1.188/hrwebapi/api/Equipment/UpdateInfo", {
+                      equipmentID: selectedEquipment.equipmentID,
+                      name: selectedEquipment.name,
+                      description: selectedEquipment.description,
+                      addAmount: Number(addAmount),
+                    });
+                    document.getElementById("update_modal").close();
+                    fetchData();
+                  }}
+                >
+                  บันทึก
+                </button>
               </div>
             </div>
           </dialog>
-
           <dialog id="error_modal" className="modal">
             <div className="modal-box">
               <h3 className="font-bold text-lg text-red-600 font-FontNoto">เกิดข้อผิดพลาด</h3>
               <p className="py-2 font-FontNoto">{errorMessage}</p>
               <div className="modal-action">
                 <form method="dialog">
-                  <button className="btn btn-error text-white font-FontNoto">ปิด</button>
-                </form>
-              </div>
-            </div>
-          </dialog>
-          <dialog id="status_modal" className="modal">
-            <div className="modal-box">
-              <h3 className="font-bold text-lg text-green-600 font-FontNoto">แจ้งเตือน</h3>
-              <p className="py-2 font-FontNoto">{statusMessage}</p>
-              <div className="modal-action">
-                <form method="dialog">
-                  <button className="btn btn-primary font-FontNoto">ปิด</button>
+                  <button
+                    className="bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800
+                     text-white font-FontNoto px-5 py-2 rounded-lg shadow-lg
+                     transition duration-300 ease-in-out"
+                  >
+                    ปิด
+                  </button>
                 </form>
               </div>
             </div>
           </dialog>
 
-          {isModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
-                <h2 className="text-xl font-bold mb-4 font-FontNoto">ยืนยันการยืมอุปกรณ์</h2>
-                <p className="font-FontNoto mb-2">
-                  คุณต้องการยืมอุปกรณ์: <span className="font- font-FontNoto">{selectedEquipment?.name}</span> หรือไม่?
-                </p>
-                <p className="font-FontNoto mb-4">
-                  ผู้ยืม: <span className="font-semibold font-FontNoto">
-                    {borrowerName ? `${borrowerName.firstName} ${borrowerName.lastName}` : "ไม่พบข้อมูลผู้ใช้"}
-                  </span>
-                </p>
-
-                <div className="flex justify-end space-x-2">
-                  <button className="btn btn-primary font-FontNoto" onClick={handleConfirmBorrow}>ยืนยัน</button>
-                  <button className="btn font-FontNoto" onClick={() => setIsModalOpen(false)}>ยกเลิก</button>
-                </div>
-              </div>
-            </div>
-          )
-          }
         </>
       )}
+      {activeTab === "assign" && (
+        <>
+          <div className="bg-white rounded-xl shadow p-4 font-FontNoto">
+            <h3 className="text-xl font-bold mb-4">คำขอยืมอุปกรณ์จากพนักงาน</h3>
+            <div className="overflow-x-auto">
+              <table className="table w-full text-sm whitespace-nowrap">
+                <thead className="bg-gray-100 text-gray-700 font-FontNoto">
+                  <tr>
+                    <th className="px-4 py-2">ชื่อพนักงาน</th>
+                    <th className="px-4 py-2">ชื่ออุปกรณ์</th>
+                    <th className="px-4 py-2">รายละเอียดอุปกรณ์</th>
+                    <th className="px-4 py-2">สถานที่ใช้งาน</th>
+                    <th className="px-4 py-2">วันที่ขอ</th>
+                    <th className="px-4 py-2 text-center">รูปอุปกรณ์ที่ยืม</th>
+                    <th className="px-4 py-2 text-center">การอนุมัติ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {borrows.filter(b => b.approvalStatus === 0).length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center text-gray-500 py-4 font-FontNoto">
+                        ยังไม่มีคำขอยืมอุปกรณ์
+                      </td>
+                    </tr>
+                  ) : (
+                    borrows.filter(b => b.approvalStatus === 0).map((br) => (
+                      <tr key={br.borrowID} className="hover:bg-gray-50">
+                        <td className="px-4 py-2">{br.user?.firstName} {br.user?.lastName}</td>
+                        <td className="px-4 py-2">{br.equipment?.name}</td>
+                        <td className="px-4 py-2 text-sm text-gray-700 whitespace-pre-line min-w-[200px]">
+                          <div className={`transition-all duration-200 ${expandedDescriptions[br.borrowID] ? "" : "line-clamp-3"}`}>
+                            {br.equipment?.description || "-"}
+                          </div>
+                          {br.equipment?.description?.split('\n').length > 3 && (
+                            <button
+                              onClick={() => toggleDescription(br.borrowID)}
+                              className="text-blue-600 text-xs underline mt-1"
+                            >
+                              {expandedDescriptions[br.borrowID] ? "ย่อ" : "ดูเพิ่มเติม"}
+                            </button>
+                          )}
+                        </td>
+
+                        <td className="px-4 py-2">{br.usageLocation || '-'}</td>
+                        <td className="px-4 py-2">{new Date(br.borrowDate).toLocaleDateString('th-TH')}</td>
+                        <td className="px-4 py-2 text-center">
+                          {br.filePath ? (
+                            <a
+                              href={`https://192.168.1.188${br.filePath}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 underline text-sm"
+                            >
+                              ดูรูปภาพ
+                            </a>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+
+                        <td className="px-4 py-2 text-center">
+                          <div className="flex justify-center gap-2">
+                            <button
+                              onClick={() => {
+                                setConfirmType("approve");
+                                setConfirmBorrowId(br.borrowID);
+                                document.getElementById("confirm_modal").showModal();
+                              }}
+                              className="btn btn-sm bg-green-500 hover:bg-green-600 text-white font-FontNoto"
+                            >
+                              อนุมัติ
+                            </button>
+                            <button
+                              onClick={() => {
+                                setConfirmType("reject");
+                                setConfirmBorrowId(br.borrowID);
+                                document.getElementById("confirm_modal").showModal();
+                              }}
+                              className="btn btn-sm bg-red-500 hover:bg-red-600 text-white font-FontNoto"
+                            >
+                              ไม่อนุมัติ
+                            </button>
+                          </div>
+                        </td>
+
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+      <dialog id="confirm_modal" className="modal">
+        <div className="modal-box rounded-xl font-FontNoto">
+          <h3 className="font-bold text-lg text-blue-700">ยืนยันการดำเนินการ</h3>
+
+          <p className="py-4">
+            คุณต้องการ<strong>{confirmType === "approve" ? "อนุมัติ" : "ไม่อนุมัติ"}</strong>คำขอยืมอุปกรณ์นี้หรือไม่?
+          </p>
+
+          {confirmType === "reject" && (
+            <div className="mt-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">ระบุเหตุผล:</label>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={3}
+                placeholder="กรุณาระบุเหตุผลที่ไม่อนุมัติ..."
+                className="textarea textarea-bordered w-full text-sm text-black"
+              />
+            </div>
+          )}
+
+          <div className="modal-action flex justify-end items-center gap-4 mt-6">
+            <form method="dialog">
+              <button
+                className="bg-gray-300 hover:bg-gray-500 text-black px-4 py-2 rounded shadow"
+              >
+                ยกเลิก
+              </button>
+            </form>
+
+            <button
+              onClick={() => {
+                if (confirmType === "approve") {
+                  handleApprove(confirmBorrowId);
+                  document.getElementById("confirm_modal")?.close();
+                } else {
+                  if (!rejectionReason.trim()) {
+                    alert("กรุณาระบุเหตุผลที่ไม่อนุมัติ");
+                    return;
+                  }
+                  handleReject(confirmBorrowId, rejectionReason); // 👈 ส่งเหตุผลไปด้วย
+                  setRejectionReason(""); // เคลียร์หลังใช้งาน
+                  document.getElementById("confirm_modal")?.close();
+                }
+              }}
+              className={`${confirmType === "approve"
+                ? "bg-green-500 hover:bg-green-600"
+                : "bg-red-500 hover:bg-red-600"
+                } text-white px-4 py-2 rounded shadow`}
+            >
+              ยืนยัน
+            </button>
+          </div>
+        </div>
+      </dialog>
+      {selectedBorrowDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-2 py-4 overflow-y-auto font-FontNoto">
+          <div className="relative bg-white rounded-2xl border border-gray-300 w-full max-w-3xl p-6 shadow-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start border-b-4 border-blue-600 pb-3 mb-4">
+              <div>
+                <h1 className="text-xl font-bold text-black">แบบฟอร์มการยืมอุปกรณ์</h1>
+                <p className="text-sm text-blue-800">THE EXPERTISE CO., LTD.</p>
+              </div>
+              <div className="text-sm text-gray-600 text-right">
+                <p>วันที่ยืม</p>
+                <p className="mt-1">
+                  {selectedBorrowDetail?.borrowDate
+                    ? new Date(selectedBorrowDetail.borrowDate).toLocaleDateString("th-TH")
+                    : "-"}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4 text-sm text-black">
+              <div className="flex flex-wrap sm:flex-nowrap gap-4">
+                <div className="w-full sm:w-1/2">
+                  <p className="font-bold mb-1">ชื่ออุปกรณ์:</p>
+                  <div className="bg-white border border-gray-200 rounded px-3 py-1.5">
+                    {selectedBorrowDetail?.equipment?.name || "-"}
+                  </div>
+                </div>
+
+                <div className="w-full sm:w-1/2">
+                  <p className="font-bold mb-1">ผู้ยืม:</p>
+                  <div className="bg-white border border-gray-200 rounded px-3 py-1.5">
+                    {users.find(u => u.userID === selectedBorrowDetail.userID)?.firstName || "-"}{" "}
+                    {users.find(u => u.userID === selectedBorrowDetail.userID)?.lastName || ""}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap sm:flex-nowrap gap-4">
+                <div className="w-full sm:w-1/2">
+                  <p className="font-bold mb-1">สถานที่ใช้งาน:</p>
+                  <div className="bg-white border border-gray-200 rounded px-3 py-1.5">
+                    {selectedBorrowDetail.usageLocation || "-"}
+                  </div>
+                </div>
+
+                <div className="w-full sm:w-1/2">
+                  <p className="font-bold mb-1">สถานะ:</p>
+                  <div className="bg-white border border-gray-200 rounded px-3 py-1.5">
+                    {selectedBorrowDetail.status || "-"}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4">
+                <p className="font-bold mb-1">รายละเอียดอุปกรณ์:</p>
+                <div className="bg-white border border-gray-200 rounded px-3 py-1.5 text-sm whitespace-pre-line">
+                  {selectedBorrowDetail?.equipment?.description || "-"}
+                </div>
+              </div>
+
+              {selectedBorrowDetail.returnDate && (
+                <div>
+                  <p className="font-bold mb-1">วันที่คืน:</p>
+                  <div className="bg-white border border-gray-200 rounded px-3 py-1.5">
+                    {new Date(selectedBorrowDetail.returnDate).toLocaleDateString("th-TH")}
+                  </div>
+                </div>
+              )}
+              <div className="flex flex-wrap sm:flex-nowrap gap-4 mt-4">
+                <div className="w-full sm:w-1/2">
+                  <p className="font-bold mb-1">รูปอุปกรณ์ที่ยืม:</p>
+                  <div className="bg-white border border-gray-200 rounded px-3 py-1.5">
+                    {selectedBorrowDetail?.filePath ? (
+                      <a
+                        href={`https://192.168.1.188${selectedBorrowDetail.filePath}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        ดูรูปภาพ/เอกสารแนบ
+                      </a>
+                    ) : (
+                      <span className="text-gray-400">ไม่มีไฟล์แนบ</span>
+                    )}
+                  </div>
+                </div>
+
+                {selectedBorrowDetail.status === "ไม่อนุมัติ" && selectedBorrowDetail.rejectionReason ? (
+                  <div className="w-full sm:w-1/2">
+                    <p className="font-bold mb-1 text-red-600">เหตุผลที่ไม่อนุมัติ:</p>
+                    <div className="bg-red-50 border border-red-300 text-red-800 rounded px-3 py-2 text-sm whitespace-pre-line">
+                      {selectedBorrowDetail.rejectionReason}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full sm:w-1/2" />
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-6">
+              <button
+                className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded shadow"
+                onClick={() => setSelectedBorrowDetail(null)} // หรือ setShowModal(false) ถ้าคุณใช้ state แบบนี้
+              >
+                ปิด
+              </button>
+
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === "history" && (
         <>
           <div className="bg-white rounded-xl shadow p-4 font-FontNoto">
-            <h2 className="text-xl font-bold mb-4">ประวัติการยืม-คืนอุปกรณ์</h2>
-            <div className="flex flex-row flex-wrap justify-end items-center gap-2 mb-4 font-FontNoto">
-              <div className="flex items-center gap-2 whitespace-nowrap">
-                <label className="text-sm text-gray-600">ปี:</label>
-                <select
-                  className="select select-sm border-gray-300 w-auto"
-                  value={selectedYear}
-                  onChange={(e) => {
-                    setSelectedYear(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                >
-                  {Array.from({ length: 11 }, (_, i) => 2024 + i).map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 font-FontNoto">
+              <h2 className="text-xl font-bold whitespace-nowrap">ประวัติการยืม-คืนอุปกรณ์</h2>
 
-              <div className="flex items-center gap-2 whitespace-nowrap">
-                <label className="text-sm text-gray-600">สถานะ:</label>
-                <select
-                  className="select select-sm border-gray-300 w-auto"
-                  value={selectedStatus}
-                  onChange={(e) => {
-                    setSelectedStatus(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                >
-                  <option value="ทั้งหมด">ทั้งหมด</option>
-                  <option value="กำลังใช้งาน">กำลังใช้งาน</option>
-                  <option value="คืนแล้ว">คืนแล้ว</option>
-                </select>
+              <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center">
+                <div className="flex items-center gap-2 whitespace-nowrap">
+                  <label className="text-sm text-gray-600">ปี:</label>
+                  <select
+                    className="select select-sm border-gray-300 w-[100px]"
+                    value={selectedYear}
+                    onChange={(e) => {
+                      setSelectedYear(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    {Array.from({ length: 11 }, (_, i) => 2024 + i).map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2 whitespace-nowrap">
+                  <label className="text-sm text-gray-600">สถานะ:</label>
+                  <select
+                    className="select select-sm border-gray-300 w-[130px]"
+                    value={selectedStatus}
+                    onChange={(e) => {
+                      setSelectedStatus(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <option value="ทั้งหมด">ทั้งหมด</option>
+                    <option value="กำลังใช้งาน">กำลังใช้งาน</option>
+                    <option value="คืนแล้ว">คืนแล้ว</option>
+                    <option value="ไม่อนุมัติ">ไม่อนุมัติ</option>
+                  </select>
+                </div>
               </div>
             </div>
+
             <div className="overflow-x-auto">
               <table className="table w-full text-sm whitespace-nowrap">
                 <thead className="bg-gray-100 text-gray-700 font-FontNoto">
@@ -441,6 +1051,8 @@ const ManageEquipmentsAdmin = () => {
                     <th className="px-4 py-2">วันที่ยืม</th>
                     <th className="px-4 py-2">วันที่คืน</th>
                     <th className="px-4 py-2">สถานะ</th>
+                    <th className="px-4 py-2 text-center">ดูเพิ่มเติม</th>
+
                   </tr>
                 </thead>
                 <tbody>
@@ -465,15 +1077,30 @@ const ManageEquipmentsAdmin = () => {
                         </td>
                         <td className="px-4 py-2">
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold ${br.status.includes("คืน")
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${br.status.trim() === "คืนแล้ว"
                               ? "bg-green-100 text-green-700"
-                              : br.status.includes("เกิน")
+                              : br.status.trim() === "ไม่อนุมัติ"
                                 ? "bg-red-100 text-red-700"
-                                : "bg-yellow-100 text-yellow-700"
+                                : br.status.trim() === "กำลังใช้งาน"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : br.status.trim() === "รอดำเนินการ"
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : "bg-gray-100 text-gray-600"
                               }`}
                           >
                             {br.status}
                           </span>
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          <button
+                            onClick={() => {
+                              setSelectedBorrowDetail(br);
+                              document.getElementById("borrow_detail_modal_admin")?.showModal();
+                            }}
+                            className="px-4 py-1.5 text-white bg-blue-600 hover:bg-blue-700 rounded-md text-sm font-FontNoto"
+                          >
+                            รายละเอียด
+                          </button>
                         </td>
                       </tr>
                     ))
@@ -521,7 +1148,7 @@ const ManageEquipmentsAdmin = () => {
         </>
       )}
 
-    </div>
+    </div >
   );
 };
 

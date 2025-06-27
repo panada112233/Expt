@@ -84,11 +84,9 @@ const EmpBase = () => {
       }
     } catch (error) {
       console.error("Error fetching profile image:", error);
-      // กำหนดรูปภาพเริ่มต้น
       setCurrentProfileImage("https://192.168.1.188/hrwebapi/api/Files/GetDefaultProfileImage");
     }
 
-    // ดึงข้อมูลผู้ใช้งานแยกต่างหาก
     try {
       const userResponse = await axios.get(
         `https://192.168.1.188/hrwebapi/api/Users/Getbyid/${id}`
