@@ -45,7 +45,7 @@ function EmpHome() {
   const userID = localStorage.getItem('userId') || sessionStorage.getItem('userId');
   const fetchDocuments = async () => {
     try {
-      const response = await fetch(`https://localhost:7039/api/Files/Document?userID=${userID}`);
+      const response = await fetch(`https://192.168.1.188/hrwebapi/api/Files/Document?userID=${userID}`);
       const data = await response.json();
       setDocuments(data);
       setFilteredDocuments(data);
@@ -55,17 +55,17 @@ function EmpHome() {
   };
   const loadLeaveJsonAndCreatePDF = async (filePath) => {
     try {
-      const response = await axios.get(`https://localhost:7039/api/Files${filePath}`);
+      const response = await axios.get(`https://192.168.1.188/hrwebapi/api/Files${filePath}`);
       const data = response.data;
-      const latestReq = await axios.get(`https://localhost:7039/api/LeaveRequest/User/${data.userID}`);
+      const latestReq = await axios.get(`https://192.168.1.188/hrwebapi/api/LeaveRequest/User/${data.userID}`);
       const updated = latestReq.data.find(r => r.id === data.id);
       if (updated) {
         Object.assign(data, updated);
       }
-      const userRes = await axios.get(`https://localhost:7039/api/User/${data.userID}`);
+      const userRes = await axios.get(`https://192.168.1.188/hrwebapi/api/User/${data.userID}`);
       const user = userRes.data;
 
-      const statRes = await axios.get(`https://localhost:7039/api/LeaveRequest/stats/${data.userID}?excludeId=${data.id}`);
+      const statRes = await axios.get(`https://192.168.1.188/hrwebapi/api/LeaveRequest/stats/${data.userID}?excludeId=${data.id}`);
       const leaveStats = statRes.data.stats || {};
       const lastLeave = statRes.data.lastLeave;
       const [contactAddress, contactPhone] = (data.contact || "").split(" / ");
@@ -123,7 +123,7 @@ function EmpHome() {
 
   const handlePasswordSubmit = async () => {
     try {
-      const response = await axios.post('https://localhost:7039/api/Files/VerifyPassword', {
+      const response = await axios.post('https://192.168.1.188/hrwebapi/api/Files/VerifyPassword', {
         userID: selectedDoc.userID,
         password: inputPassword
       });
@@ -132,7 +132,7 @@ function EmpHome() {
         setErrorPassword("");
         setInputPassword("");
         if (selectedDoc?.filePath) {
-          window.open(`https://localhost:7039/api/Files${selectedDoc.filePath}`, '_blank');
+          window.open(`https://192.168.1.188/hrwebapi/api/Files${selectedDoc.filePath}`, '_blank');
         } else {
 
           createPDF(selectedDoc);
@@ -161,7 +161,7 @@ function EmpHome() {
 
       const config = {
         method: 'post',
-        url: 'https://localhost:7039/api/Files/VerifyPassword',
+        url: 'https://192.168.1.188/hrwebapi/api/Files/VerifyPassword',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -175,7 +175,7 @@ function EmpHome() {
           if (fileExt === "json") {
             await loadLeaveJsonAndCreatePDF(selectedDocument.filePath);
           } else {
-            window.open('https://localhost:7039/api/Files' + selectedDocument.filePath, '_blank');
+            window.open('https://192.168.1.188/hrwebapi/api/Files' + selectedDocument.filePath, '_blank');
           }
         } else if (selectedDocument) {
           createPDF(selectedDocument);
@@ -206,7 +206,7 @@ function EmpHome() {
     formData.append('UserID', userID);
 
     try {
-      const response = await fetch('https://localhost:7039/api/Files/Create', {
+      const response = await fetch('https://192.168.1.188/hrwebapi/api/Files/Create', {
         method: 'POST',
         body: formData,
       });
@@ -268,7 +268,7 @@ function EmpHome() {
 
   useEffect(() => {
     const fetchLeaveDocs = async () => {
-      const res = await axios.get("https://localhost:7039/api/Files/Document?userID=" + userID);
+      const res = await axios.get("https://192.168.1.188/hrwebapi/api/Files/Document?userID=" + userID);
       const data = res.data;
 
       const leaveOnly = data.filter(doc =>
@@ -288,8 +288,8 @@ function EmpHome() {
     if (!deleteDocumentId || !deleteType) return;
 
     let apiUrl = deleteType === "upload"
-      ? `https://localhost:7039/api/Files/${deleteDocumentId}`
-      : `https://localhost:7039/api/Document/DeleteDocument/${deleteDocumentId}`;
+      ? `https://192.168.1.188/hrwebapi/api/Files/${deleteDocumentId}`
+      : `https://192.168.1.188/hrwebapi/api/Document/DeleteDocument/${deleteDocumentId}`;
 
     try {
       const response = await fetch(apiUrl, { method: "DELETE" });
