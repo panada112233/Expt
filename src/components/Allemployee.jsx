@@ -313,7 +313,7 @@ const Allemployee = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full sm:w-auto">
                         <label className="text-sm text-gray-700 font-FontNoto whitespace-nowrap">ตำแหน่ง</label>
                         <select
-                            className="select select-bordered font-FontNoto w-full sm:w-56"
+                            className="select select-bordered font-FontNoto w-full sm:w-56 bg-white text-black"
                             value={selectedRole}
                             onChange={(e) => setSelectedRole(e.target.value)}
                         >
@@ -331,7 +331,7 @@ const Allemployee = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full sm:w-auto">
                         <label className="text-sm text-gray-700 font-FontNoto whitespace-nowrap">สถานะงาน</label>
                         <select
-                            className="select select-bordered font-FontNoto w-full sm:w-56"
+                            className="select select-bordered font-FontNoto w-full sm:w-56 bg-white text-black"
                             value={selectedDesignation}
                             onChange={(e) => setSelectedDesignation(e.target.value)}
                         >
@@ -347,7 +347,7 @@ const Allemployee = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full sm:w-auto">
                         <label className="text-sm text-gray-700 font-FontNoto whitespace-nowrap">ประเภทการทำงาน</label>
                         <select
-                            className="select select-bordered font-FontNoto w-full sm:w-56"
+                            className="select select-bordered font-FontNoto w-full sm:w-56 bg-white text-black"
                             value={selectedWorkStatus}
                             onChange={(e) => setSelectedWorkStatus(e.target.value)}
                         >
@@ -466,7 +466,7 @@ const Allemployee = () => {
             </div>
 
             <dialog id="delete_modal" className="modal">
-                <div className="modal-box font-FontNoto w-full !max-w-[400px] px-5 py-6 text-center rounded-xl shadow-lg">
+                <div className="modal-box font-FontNoto w-full !max-w-[400px] px-5 py-6 text-center rounded-xl shadow-lg bg-white text-black">
                     <h2 className="text-lg font-bold text-red-600 mb-3">
                         ยืนยันการลบผู้ใช้งาน
                     </h2>
@@ -522,7 +522,7 @@ const Allemployee = () => {
                                 </p>
                             )}
                             <form onSubmit={handleSubmit}>
-                                <div className="font-FontNoto font-bold ">ข้อมูลส่วนตัว</div>
+                                <div className="font-FontNoto font-bold text-black">ข้อมูลส่วนตัว</div>
                                 <div className="flex flex-row gap-4">
                                     <div className="w-1/2">
                                         <label className="label">
@@ -534,7 +534,7 @@ const Allemployee = () => {
                                             placeholder="รหัสพนักงาน"
                                             value={user.employeeCode || ''}
                                             onChange={handleChange}
-                                            className="input input-bordered font-FontNoto w-full"
+                                            className="input input-bordered font-FontNoto w-full bg-white text-black"
                                             required
                                         />
                                     </div>
@@ -549,7 +549,7 @@ const Allemployee = () => {
                                             placeholder="Username"
                                             value={user.username}
                                             onChange={handleChange}
-                                            className="input input-bordered font-FontNoto w-full"
+                                            className="input input-bordered font-FontNoto w-full bg-white text-black"
                                             required
                                         />
                                     </div>
@@ -562,7 +562,7 @@ const Allemployee = () => {
                                         name="prefix"
                                         value={user.prefix}
                                         onChange={handleChange}
-                                        className="select select-bordered font-FontNoto w-full"
+                                        className="select select-bordered font-FontNoto w-full bg-white text-black"
                                         required
                                     >
                                         <option className="font-FontNoto" value="" disabled>เลือกคำนำหน้า</option>
@@ -583,7 +583,7 @@ const Allemployee = () => {
                                             placeholder="ชื่อ"
                                             value={user.firstname}
                                             onChange={handleChange}
-                                            className="input input-bordered font-FontNoto w-full"
+                                            className="input input-bordered font-FontNoto w-full bg-white text-black"
                                             required
                                         />
                                     </div>
@@ -597,7 +597,7 @@ const Allemployee = () => {
                                             placeholder="นามสกุล"
                                             value={user.lastname}
                                             onChange={handleChange}
-                                            className="input input-bordered font-FontNoto w-full"
+                                            className="input input-bordered font-FontNoto w-full bg-white text-black"
                                             required
                                         />
                                     </div>
@@ -613,7 +613,7 @@ const Allemployee = () => {
                                             placeholder="อีเมล"
                                             value={user.email}
                                             onChange={handleChange}
-                                            className="input input-bordered font-FontNoto w-full"
+                                            className="input input-bordered font-FontNoto w-full bg-white text-black"
                                             required
                                         />
                                     </div>
@@ -627,7 +627,7 @@ const Allemployee = () => {
                                             placeholder="โทรศัพท์"
                                             value={user.contact}
                                             onChange={handleChange}
-                                            className="input input-bordered font-FontNoto w-full"
+                                            className="input input-bordered font-FontNoto w-full bg-white text-black"
                                             required
                                         />
                                     </div>
@@ -642,7 +642,7 @@ const Allemployee = () => {
                                             name="role"
                                             value={user.role}
                                             onChange={handleChange}
-                                            className="select select-bordered font-FontNoto w-full"
+                                            className="select select-bordered font-FontNoto w-full bg-white text-black"
                                             required
                                         >
                                             <option className="font-FontNoto" value="" disabled>เลือกตำแหน่ง</option>
@@ -665,7 +665,7 @@ const Allemployee = () => {
                                             name="designation"
                                             value={user.designation}
                                             onChange={handleChange}
-                                            className="select select-bordered font-FontNoto w-full"
+                                            className="select select-bordered font-FontNoto w-full bg-white text-black"
                                             required
                                         >
                                             <option className="font-FontNoto" value="" disabled>เลือกสถานะงาน</option>
@@ -689,7 +689,7 @@ const Allemployee = () => {
                                             placeholder="วันที่เริ่มงาน"
                                             value={user.JDate}
                                             onChange={handleChange}
-                                            className="input input-bordered font-FontNoto w-full text-black"
+                                            className="input input-bordered font-FontNoto w-full text-black bg-white"
                                             required
                                             style={{
                                                 colorScheme: "light", // บังคับไอคอนให้ใช้โหมดสว่าง
@@ -704,7 +704,7 @@ const Allemployee = () => {
                                             name="gender"
                                             value={user.gender}
                                             onChange={handleChange}
-                                            className="select select-bordered font-FontNoto w-full"
+                                            className="select select-bordered font-FontNoto w-full bg-white text-black"
                                             required
                                         >
                                             <option className="font-FontNoto" value="" disabled>เลือกเพศ</option>
@@ -726,7 +726,7 @@ const Allemployee = () => {
                                                 placeholder="รหัสผ่าน"
                                                 value={user.passwordHash}
                                                 onChange={handleChange}
-                                                className="input input-bordered font-FontNoto w-full"
+                                                className="input input-bordered font-FontNoto w-full bg-white text-black"
                                                 required
                                             />
                                             <button
@@ -753,7 +753,7 @@ const Allemployee = () => {
                                                 placeholder="ยืนยันรหัสผ่าน"
                                                 value={user.confirmPassword}
                                                 onChange={handleChange}
-                                                className="input input-bordered font-FontNoto w-full"
+                                                className="input input-bordered font-FontNoto w-full bg-white text-black"
                                                 required
                                             />
                                             <button

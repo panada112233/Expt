@@ -789,7 +789,7 @@ function Profile() {
               <>
                 <form id="profileForm" onSubmit={handleSubmit}>
                   <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-bold font-FontNoto">ข้อมูลส่วนบุคคล</h2>
+                    <h2 className="text-xl font-bold font-FontNoto text-black">ข้อมูลส่วนบุคคล</h2>
                     {!isEditMode ? (
                       <button
                         type="button"
@@ -840,7 +840,7 @@ function Profile() {
                             <div className="flex gap-2 w-full">
                               <select
                                 name="prefix"
-                                className="select select-sm select-bordered w-1/4"
+                                className="select select-sm select-bordered w-1/4 bg-white text-black"
                                 value={employee.prefix}
                                 onChange={handleChange}
                               >
@@ -853,7 +853,7 @@ function Profile() {
                                 type="text"
                                 name="firstName"
                                 placeholder="ชื่อ"
-                                className="input input-sm input-bordered w-1/4"
+                                className="input input-sm input-bordered w-1/4 bg-white text-black"
                                 value={employee.firstName}
                                 onChange={handleChange}
                               />
@@ -861,7 +861,7 @@ function Profile() {
                                 type="text"
                                 name="lastName"
                                 placeholder="นามสกุล"
-                                className="input input-sm input-bordered w-1/2"
+                                className="input input-sm input-bordered w-1/2 bg-white text-black"
                                 value={employee.lastName}
                                 onChange={handleChange}
                               />
@@ -878,14 +878,14 @@ function Profile() {
                               <input
                                 type="text"
                                 name="englishFirstName"
-                                className="input input-sm input-bordered w-1/2"
+                                className="input input-sm input-bordered w-1/2 bg-white text-black"
                                 value={employee.englishFirstName}
                                 onChange={handleChange}
                               />
                               <input
                                 type="text"
                                 name="englishLastName"
-                                className="input input-sm input-bordered w-1/2"
+                                className="input input-sm input-bordered w-1/2 bg-white text-black"
                                 value={employee.englishLastName}
                                 onChange={handleChange}
                               />
@@ -900,7 +900,7 @@ function Profile() {
                             <input
                               type="text"
                               name="nickname"
-                              className="input input-sm input-bordered w-full"
+                              className="input input-sm input-bordered w-full bg-white text-black"
                               value={employee.nickname}
                               onChange={handleChange}
                             />
@@ -913,7 +913,7 @@ function Profile() {
                           ) : (
                             <select
                               name="gender"
-                              className="select select-sm select-bordered w-full"
+                              className="select select-sm select-bordered w-full bg-white text-black"
                               value={employee.gender}
                               onChange={handleChange}
                             >
@@ -939,7 +939,7 @@ function Profile() {
                               name="birthday"
                               value={employee.birthday || ""}
                               onChange={handleChange}
-                              className="input input-sm input-bordered w-full font-FontNoto"
+                              className="input input-sm input-bordered w-full font-FontNoto bg-white text-black"
                               style={{ colorScheme: "light" }}
                               max={new Date().toISOString().split("T")[0]}
                             />
@@ -952,7 +952,7 @@ function Profile() {
                           ) : (
                             <select
                               name="maritalStatus"
-                              className="select select-sm select-bordered w-full"
+                              className="select select-sm select-bordered w-full bg-white text-black"
                               value={employee.maritalStatus}
                               onChange={handleChange}
                             >
@@ -974,7 +974,7 @@ function Profile() {
                             <input
                               type="text"
                               name="nationalID"
-                              className="input input-sm input-bordered w-full"
+                              className="input input-sm input-bordered w-full bg-white text-black"
                               value={employee.nationalID}
                               onChange={(e) => {
                                 const value = e.target.value.replace(/\D/g, ""); // เอาเฉพาะตัวเลข
@@ -1001,7 +1001,7 @@ function Profile() {
                             <input
                               type="text"
                               name="username"
-                              className="input input-sm input-bordered w-full"
+                              className="input input-sm input-bordered w-full bg-white text-black"
                               value={employee.username}
                               onChange={(e) => {
                                 const value = e.target.value;
@@ -1025,7 +1025,7 @@ function Profile() {
                             <input
                               type="email"
                               name="email"
-                              className="input input-sm input-bordered w-full"
+                              className="input input-sm input-bordered w-full bg-white text-black"
                               value={employee.email}
                               onChange={handleChange}
                             />
@@ -1040,7 +1040,7 @@ function Profile() {
                             <input
                               type="text"
                               name="contact"
-                              className="input input-sm input-bordered w-full"
+                              className="input input-sm input-bordered w-full bg-white text-black"
                               value={employee.contact}
                               onChange={handleChange}
                             />
@@ -1056,7 +1056,7 @@ function Profile() {
                               type="text"
                               name="currentAddress"
                               rows={2}
-                              className="input input-sm input-bordered w-full"
+                              className="input input-sm input-bordered w-full bg-white text-black"
                               value={employee.currentAddress}
                               onChange={handleChange}
                             />
@@ -1074,7 +1074,7 @@ function Profile() {
                             <input
                               type="text"
                               name="emergencyContact"
-                              className="input input-sm input-bordered w-full"
+                              className="input input-sm input-bordered w-full bg-white text-black"
                               value={employee.emergencyContact}
                               onChange={handleChange}
                             />
@@ -1094,7 +1094,7 @@ function Profile() {
                               <input
                                 type="text"
                                 name="employeeCode"
-                                className="input input-sm input-bordered w-full text-sm"
+                                className="input input-sm input-bordered w-full text-sm bg-white text-black"
                                 value={employee.employeeCode}
                                 onChange={handleChange}
                               />
@@ -1105,7 +1105,7 @@ function Profile() {
                                 name="role"
                                 value={employee.role || ""}
                                 onChange={handleChange}
-                                className="select select-sm select-bordered w-full text-sm font-FontNoto"
+                                className="select select-sm select-bordered w-full text-sm font-FontNoto bg-white text-black"
                                 required
                               >
                                 <option className="font-FontNoto" value="" disabled>เลือกตำแหน่ง</option>
@@ -1131,7 +1131,7 @@ function Profile() {
                                     name="designation"
                                     value={employee.designation || ""}
                                     onChange={handleChange}
-                                    className="select select-sm select-bordered w-full text-sm font-FontNoto"
+                                    className="select select-sm select-bordered w-full text-sm font-FontNoto bg-white text-black"
                                     required
                                   >
                                     <option value="" disabled>เลือกสถานะงาน</option>
@@ -1153,7 +1153,7 @@ function Profile() {
                                 name="JDate"
                                 value={employee.JDate || ""}
                                 onChange={handleChange}
-                                className="input input-sm input-bordered w-full text-sm font-FontNoto"
+                                className="input input-sm input-bordered w-full text-sm font-FontNoto bg-white text-black"
                                 style={{ colorScheme: "light" }}
                               />
                             </div>
@@ -1306,7 +1306,7 @@ function Profile() {
           {showEducationModal && (
             <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
               <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg relative">
-                <h3 className="text-lg font-semibold mb-4 text-center text-indigo-700 font-FontNoto">
+                <h3 className="text-lg font-semibold mb-4 text-indigo-700 font-FontNoto">
                   {isEditing ? "แก้ไขข้อมูลการศึกษา" : "เพิ่มข้อมูลการศึกษา"}
                 </h3>
 
@@ -1353,7 +1353,7 @@ function Profile() {
                   <div className="form-control">
                     <select
                       name="level"
-                      className="select select-bordered w-full"
+                      className="select select-bordered w-full bg-white text-black"
                       value={newEducation.level}
                       onChange={handleChangeEducation}
                       required
@@ -1368,7 +1368,7 @@ function Profile() {
                     <input
                       type="text"
                       name="fieldOfStudy"
-                      className="input input-bordered w-full"
+                      className="input input-bordered w-full bg-white text-black"
                       value={newEducation.fieldOfStudy}
                       onChange={handleChangeEducation}
                       placeholder="สาขาวิชา"
@@ -1379,7 +1379,7 @@ function Profile() {
                     <input
                       type="text"
                       name="institute"
-                      className="input input-bordered w-full"
+                      className="input input-bordered w-full bg-white text-black"
                       value={newEducation.institute}
                       onChange={handleChangeEducation}
                       placeholder="มหาวิทยาลัย, โรงเรียน, สถาบัน"
@@ -1395,7 +1395,7 @@ function Profile() {
                       min="0"
                       max="4"
                       required
-                      className="input input-bordered w-full"
+                      className="input input-bordered w-full bg-white text-black"
                       value={newEducation.gpa}
                       onChange={(e) => {
                         const val = e.target.value;
@@ -1410,7 +1410,7 @@ function Profile() {
                   <div className="form-control md:col-span-2">
                     <textarea
                       name="thesis"
-                      className="textarea textarea-bordered w-full"
+                      className="textarea textarea-bordered w-full bg-white text-black"
                       value={newEducation.thesis}
                       onChange={handleChangeEducation}
                       placeholder="วิทยานิพนธ์ (ถ้ามี)"
@@ -1419,7 +1419,7 @@ function Profile() {
                   <div className="form-control md:col-span-2">
                     <textarea
                       name="activities"
-                      className="textarea textarea-bordered w-full"
+                      className="textarea textarea-bordered w-full bg-white text-black"
                       value={newEducation.activities}
                       onChange={handleChangeEducation}
                       placeholder="กิจกรรม (ถ้ามี)"
@@ -1429,7 +1429,7 @@ function Profile() {
                     <input
                       type="text"
                       name="year"
-                      className="input input-bordered w-full"
+                      className="input input-bordered w-full bg-white text-black"
                       value={newEducation.year}
                       onChange={handleChangeEducation}
                       required
@@ -1438,21 +1438,23 @@ function Profile() {
                       placeholder="ปีที่ศึกษา (เช่น 2565-2569)"
                     />
                   </div>
-                  <div className="flex justify-end gap-2 mt-6">
+                  <div className="flex justify-end items-center gap-4 mt-6">
                     <button
                       type="button"
-                      className="btn !bg-gray-200 !text-black !hover:bg-gray-300 font-FontNoto"
+                      className="bg-gray-300 hover:bg-gray-500 text-black font-FontNoto px-4 py-2 rounded shadow"
                       onClick={() => setShowEducationModal(false)}
                     >
                       ยกเลิก
                     </button>
+
                     <button
                       type="submit"
-                      className="btn !bg-blue-600 !text-white !hover:bg-blue-700 font-FontNoto"
+                      className="bg-blue-500 hover:bg-blue-600 text-white font-FontNoto px-4 py-2 rounded shadow"
                     >
                       บันทึก
                     </button>
                   </div>
+
                 </form>
               </div>
             </div>
@@ -1562,11 +1564,9 @@ function Profile() {
             {showExperienceModal && (
               <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                 <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg relative">
-
-                  <h3 className="text-lg font-semibold mb-4 font-FontNoto">
+                  <h3 className="text-lg font-semibold mb-4 font-FontNoto text-black">
                     {isEditing ? "แก้ไขประสบการณ์" : "เพิ่มประวัติการทำงาน"}
                   </h3>
-
                   <form
                     onSubmit={async (e) => {
                       e.preventDefault();
@@ -1623,7 +1623,7 @@ function Profile() {
                         type="text"
                         name="jobTitle"
                         placeholder="ตำแหน่งงาน"
-                        className="input input-bordered font-FontNoto"
+                        className="input input-bordered font-FontNoto bg-white text-black"
                         value={newExperience.jobTitle}
                         onChange={handleChangeExperience}
                         required
@@ -1635,7 +1635,7 @@ function Profile() {
                         type="text"
                         name="companyName"
                         placeholder="ชื่อบริษัท"
-                        className="input input-bordered font-FontNoto"
+                        className="input input-bordered font-FontNoto bg-white text-black"
                         value={newExperience.companyName}
                         onChange={handleChangeExperience}
                         required
@@ -1646,7 +1646,7 @@ function Profile() {
                       <textarea
                         name="description"
                         placeholder="หน้าที่ความรับผิดชอบ (คั่นด้วย , หรือ Enter)"
-                        className="textarea textarea-bordered font-FontNoto"
+                        className="textarea textarea-bordered font-FontNoto bg-white text-black"
                         rows={3}
                         value={newExperience.description}
                         onChange={handleChangeExperience}
@@ -1662,7 +1662,7 @@ function Profile() {
                           maxLength={4}
                           pattern="\d{4}"
                           placeholder="กรอกปี พ.ศ. เริ่มงาน"
-                          className={`input input-bordered font-FontNoto ${errors.startDate ? "border-red-500" : ""}`}
+                          className={`input input-bordered font-FontNoto bg-white text-black ${errors.startDate ? "border-red-500" : ""}`}
                           value={newExperience.startDate}
                           onChange={handleChangeExperience}
                           required
@@ -1681,7 +1681,7 @@ function Profile() {
                           maxLength={4}
                           pattern="\d{4}"
                           placeholder="เว้นว่างหากยังทำงานอยู่"
-                          className={`input input-bordered font-FontNoto ${errors.endDate ? "border-red-500" : ""}`}
+                          className={`input input-bordered font-FontNoto bg-white text-black ${errors.endDate ? "border-red-500" : ""}`}
                           value={newExperience.endDate}
                           onChange={handleChangeExperience}
                         />
@@ -1691,18 +1691,23 @@ function Profile() {
                         )}
                       </div>
                     </div>
-                    <div className="flex justify-end gap-2 mt-6">
+                    <div className="flex justify-end items-center gap-4 mt-6">
                       <button
                         type="button"
-                        className="btn !bg-gray-200 !text-black !hover:bg-gray-300 font-FontNoto"
+                        className="bg-gray-300 hover:bg-gray-500 text-black font-FontNoto px-4 py-2 rounded shadow"
                         onClick={() => setShowExperienceModal(false)}
                       >
                         ยกเลิก
                       </button>
-                      <button type="submit" className="btn !bg-blue-600 !text-white !hover:bg-blue-700 font-FontNoto">
+
+                      <button
+                        type="submit"
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-FontNoto px-4 py-2 rounded shadow"
+                      >
                         บันทึก
                       </button>
                     </div>
+
                   </form>
                 </div>
               </div>
@@ -1712,14 +1717,14 @@ function Profile() {
       )}
       {showPasswordModal && (
         <dialog open className="modal modal-open z-50">
-          <div className="modal-box font-FontNoto">
+          <div className="modal-box font-FontNoto bg-white text-black">
             <h3 className="font-bold text-lg text-blue-700 mb-4">เปลี่ยนรหัสผ่าน</h3>
             <form onSubmit={handleSubmitChangePassword} className="space-y-3">
               <div className="relative">
                 <input
                   type={showOldPassword ? "text" : "password"}
                   placeholder="รหัสผ่านปัจจุบัน"
-                  className="input input-bordered w-full"
+                  className="input input-bordered w-full bg-white text-black"
                   value={oldPassword}
                   onChange={(e) => {
                     const value = e.target.value;
@@ -1751,7 +1756,7 @@ function Profile() {
                 <input
                   type={showNewPassword1 ? "text" : "password"}
                   placeholder="รหัสผ่านใหม่"
-                  className="input input-bordered w-full"
+                  className="input input-bordered w-full bg-white text-black"
                   value={newPassword1}
                   onChange={(e) => {
                     const value = e.target.value;
@@ -1783,7 +1788,7 @@ function Profile() {
                 <input
                   type={showNewPassword2 ? "text" : "password"}
                   placeholder="ยืนยันรหัสผ่านใหม่"
-                  className="input input-bordered w-full"
+                  className="input input-bordered w-full bg-white text-black"
                   value={newPassword2}
                   onChange={(e) => {
                     const value = e.target.value;
@@ -1812,14 +1817,23 @@ function Profile() {
                 </button>
               </div>
 
-              <div className="flex justify-end gap-2">
-                <button type="button" className="btn" onClick={() => setShowPasswordModal(false)}>
+              <div className="flex justify-end items-center gap-4 mt-6">
+                <button
+                  type="button"
+                  className="bg-gray-300 hover:bg-gray-500 text-black font-FontNoto px-4 py-2 rounded shadow"
+                  onClick={() => setShowPasswordModal(false)}
+                >
                   ยกเลิก
                 </button>
-                <button type="submit" className="btn !text-white !bg-blue-600">
+
+                <button
+                  type="submit"
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-FontNoto px-4 py-2 rounded shadow"
+                >
                   ยืนยัน
                 </button>
               </div>
+
             </form>
           </div>
         </dialog>

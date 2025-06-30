@@ -25,6 +25,7 @@ function EmpHome() {
   const [deleteType, setDeleteType] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [activeTab, setActiveTab] = useState('approvedLeave');
+  const [selectedDoc, setSelectedDoc] = useState(null);
   const [allLeaveDocuments, setAllLeaveDocuments] = useState([]);
 
   const categoryMapping = {
@@ -44,7 +45,7 @@ function EmpHome() {
   const userID = localStorage.getItem('userId') || sessionStorage.getItem('userId');
   const fetchDocuments = async () => {
     try {
-      const response = await fetch(`https://192.168.1.188/hrwebapi/api/Files/Document?userID=${userID}`);
+      const response = await fetch(`https://localhost:7039/api/Files/Document?userID=${userID}`);
       const data = await response.json();
       setDocuments(data);
       setFilteredDocuments(data);
@@ -54,17 +55,17 @@ function EmpHome() {
   };
   const loadLeaveJsonAndCreatePDF = async (filePath) => {
     try {
-      const response = await axios.get(`https://192.168.1.188/hrwebapi/api/Files${filePath}`);
+      const response = await axios.get(`https://localhost:7039/api/Files${filePath}`);
       const data = response.data;
-      const latestReq = await axios.get(`https://192.168.1.188/hrwebapi/api/LeaveRequest/User/${data.userID}`);
+      const latestReq = await axios.get(`https://localhost:7039/api/LeaveRequest/User/${data.userID}`);
       const updated = latestReq.data.find(r => r.id === data.id);
       if (updated) {
         Object.assign(data, updated);
       }
-      const userRes = await axios.get(`https://192.168.1.188/hrwebapi/api/User/${data.userID}`);
+      const userRes = await axios.get(`https://localhost:7039/api/User/${data.userID}`);
       const user = userRes.data;
 
-      const statRes = await axios.get(`https://192.168.1.188/hrwebapi/api/LeaveRequest/stats/${data.userID}?excludeId=${data.id}`);
+      const statRes = await axios.get(`https://localhost:7039/api/LeaveRequest/stats/${data.userID}?excludeId=${data.id}`);
       const leaveStats = statRes.data.stats || {};
       const lastLeave = statRes.data.lastLeave;
       const [contactAddress, contactPhone] = (data.contact || "").split(" / ");
@@ -122,7 +123,7 @@ function EmpHome() {
 
   const handlePasswordSubmit = async () => {
     try {
-      const response = await axios.post('https://192.168.1.188/hrwebapi/api/Files/VerifyPassword', {
+      const response = await axios.post('https://localhost:7039/api/Files/VerifyPassword', {
         userID: selectedDoc.userID,
         password: inputPassword
       });
@@ -131,7 +132,7 @@ function EmpHome() {
         setErrorPassword("");
         setInputPassword("");
         if (selectedDoc?.filePath) {
-          window.open(`https://192.168.1.188/hrwebapi/api/Files${selectedDoc.filePath}`, '_blank');
+          window.open(`https://localhost:7039/api/Files${selectedDoc.filePath}`, '_blank');
         } else {
 
           createPDF(selectedDoc);
@@ -160,7 +161,7 @@ function EmpHome() {
 
       const config = {
         method: 'post',
-        url: 'https://192.168.1.188/hrwebapi/api/Files/VerifyPassword',
+        url: 'https://localhost:7039/api/Files/VerifyPassword',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -174,7 +175,7 @@ function EmpHome() {
           if (fileExt === "json") {
             await loadLeaveJsonAndCreatePDF(selectedDocument.filePath);
           } else {
-            window.open('https://192.168.1.188/hrwebapi/api/Files' + selectedDocument.filePath, '_blank');
+            window.open('https://localhost:7039/api/Files' + selectedDocument.filePath, '_blank');
           }
         } else if (selectedDocument) {
           createPDF(selectedDocument);
@@ -205,7 +206,7 @@ function EmpHome() {
     formData.append('UserID', userID);
 
     try {
-      const response = await fetch('https://192.168.1.188/hrwebapi/api/Files/Create', {
+      const response = await fetch('https://localhost:7039/api/Files/Create', {
         method: 'POST',
         body: formData,
       });
@@ -267,7 +268,7 @@ function EmpHome() {
 
   useEffect(() => {
     const fetchLeaveDocs = async () => {
-      const res = await axios.get("https://192.168.1.188/hrwebapi/api/Files/Document?userID=" + userID);
+      const res = await axios.get("https://localhost:7039/api/Files/Document?userID=" + userID);
       const data = res.data;
 
       const leaveOnly = data.filter(doc =>
@@ -287,8 +288,8 @@ function EmpHome() {
     if (!deleteDocumentId || !deleteType) return;
 
     let apiUrl = deleteType === "upload"
-      ? `https://192.168.1.188/hrwebapi/api/Files/${deleteDocumentId}`
-      : `https://192.168.1.188/hrwebapi/api/Document/DeleteDocument/${deleteDocumentId}`;
+      ? `https://localhost:7039/api/Files/${deleteDocumentId}`
+      : `https://localhost:7039/api/Document/DeleteDocument/${deleteDocumentId}`;
 
     try {
       const response = await fetch(apiUrl, { method: "DELETE" });
@@ -341,14 +342,17 @@ function EmpHome() {
       <div className="">
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-[400px] relative">
+            <div className="bg-white text-black p-6 rounded-lg shadow-lg w-[400px] relative">
               <h3 className="text-lg font-bold mb-4 font-FontNoto">
                 กรุณาใส่รหัสผ่าน
               </h3>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
-                  className="input input-bordered w-full mb-4 font-FontNoto"
+                  className="input input-bordered w-full mb-4 font-FontNoto 
+             bg-white text-black 
+             dark:bg-gray-800 dark:text-white 
+             dark:placeholder-gray-400"
                   placeholder="ใส่รหัสผ่าน"
                   value={password}
                   onChange={(e) => {
@@ -362,6 +366,7 @@ function EmpHome() {
                     }
                   }}
                 />
+
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -394,18 +399,18 @@ function EmpHome() {
         )}
         {isDeleteModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-[400px] relative">
+            <div className="bg-white text-black p-6 rounded-lg shadow-lg w-[400px] relative">
               <h3 className="text-lg font-bold mb-4 font-FontNoto">ยืนยันการลบ</h3>
               <p className="font-FontNoto">คุณต้องการลบเอกสารนี้หรือไม่?</p>
               <div className="flex justify-end space-x-2 mt-4">
                 <button
-                  className="btn btn-outline btn-warning font-FontNoto"
+                  className="btn btn-outline btn-warning bg-white text-black border-yellow-500 hover:bg-yellow-100 font-FontNoto"
                   onClick={handleCloseDeleteModal}
                 >
                   ยกเลิก
                 </button>
                 <button
-                  className="btn btn-outline btn-error font-FontNoto"
+                  className="btn btn-outline btn-error bg-white text-black border-red-500 hover:bg-red-100 font-FontNoto"
                   onClick={handleDeleteDocument}
                 >
                   ยืนยัน
@@ -414,14 +419,15 @@ function EmpHome() {
             </div>
           </div>
         )}
+
         {isSuccessModalOpen && (
           <dialog id="success_modal" className="modal" open>
-            <div className="modal-box">
+            <div className="modal-box bg-white text-black">
               <h3 className="font-bold text-lg font-FontNoto">สำเร็จ</h3>
               <p className="text-lg font-FontNoto">{modalMessage}</p>
               <div className="modal-action">
                 <button
-                  className="btn btn-outline btn-error font-FontNoto"
+                  className="btn btn-outline btn-error bg-white text-black border-red-500 hover:bg-red-100 font-FontNoto"
                   onClick={() => setIsSuccessModalOpen(false)}
                 >
                   ปิด
@@ -430,6 +436,7 @@ function EmpHome() {
             </div>
           </dialog>
         )}
+
         {isErrorModalOpen && (
           <dialog id="error_modal" className="modal" open>
             <div className="modal-box">
@@ -448,16 +455,16 @@ function EmpHome() {
         )}
         <form
           onSubmit={handleAddDocument}
-          className="space-y-4 mb-8 bg-base-100 p-4 rounded-lg shadow"
+          className="space-y-4 mb-8 bg-white p-4 rounded-lg shadow text-black"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-FontNoto">ชื่อเอกสาร</span>
+                <span className="label-text font-FontNoto text-black">ชื่อเอกสาร</span>
               </label>
               <input
                 type="text"
-                className="input input-bordered font-FontNoto"
+                className="input input-bordered bg-white text-black font-FontNoto"
                 placeholder="กรอกชื่อเอกสาร"
                 value={newDocument.description}
                 onChange={(e) =>
@@ -465,12 +472,13 @@ function EmpHome() {
                 }
               />
             </div>
+
             <div className="form-control font-FontNoto">
               <label className="label">
-                <span className="label-text font-FontNoto">หมวดหมู่เอกสาร</span>
+                <span className="label-text text-black font-FontNoto">หมวดหมู่เอกสาร</span>
               </label>
               <select
-                className="select select-bordered font-FontNoto"
+                className="select select-bordered bg-white text-black font-FontNoto"
                 value={newDocument.category}
                 onChange={(e) =>
                   setNewDocument({ ...newDocument, category: e.target.value })
@@ -481,16 +489,16 @@ function EmpHome() {
                 <option className="font-FontNoto" value="Others">อื่นๆ</option>
               </select>
             </div>
+
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-FontNoto">ไฟล์เอกสาร</span>
+                <span className="label-text text-black font-FontNoto">ไฟล์เอกสาร</span>
               </label>
               <input
                 type="file"
-                className="file-input file-input-sm file-input-bordered font-FontNoto"
+                className="file-input file-input-sm file-input-bordered bg-white text-black font-FontNoto"
                 onChange={handleFileChange}
               />
-
             </div>
           </div>
           <div className="relative mt-4 w-full">
@@ -504,18 +512,18 @@ function EmpHome() {
             </button>
           </div>
         </form>
-        <div className="bg-base-100 p-4 rounded-lg shadow mb-8 font-FontNoto max-w-full overflow-hidden">
+        <div className="bg-white text-black p-4 rounded-lg shadow mb-8 font-FontNoto max-w-full overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full">
             <div className="flex flex-row gap-2 w-full sm:w-1/3 items-center max-w-full min-w-0">
               <input
                 type="text"
-                className="input input-bordered flex-grow max-w-full min-w-0 font-FontNoto"
+                className="input input-bordered bg-white text-black flex-grow max-w-full min-w-0 font-FontNoto"
                 placeholder="ค้นหาชื่อเอกสาร..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <button
-                className="btn btn-outline btn-success whitespace-nowrap max-w-[120px] shrink-0 font-FontNoto"
+                className="btn btn-outline btn-success bg-white text-black border-green-500 hover:bg-green-100 whitespace-nowrap max-w-[120px] shrink-0 font-FontNoto"
                 onClick={handleSearch}
               >
                 ค้นหา
@@ -524,7 +532,7 @@ function EmpHome() {
           </div>
         </div>
 
-        <div className="bg-base-100 p-6 rounded-lg shadow-lg font-FontNoto">
+        <div className="bg-white p-6 rounded-lg shadow-lg font-FontNoto text-black">
           <h3 className="text-xl font-bold text-black mb-4 font-FontNoto">เอกสารอัปโหลด</h3>
           <ul className="space-y-4 font-FontNoto">
             {filteredDocuments

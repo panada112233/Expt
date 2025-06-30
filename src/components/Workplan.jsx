@@ -608,8 +608,8 @@ const Workplan = () => {
         try {
             const mappedTask = {
                 ...task,
-                PrivateNote: task.privateNote, 
-                NoteType: task.noteType, 
+                PrivateNote: task.privateNote,
+                NoteType: task.noteType,
             };
             const res = await axios.get(`https://192.168.1.188/hrwebapi/api/Workplan/${task.userID}`);
             const sameDayTasks = res.data.filter(t =>
@@ -1345,7 +1345,7 @@ const Workplan = () => {
                                     <div className="flex justify-between items-center mb-1">
                                         <label className="font-bold text-cyan-950 font-FontNoto">แผนงานย้อนหลัง</label>
                                         <select
-                                            className="select select-sm select-bordered font-FontNoto"
+                                            className="select select-sm select-bordered font-FontNoto bg-white text-black"
                                             value={selectedDay}
                                             onChange={(e) => {
                                                 const newDay = e.target.value;
@@ -1417,7 +1417,7 @@ const Workplan = () => {
 
                                 <div className="flex justify-end gap-2 mt-2">
                                     <button
-                                        className="btn !bg-slate-200 font-FontNoto"
+                                        className="bg-gray-300 hover:bg-gray-500 text-black font-FontNoto px-4 py-2 rounded shadow"
                                         onClick={async () => {
                                             const date = new Date(year, month, selectedDate);
                                             await deleteTaskFromDatabase(date);
@@ -1444,12 +1444,11 @@ const Workplan = () => {
                                         ลบแผนงาน
                                     </button>
                                     <button
-                                        className="btn !bg-green-400 hover:!bg-green-500 text-white font-FontNoto "
+                                        className="bg-green-400 hover:bg-green-500 text-white font-FontNoto px-4 py-2 rounded shadow"
                                         onClick={saveTask}
                                     >
                                         บันทึก
                                     </button>
-
                                 </div>
                             </div>
                         )}
@@ -1463,7 +1462,7 @@ const Workplan = () => {
                                         </label>
                                         <input
                                             type="text"
-                                            className="input input-sm input-bordered w-full font-FontNoto mb-1"
+                                            className="input input-sm input-bordered w-full font-FontNoto mb-1 bg-white text-black"
                                             placeholder={`หัวข้อโน้ต... ${idx + 1}`}
                                             value={taskData.privateNoteTitles?.[idx] || ""}
                                             onChange={(e) => {
@@ -1476,7 +1475,7 @@ const Workplan = () => {
                                             รายละเอียดโน้ต :
                                         </label>
                                         <textarea
-                                            className="textarea textarea-bordered w-full bg-purple-50 font-FontNoto pr-10"
+                                            className="textarea textarea-bordered w-full font-FontNoto pr-10 bg-white text-black"
                                             value={note}
                                             placeholder={`ใส่ข้อความ Note งาน... ${idx + 1}`}
                                             onChange={(e) => {

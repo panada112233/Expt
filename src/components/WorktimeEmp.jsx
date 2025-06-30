@@ -523,12 +523,12 @@ const WorktimeEmp = () => {
                     </div>
                 </div>
             </div>
-            <h2 className="text-lg font-bold font-FontNoto  py-4">ตารางลงเวลาเข้า-ออกงานของพนักงาน</h2>
+            <h2 className="text-lg font-bold font-FontNoto py-4 text-black">ตารางลงเวลาเข้า-ออกงานของพนักงาน</h2>
             <div className="flex flex-wrap sm:flex-nowrap items-center justify-between mb-4 bg-white p-4 rounded-xl shadow gap-4">
 
                 <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-y-2 sm:space-x-4 w-full">
                     <select
-                        className="select select-bordered w-full sm:w-auto text-black font-FontNoto"
+                        className="select select-bordered w-full sm:w-auto text-black font-FontNoto bg-white"
                         value={selectedUser}
                         onChange={(e) => setSelectedUser(e.target.value)}
                     >
@@ -541,7 +541,7 @@ const WorktimeEmp = () => {
                     </select>
 
                     <select
-                        className="select select-bordered w-full sm:w-auto text-black font-FontNoto"
+                        className="select select-bordered w-full sm:w-auto text-black font-FontNoto bg-white"
                         value={monthFilter}
                         onChange={(e) => setMonthFilter(e.target.value)}
                     >
@@ -553,7 +553,7 @@ const WorktimeEmp = () => {
                     </select>
 
                     <select
-                        className="select select-bordered w-full sm:w-auto text-black font-FontNoto"
+                        className="select select-bordered w-full sm:w-auto text-black font-FontNoto bg-white"
                         value={yearFilter}
                         onChange={(e) => setYearFilter(e.target.value)}
                     >
@@ -577,7 +577,7 @@ const WorktimeEmp = () => {
                 </div>
             </div>
             <div className="bg-white p-2 rounded-xl shadow-lg relative">
-                <h2 className="text-lg font-bold font-FontNoto mb-4">ประวัติการลงเวลา</h2>
+                <h2 className="text-lg font-bold font-FontNoto mb-4 text-black">ประวัติการลงเวลา</h2>
                 <div className="overflow-x-auto">
                     {filteredWorktimes.length === 0 ? (
                         <div className="bg-white p-8 text-center rounded-lg shadow font-FontNoto">
@@ -600,7 +600,7 @@ const WorktimeEmp = () => {
                                         <th className="py-3 font-FontNoto whitespace-nowrap">จัดการ</th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white">
+                                <tbody className="bg-white text-slate-800">
                                     {paginatedWorktimes.map((item, index) => {
                                         const locationText = item.location || '';
                                         const leaveKeywords = ['ป่วย', 'กิจส่วนตัว', 'บวช', 'พักร้อน', 'ลาคลอด'];
@@ -728,7 +728,7 @@ const WorktimeEmp = () => {
                     className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4 overflow-y-auto"
                 >
                     <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto">
-                        <h3 className="font-bold text-lg mb-4 font-FontNoto">แก้ไขข้อมูลลงเวลาเข้า-ออกงาน</h3>
+                        <h3 className="font-bold text-lg mb-4 font-FontNoto text-black">แก้ไขข้อมูลลงเวลาเข้า-ออกงาน</h3>
                         <div className="space-y-3">
                             <div>
                                 <label className="label font-FontNoto">ชื่อ-นามสกุล</label>
@@ -736,7 +736,7 @@ const WorktimeEmp = () => {
                                     type="text"
                                     value={getFullName(editingRecord.userID)}
                                     disabled
-                                    className="input input-bordered w-full font-FontNoto bg-gray-100 !text-black"
+                                    className="input input-bordered w-full font-FontNoto !bg-gray-100 !text-black"
                                 />
                             </div>
                             <div>
@@ -745,7 +745,7 @@ const WorktimeEmp = () => {
                                     type="text"
                                     value={formatDate(editingRecord.date)}
                                     disabled
-                                    className="input input-bordered w-full font-FontNoto bg-gray-100 !text-black"
+                                    className="input input-bordered w-full font-FontNoto !bg-gray-100 !text-black"
                                 />
                             </div>
                             <div>
@@ -754,7 +754,7 @@ const WorktimeEmp = () => {
                                     type="time"
                                     value={editForm.checkIn}
                                     onChange={(e) => setEditForm({ ...editForm, checkIn: e.target.value })}
-                                    className="input input-bordered w-full font-FontNoto"
+                                    className="input input-bordered w-full font-FontNoto bg-white text-black"
                                 />
                             </div>
                             <div>
@@ -763,7 +763,7 @@ const WorktimeEmp = () => {
                                     type="text"
                                     value={editForm.checkOut}
                                     onChange={(e) => setEditForm({ ...editForm, checkOut: e.target.value })}
-                                    className="input input-bordered w-full font-FontNoto"
+                                    className="input input-bordered w-full font-FontNoto bg-white text-black"
                                     placeholder="17:30 หรือ -"
                                 />
                             </div>

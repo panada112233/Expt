@@ -409,7 +409,7 @@ const ManageEquipmentsAdmin = () => {
         <>
           <div className="bg-white rounded-xl shadow p-4 font-FontNoto">
             <div className="mb-4 flex flex-row items-center justify-between gap-4 font-FontNoto">
-              <h2 className="text-xl font-bold whitespace-nowrap">จัดการอุปกรณ์</h2>
+              <h2 className="text-xl font-bold whitespace-nowrap text-black">จัดการอุปกรณ์</h2>
               <div className="flex justify-end">
                 <button
                   onClick={() => document.getElementById("add_equipment_modal").showModal()}
@@ -421,14 +421,14 @@ const ManageEquipmentsAdmin = () => {
             </div>
 
             <dialog id="add_equipment_modal" className="modal">
-              <div className="modal-box font-FontNoto">
+              <div className="modal-box font-FontNoto bg-white text-black">
                 <h3 className="font-bold text-lg mb-3">เพิ่มอุปกรณ์ใหม่</h3>
 
                 <div className="mb-3">
                   <label className="block mb-1 text-sm font-medium">ชื่ออุปกรณ์</label>
                   <input
                     type="text"
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-full bg-white text-black"
                     value={newEq.name}
                     onChange={(e) => setNewEq({ ...newEq, name: e.target.value })}
                   />
@@ -437,7 +437,7 @@ const ManageEquipmentsAdmin = () => {
                   <label className="block mb-1 text-sm font-medium">รายละเอียด</label>
                   <textarea
                     rows={4}
-                    className="textarea textarea-bordered w-full font-FontNoto"
+                    className="textarea textarea-bordered w-full font-FontNoto bg-white text-black"
                     value={newEq.description}
                     placeholder="• กรอกรายละเอียด"
                     onChange={(e) => {
@@ -490,7 +490,7 @@ const ManageEquipmentsAdmin = () => {
                   <label className="block mb-1 text-sm font-medium">จำนวนอุปกรณ์</label>
                   <input
                     type="number"
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-full bg-white text-black"
                     value={newEq.totalCount}
                     onChange={(e) =>
                       setNewEq({ ...newEq, totalCount: parseInt(e.target.value) })
@@ -573,7 +573,7 @@ const ManageEquipmentsAdmin = () => {
 
           <input type="checkbox" id="delete_confirm_modal" className="modal-toggle" />
           <div className="modal">
-            <div className="modal-box rounded-xl shadow-lg">
+            <div className="modal-box rounded-xl shadow-lg font-FontNoto bg-white text-black">
               <h3 className="font-bold text-lg font-FontNoto text-red-600">ยืนยันการลบ</h3>
               <p className="py-4 font-FontNoto text-gray-700">
                 คุณแน่ใจหรือไม่ว่าต้องการลบอุปกรณ์นี้?
@@ -597,14 +597,14 @@ const ManageEquipmentsAdmin = () => {
           </div>
 
           <dialog id="update_modal" className="modal">
-            <div className="modal-box font-FontNoto">
+            <div className="modal-box font-FontNoto bg-white text-black">
               <h3 className="font-bold text-lg mb-4">แก้ไขอุปกรณ์</h3>
 
               <div className="mb-3">
                 <label className="block mb-1 text-sm font-medium">ชื่ออุปกรณ์</label>
                 <input
                   type="text"
-                  className="input input-bordered w-full"
+                  className="input input-bordered w-full bg-white text-black"
                   value={selectedEquipment?.name || ""}
                   onChange={(e) =>
                     setSelectedEquipment({ ...selectedEquipment, name: e.target.value })
@@ -616,7 +616,7 @@ const ManageEquipmentsAdmin = () => {
                 <label className="block mb-1 text-sm font-medium">รายละเอียด</label>
                 <textarea
                   rows={4}
-                  className="textarea textarea-bordered w-full font-FontNoto"
+                  className="textarea textarea-bordered w-full font-FontNoto bg-white text-black"
                   value={selectedEquipment?.description || ""}
                   onChange={(e) => {
                     const lines = e.target.value.split("\n");
@@ -686,7 +686,7 @@ const ManageEquipmentsAdmin = () => {
                 <input
                   type="number"
                   placeholder="จำนวนที่ต้องการเพิ่ม"
-                  className="input input-bordered w-full font-FontNoto"
+                  className="input input-bordered w-full font-FontNoto bg-white text-black"
                   value={addAmount}
                   onChange={(e) => setAddAmount(e.target.value)}
                 />
@@ -741,7 +741,7 @@ const ManageEquipmentsAdmin = () => {
       {activeTab === "assign" && (
         <>
           <div className="bg-white rounded-xl shadow p-4 font-FontNoto">
-            <h3 className="text-xl font-bold mb-4">คำขอยืมอุปกรณ์จากพนักงาน</h3>
+            <h3 className="text-xl font-bold mb-4 text-black">คำขอยืมอุปกรณ์จากพนักงาน</h3>
             <div className="overflow-x-auto">
               <table className="table w-full text-sm whitespace-nowrap">
                 <thead className="bg-gray-100 text-gray-700 font-FontNoto">
@@ -1002,13 +1002,13 @@ const ManageEquipmentsAdmin = () => {
         <>
           <div className="bg-white rounded-xl shadow p-4 font-FontNoto">
             <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 font-FontNoto">
-              <h2 className="text-xl font-bold whitespace-nowrap">ประวัติการยืม-คืนอุปกรณ์</h2>
+              <h2 className="text-xl font-bold whitespace-nowrap bg-white text-black">ประวัติการยืม-คืนอุปกรณ์</h2>
 
               <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center">
                 <div className="flex items-center gap-2 whitespace-nowrap">
                   <label className="text-sm text-gray-600">ปี:</label>
                   <select
-                    className="select select-sm border-gray-300 w-[100px]"
+                    className="select select-sm border-gray-300 w-[100px] bg-white text-black"
                     value={selectedYear}
                     onChange={(e) => {
                       setSelectedYear(e.target.value);
@@ -1026,7 +1026,7 @@ const ManageEquipmentsAdmin = () => {
                 <div className="flex items-center gap-2 whitespace-nowrap">
                   <label className="text-sm text-gray-600">สถานะ:</label>
                   <select
-                    className="select select-sm border-gray-300 w-[130px]"
+                    className="select select-sm border-gray-300 w-[130px] bg-white text-black"
                     value={selectedStatus}
                     onChange={(e) => {
                       setSelectedStatus(e.target.value);

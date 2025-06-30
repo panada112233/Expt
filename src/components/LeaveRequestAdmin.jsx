@@ -373,7 +373,7 @@ const LeaveRequestAdmin = () => {
             </div>
             <div className="flex justify-end mt-2 font-FontNoto">
                 <select
-                    className="select select-bordered w-40 font-FontNoto"
+                    className="select select-bordered w-40 font-FontNoto bg-white text-black"
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                 >

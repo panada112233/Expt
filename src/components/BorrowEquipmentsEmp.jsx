@@ -337,12 +337,12 @@ const BorrowEquipmentsEmp = () => {
         <>
           <div className="bg-white rounded-xl shadow p-4 font-FontNoto">
             <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 font-FontNoto">
-              <h2 className="text-xl font-bold mb-4">รายการอุปกรณ์ทั้งหมด</h2>
+              <h2 className="text-xl font-bold mb-4 text-black">รายการอุปกรณ์ทั้งหมด</h2>
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
                 <input
                   type="text"
                   placeholder="ค้นหาอุปกรณ์..."
-                  className="input input-bordered w-full sm:w-[180px]"
+                  className="input input-bordered w-full sm:w-[180px] bg-white text-black"
                   value={searchKeyword}
                   onChange={(e) => {
                     setSearchKeyword(e.target.value);
@@ -350,7 +350,7 @@ const BorrowEquipmentsEmp = () => {
                   }}
                 />
                 <select
-                  className="select select-bordered w-full sm:w-[180px]"
+                  className="select select-bordered w-full sm:w-[180px] bg-white text-black"
                   value={selectedDropdown}
                   onChange={(e) => {
                     setSelectedDropdown(e.target.value);
@@ -470,7 +470,7 @@ const BorrowEquipmentsEmp = () => {
         const usedCount = activeCount + pendingCount;
         return (
           <dialog id="borrow_modal" className="modal">
-            <div className="modal-box w-full max-w-2xl rounded-xl p-4 sm:p-6 shadow-lg font-FontNoto">
+            <div className="modal-box w-full max-w-2xl rounded-xl p-4 sm:p-6 shadow-lg font-FontNoto bg-white text-black">
               <div className="flex justify-between items-start border-b-4 border-blue-600 pb-2 mb-4">
                 <div>
                   <h2 className="text-xl font-bold text-black">แบบฟอร์มขอยืมอุปกรณ์</h2>
@@ -656,8 +656,8 @@ const BorrowEquipmentsEmp = () => {
 
       {activeTab === "borrow" && (
         <>
-          <div className="bg-white rounded-xl shadow p-4 font-FontNoto">
-            <h2 className="text-xl font-bold whitespace-nowrap">รายการอุปกรณ์ที่กำลังยืม</h2>
+          <div className="bg-white rounded-xl shadow p-4 font-FontNoto ">
+            <h2 className="text-xl font-bold whitespace-nowrap text-black">รายการอุปกรณ์ที่กำลังยืม</h2>
             <div className="space-y-4">
               {borrows
                 .filter(br => br.status.trim() === "กำลังใช้งาน")
@@ -735,12 +735,12 @@ const BorrowEquipmentsEmp = () => {
         <>
           <div className="bg-white rounded-xl shadow p-4 font-FontNoto">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 font-FontNoto">
-              <h2 className="text-xl font-bold whitespace-nowrap">ประวัติการยืม-คืนอุปกรณ์</h2>
+              <h2 className="text-xl font-bold whitespace-nowrap text-black">ประวัติการยืม-คืนอุปกรณ์</h2>
               <div className="flex flex-row flex-wrap justify-end items-center gap-2 mb-4 font-FontNoto">
                 <div className="flex items-center gap-2 whitespace-nowrap">
                   <label className="text-sm text-gray-600">ปี:</label>
                   <select
-                    className="select select-sm border-gray-300 w-auto"
+                    className="select select-sm border-gray-300 w-auto bg-white text-black"
                     value={selectedYear}
                     onChange={(e) => {
                       setSelectedYear(e.target.value);
@@ -758,7 +758,7 @@ const BorrowEquipmentsEmp = () => {
                 <div className="flex items-center gap-2 whitespace-nowrap">
                   <label className="text-sm text-gray-600">สถานะ:</label>
                   <select
-                    className="select select-sm border-gray-300 w-auto"
+                    className="select select-sm border-gray-300 w-auto bg-white text-black"
                     value={selectedStatus}
                     onChange={(e) => {
                       setSelectedStatus(e.target.value);
