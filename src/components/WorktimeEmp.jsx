@@ -555,13 +555,16 @@ const WorktimeEmp = () => {
                     <select
                         className="select select-bordered w-full sm:w-auto text-black font-FontNoto bg-white"
                         value={yearFilter}
-                        onChange={(e) => setYearFilter(e.target.value)}
+                        onChange={(e) => setYearFilter(parseInt(e.target.value))}
                     >
-                        {Array.from({ length: 11 }, (_, i) => (
-                            <option className="font-FontNoto" key={i} value={2024 + i}>
-                                {2024 + i}
-                            </option>
-                        ))}
+                        {Array.from({ length: 11 }, (_, i) => {
+                            const year = 2024 + i;
+                            return (
+                                <option className="font-FontNoto" key={year} value={year}>
+                                    {year + 543}
+                                </option>
+                            );
+                        })}
                     </select>
                 </div>
 

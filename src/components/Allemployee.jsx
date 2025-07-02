@@ -68,6 +68,19 @@ const Allemployee = () => {
         confirmPassword: false,
     });
 
+    const formatThaiDate = (dateStr) => {
+        if (!dateStr) return "-";
+        const date = new Date(dateStr);
+        const day = date.getDate().toString().padStart(2, "0");
+        const monthNames = [
+            "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+            "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+        ];
+        const month = monthNames[date.getMonth()];
+        const year = date.getFullYear() + 543;
+        return `${day} ${month} ${year}`;
+    };
+
     const handleDeleteUser = async () => {
         try {
             await axios.put(`https://192.168.1.188/hrwebapi/api/Users/Resign/${userToDelete}`);
@@ -88,7 +101,7 @@ const Allemployee = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         const noThaiPattern = /^[^\u0E00-\u0E7F]*$/;
-        const emailPattern = /^[^\u0E00-\u0E7F\s]+$/; 
+        const emailPattern = /^[^\u0E00-\u0E7F\s]+$/;
         if (name === "email" && !emailPattern.test(value) && value !== "") {
             return;
         }
@@ -99,7 +112,7 @@ const Allemployee = () => {
         if (name === "contact") {
             const phonePattern = /^[0-9]{0,10}$/;
             if (!phonePattern.test(value)) {
-                return; 
+                return;
             }
         }
         setUser((prevUser) => ({
@@ -277,10 +290,10 @@ const Allemployee = () => {
                             {
                                 users.filter(u =>
                                     u.isActive !== false &&
-                                    u.role !== "ADMIN" && 
-                                    u.designation !== "CONTRACT" && 
-                                    u.designation !== "RESIGNED" && 
-                                    u.designation !== "EXPIRED" 
+                                    u.role !== "ADMIN" &&
+                                    u.designation !== "CONTRACT" &&
+                                    u.designation !== "RESIGNED" &&
+                                    u.designation !== "EXPIRED"
                                 ).length
                             } คน
                         </span>
@@ -683,19 +696,33 @@ const Allemployee = () => {
                                         <label className="label">
                                             <span className="label-text font-FontNoto">วันที่เริ่มงาน</span>
                                         </label>
-                                        <input
-                                            type="date"
-                                            name="JDate"
-                                            placeholder="วันที่เริ่มงาน"
-                                            value={user.JDate}
-                                            onChange={handleChange}
-                                            className="input input-bordered font-FontNoto w-full text-black bg-white"
-                                            required
-                                            style={{
-                                                colorScheme: "light", // บังคับไอคอนให้ใช้โหมดสว่าง
-                                            }}
-                                        />
+                                        <div className="relative w-full">
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                value={user.JDate ? formatThaiDate(user.JDate) : ""}
+                                                className="input input-bordered font-FontNoto w-full text-black bg-white"
+                                                onClick={() => document.getElementById("JDatePicker").showPicker()}
+                                                style={{ cursor: "pointer" }}
+                                            />
+                                            <input
+                                                type="date"
+                                                id="JDatePicker"
+                                                name="JDate"
+                                                value={user.JDate}
+                                                onChange={handleChange}
+                                                className="absolute opacity-0 pointer-events-none"
+                                                style={{ colorScheme: "light" }}
+                                            />
+                                            <div
+                                                className="absolute right-3 top-3 text-gray-500 cursor-pointer"
+                                                onClick={() => document.getElementById("JDatePicker").showPicker()}
+                                            >
+                                                <i className="fas fa-calendar-alt"></i>
+                                            </div>
+                                        </div>
                                     </div>
+
                                     <div className="w-1/2">
                                         <label className="label">
                                             <span className="label-text font-FontNoto">เพศ</span>

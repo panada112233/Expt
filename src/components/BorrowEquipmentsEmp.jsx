@@ -46,6 +46,7 @@ const BorrowEquipmentsEmp = () => {
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const [attachment, setAttachment] = useState(null);
   const [documentType, setDocumentType] = useState("อื่นๆ");
+  const [withBag, setWithBag] = useState(false);
 
   const [requestReason, setRequestReason] = useState("");
   const [userProfile, setUserProfile] = useState({});
@@ -86,6 +87,18 @@ const BorrowEquipmentsEmp = () => {
       console.error("อัปโหลดไฟล์แนบไม่สำเร็จ", err);
       return null;
     }
+  };
+
+  const formatThaiDate = (dateStr) => {
+    const date = new Date(dateStr);
+    const day = date.getDate();
+    const monthNames = [
+      "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+      "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+    ];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear() + 543;
+    return `${day} ${month} ${year}`;
   };
 
   const getIconByName = (name) => {
@@ -158,8 +171,6 @@ const BorrowEquipmentsEmp = () => {
         </div>
       );
     }
-
-
     if (lowerName.includes("เซิร์ฟเวอร์") || lowerName.includes("server")) {
       return (
         <div className="flex justify-center items-center">
@@ -204,7 +215,6 @@ const BorrowEquipmentsEmp = () => {
       );
     }
 
-    // ✅ Default
     return (
       <div className="flex justify-center items-center">
         <Package size={100} className="text-yellow-500" />
@@ -470,15 +480,15 @@ const BorrowEquipmentsEmp = () => {
         const usedCount = activeCount + pendingCount;
         return (
           <dialog id="borrow_modal" className="modal">
-            <div className="modal-box w-full max-w-2xl rounded-xl p-4 sm:p-6 shadow-lg font-FontNoto bg-white text-black">
-              <div className="flex justify-between items-start border-b-4 border-blue-600 pb-2 mb-4">
+            <div className="modal-box w-full max-w-2xl rounded-xl p-4 sm:p-6 shadow-lg font-FontNoto bg-white text-black overflow-x-hidden">
+              <div className="flex justify-between items-start border-b-4 border-blue-600 pb-2 mb-4 flex-wrap">
                 <div>
                   <h2 className="text-xl font-bold text-black">แบบฟอร์มขอยืมอุปกรณ์</h2>
                   <p className="text-sm text-blue-800">THE EXPERTISE CO., LTD.</p>
                 </div>
                 <div className="text-sm text-gray-600 text-right">
                   <p>วันที่เขียนแบบฟอร์ม</p>
-                  <p className="mt-1">{new Date().toLocaleDateString("th-TH")}</p>
+                  <p className="mt-1">{formatThaiDate(new Date())}</p>
                 </div>
               </div>
 
@@ -503,6 +513,18 @@ const BorrowEquipmentsEmp = () => {
                     rows={2}
                   />
                 </div>
+                <div className="mt-2">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={withBag}
+                      onChange={(e) => setWithBag(e.target.checked)}
+                      className="checkbox checkbox-sm accent-blue-600"
+                    />
+                    <span className="text-sm text-gray-800 font-FontNoto">ขอยืมกระเป๋าด้วย</span>
+                  </label>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="font-semibold">ชื่อ-นามสกุล</label>
@@ -555,13 +577,30 @@ const BorrowEquipmentsEmp = () => {
 
                   <div>
                     <label className="font-semibold block mb-1">วันที่ยืม</label>
-                    <input
-                      type="date"
-                      value={borrowDate}
-                      onChange={(e) => setBorrowDate(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto"
-                      style={{ colorScheme: "light" }}
-                    />
+                    <div className="relative w-full">
+                      <input
+                        type="text"
+                        value={borrowDate ? formatThaiDate(borrowDate) : ""}
+                        readOnly
+                        onClick={() => document.getElementById("borrowDatePicker").showPicker()}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto"
+                        style={{ cursor: "pointer" }}
+                      />
+                      <input
+                        type="date"
+                        id="borrowDatePicker"
+                        value={borrowDate}
+                        onChange={(e) => setBorrowDate(e.target.value)}
+                        className="absolute opacity-0 pointer-events-none"
+                        style={{ colorScheme: "light" }}
+                      />
+                      <div
+                        className="absolute right-3 top-3 text-gray-500 cursor-pointer"
+                        onClick={() => document.getElementById("borrowDatePicker").showPicker()}
+                      >
+                        <i className="fas fa-calendar-alt"></i>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="sm:col-span-2">
@@ -696,7 +735,10 @@ const BorrowEquipmentsEmp = () => {
                             )}
                           </div>
                           <p className="text-sm text-gray-500 font-FontNoto">สถานที่ใช้งาน: {br.usageLocation || "-"}</p>
-                          <p className="text-sm text-gray-500 font-FontNoto">วันที่ยืม: {borrowDate}</p>
+                          <p className="text-sm text-gray-500 font-FontNoto">
+                            วันที่ยืม: {br.borrowDate ? formatThaiDate(br.borrowDate) : "-"}
+                          </p>
+
                           {br.filePath && (
                             <div className="flex items-center gap-2 mt-1">
                               <label className="text-sm font-bold text-gray-600 font-FontNoto">ไฟล์แนบ:</label>
@@ -749,12 +791,11 @@ const BorrowEquipmentsEmp = () => {
                   >
                     {Array.from({ length: 11 }, (_, i) => 2024 + i).map((year) => (
                       <option key={year} value={year}>
-                        {year}
+                        {year + 543}
                       </option>
                     ))}
                   </select>
                 </div>
-
                 <div className="flex items-center gap-2 whitespace-nowrap">
                   <label className="text-sm text-gray-600">สถานะ:</label>
                   <select
@@ -811,13 +852,12 @@ const BorrowEquipmentsEmp = () => {
                           )}
                         </td>
                         <td className="px-4 py-2">
-                          {new Date(br.borrowDate).toLocaleDateString("th-TH")}
+                          {br.borrowDate ? formatThaiDate(br.borrowDate) : "-"}
                         </td>
                         <td className="px-4 py-2">
-                          {br.returnDate
-                            ? new Date(br.returnDate).toLocaleDateString("th-TH")
-                            : "-"}
+                          {br.returnDate ? formatThaiDate(br.returnDate) : "-"}
                         </td>
+
                         <td className="px-4 py-2">
                           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${br.status.includes("คืน")
                             ? "bg-green-100 text-green-700"

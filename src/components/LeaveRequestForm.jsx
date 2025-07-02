@@ -3,7 +3,6 @@ import axios from "axios";
 import clsx from "clsx";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-
 const formatDateThai = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -19,6 +18,7 @@ const formatDateThai = (dateString) => {
 
 const LeaveRequestForm = () => {
     const userId = sessionStorage.getItem("userId") || "";
+    const userRole = sessionStorage.getItem("role") || "";
     const [leaveTypes, setLeaveTypes] = useState([]);
     const [leaveHistory, setLeaveHistory] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -227,6 +227,20 @@ const LeaveRequestForm = () => {
         }
     };
 
+    const formatDateThaiText = (dateString) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        if (isNaN(date)) return "";
+        const day = date.getDate();
+        const monthNames = [
+            "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+            "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+        ];
+        const month = monthNames[date.getMonth()];
+        const year = date.getFullYear() + 543;
+        return `${day} ${month} ${year}`;
+    };
+
     const fetchLeaveTypes = async () => {
         const res = await axios.get("https://192.168.1.188/hrwebapi/api/Document/GetLeaveTypes");
         setLeaveTypes(res.data);
@@ -375,6 +389,7 @@ const LeaveRequestForm = () => {
             const res = await axios.post("https://192.168.1.188/hrwebapi/api/LeaveRequest", payload);
             fetchLeaveHistory();
             setShowSuccessModal(true);
+            setShowFormModal(false);
         } catch (err) {
             console.error("ส่งใบลาไม่สำเร็จ", err);
             alert("เกิดข้อผิดพลาดในการส่งฟอร์ม");
@@ -401,7 +416,8 @@ const LeaveRequestForm = () => {
                 return "-";
             }
         };
-
+        const showHeadBA = ["GM", "Hr", "HEAD_BA", "BA"].includes(form.department);
+        const isHR = userRole === "Hr";
         const docDefinition = {
             content: [
                 { text: "แบบฟอร์มใบลา", style: "header" },
@@ -482,30 +498,77 @@ const LeaveRequestForm = () => {
                     margin: [0, 0, 0, 10]
                 },
                 {
-                    columns: [
-                        { width: '33.33%', text: `ลงชื่อ ....${(form.gmComment || '-').replace('อนุมัติ ', '')}.....`, alignment: "center" },
-                        { width: '33.33%', text: `ลงชื่อ ....${(form.headComment || '-').replace('อนุมัติ ', '')}.....`, alignment: "center" },
-                        { width: '33.33%', text: `ลงชื่อ ....${(form.hrComment || '-').replace('อนุมัติ ', '')}.....`, alignment: "center" },
-                    ],
+                    columns: isHR
+                        ? [
+                            {
+                                width: '*',
+                                text: `ลงชื่อ ....${(form.hrComment || '-').replace('อนุมัติ ', '')}.....`,
+                                alignment: "center"
+                            }
+                        ]
+                        : [
+                            {
+                                width: '33.33%',
+                                text: `ลงชื่อ ....${(form.gmComment || '-').replace('อนุมัติ ', '')}.....`,
+                                alignment: "center"
+                            },
+                            ...(showHeadBA
+                                ? [{
+                                    width: '33.33%',
+                                    text: `ลงชื่อ ....${(form.headComment || '-').replace('อนุมัติ ', '')}.....`,
+                                    alignment: "center"
+                                }]
+                                : []),
+                            {
+                                width: '33.33%',
+                                text: `ลงชื่อ ....${(form.hrComment || '-').replace('อนุมัติ ', '')}.....`,
+                                alignment: "center"
+                            }
+                        ],
                     margin: [0, 10, 0, 0]
                 },
                 {
-                    columns: [
-                        { width: '33.33%', text: `(${(form.gmComment || '-').replace('อนุมัติ ', '')})`, alignment: "center" },
-                        { width: '33.33%', text: `(${(form.headComment || '-').replace('อนุมัติ ', '')})`, alignment: "center" },
-                        { width: '33.33%', text: `(${(form.hrComment || '-').replace('อนุมัติ ', '')})`, alignment: "center" },
-                    ],
+                    columns: isHR
+                        ? [
+                            {
+                                width: '*',
+                                text: `(${(form.hrComment || '-').replace('อนุมัติ ', '')})`,
+                                alignment: "center"
+                            }
+                        ]
+                        : [
+                            {
+                                width: '33.33%',
+                                text: `(${(form.gmComment || '-').replace('อนุมัติ ', '')})`,
+                                alignment: "center"
+                            },
+                            ...(showHeadBA
+                                ? [{
+                                    width: '33.33%',
+                                    text: `(${(form.headComment || '-').replace('อนุมัติ ', '')})`,
+                                    alignment: "center"
+                                }]
+                                : []),
+                            {
+                                width: '33.33%',
+                                text: `(${(form.hrComment || '-').replace('อนุมัติ ', '')})`,
+                                alignment: "center"
+                            }
+                        ],
                     margin: [0, 0, 0, 0]
                 },
                 {
-                    columns: [
-                        { width: '33.33%', text: "ผู้จัดการทั่วไป", alignment: "center" },
-                        { width: '33.33%', text: "หัวหน้าฝ่ายนักวิเคราะห์ธุรกิจ", alignment: "center" },
-                        { width: '33.33%', text: "ทรัพยากรบุคคล", alignment: "center" },
-                    ],
+                    columns: isHR
+                        ? [{ width: '*', text: "ทรัพยากรบุคคล", alignment: "center" }]
+                        : [
+                            { width: '33.33%', text: "ผู้จัดการทั่วไป", alignment: "center" },
+                            ...(showHeadBA
+                                ? [{ width: '33.33%', text: "หัวหน้าฝ่ายนักวิเคราะห์ธุรกิจ", alignment: "center" }]
+                                : []),
+                            { width: '33.33%', text: "ทรัพยากรบุคคล", alignment: "center" }
+                        ],
                     margin: [0, 5, 0, 0]
                 }
-
             ],
             styles: {
                 header: { fontSize: 18, bold: true, alignment: "center" },
@@ -544,7 +607,7 @@ const LeaveRequestForm = () => {
             {!showFormModal && (
                 <>
                     <div className="overflow-x-auto sm:overflow-visible px-3 ">
-                        <div className="flex sm:grid sm:grid-cols-2 md:grid-cols-5 gap-4 font-FontNoto min-w-[640px] sm:min-w-0">
+                        <div className="flex sm:grid sm:grid-cols-2 md:grid-cols-5 gap-4 font-FontNoto min-w-[640px] sm:min-w-0 whitespace-nowrap">
                             <div className="flex-shrink-0 w-[250px] sm:w-auto bg-white shadow rounded-xl p-4">
                                 <p className="text-sm text-gray-600 font-FontNoto mb-1 flex justify-between items-center">
                                     ลาป่วยที่ใช้ไป <span className="text-blue-500"><i className="fas fa-clock"></i></span>
@@ -856,7 +919,7 @@ const LeaveRequestForm = () => {
                                     <li><span className="font-bold text-black">วันพุธที่ 16 เมษายน :</span> ชดเชยวันสงกรานต์ (อาทิตย์ที่ 13 เมษายน : วันสงกรานต์)</li>
                                     <li><span className="font-bold text-black">วันพฤหัสบดีที่ 1 พฤษภาคม :</span> วันแรงงาน</li>
                                     <li><span className="font-bold text-black">วันจันทร์ที่ 5 พฤษภาคม :</span> ชดเชยวันฉัตรมงคล (อาทิตย์ที่ 4 พฤษภาคม : วันฉัตรมงคล)</li>
-                                    <li><span className="font-bold text-black">วันจันทร์ที่ 12 :</span> ชดเชยวันวิสาขบูชา (อาทิตย์ที่ 11 พฤษภาคม : วันวิสาขบูชา)</li>
+                                    <li><span className="font-bold text-black">วันจันทร์ที่ 12 พฤษภาคม:</span> ชดเชยวันวิสาขบูชา (อาทิตย์ที่ 11 พฤษภาคม : วันวิสาขบูชา)</li>
                                     <li><span className="font-bold text-black">วันจันทร์ที่ 3 มิถุนายน :</span> วันเฉลิมราชินี</li>
                                     <li><span className="font-bold text-black">วันพฤหัสบดีที่ 10 กรกฎาคม :</span> วันอาสาฬหบูชา</li>
                                     <li><span className="font-bold text-black">วันศุกร์ที่ 11 กรกฎาคม :</span> วันเข้าพรรษา</li>
@@ -957,13 +1020,13 @@ const LeaveRequestForm = () => {
                                             <div className="flex items-center w-full sm:w-1/3">
                                                 <label className="mr-2 font-bold">ตั้งแต่วันที่ :</label>
                                                 <div className="flex-1 text-black bg-white border border-gray-200 rounded px-3 py-1.5 whitespace-nowrap">
-                                                    {new Date(selectedLeave.startDate).toLocaleDateString("th-TH")}
+                                                    {formatDateThai(selectedLeave.startDate)}
                                                 </div>
                                             </div>
                                             <div className="flex items-center w-full sm:w-1/3">
                                                 <label className="mr-2 font-bold">ถึงวันที่ :</label>
                                                 <div className="flex-1 text-black bg-white border border-gray-200 rounded px-3 py-1.5 whitespace-nowrap">
-                                                    {new Date(selectedLeave.endDate).toLocaleDateString("th-TH")}
+                                                    {formatDateThai(selectedLeave.endDate)}
                                                 </div>
                                             </div>
                                             <div className="flex items-center w-full sm:w-1/3">
@@ -975,7 +1038,6 @@ const LeaveRequestForm = () => {
                                                 </div>
                                             </div>
                                         </div>
-
                                         {(() => {
                                             const [address, phone] = (selectedLeave.contact || "").split(" / ");
                                             return (
@@ -1039,116 +1101,117 @@ const LeaveRequestForm = () => {
                                                 การอนุมัติ
                                             </label>
                                         </div>
+
                                         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 font-FontNoto text-sm text-black">
                                             <div className="border border-gray-300 rounded-lg p-4 shadow-sm whitespace-nowrap bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
                                                 <p className="font-bold text-center mb-2">ผู้ขอลา</p>
                                                 <div className="mb-1">ลายมือชื่อ: <span className="inline-block border-b border-gray-400 w-28 h-6 align-bottom ml-1 whitespace-nowrap">{form.fullName}</span></div>
-                                                <div>วันที่ : {formatDateThai(selectedLeave.createdAt)}</div>
-                                            </div>
-                                            <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
-                                                <p className="font-bold text-center mb-2">ผู้จัดการทั่วไป</p>
-                                                <div className="mb-2 flex items-center whitespace-nowrap">
-                                                    <span className="text-gray-600 mr-2">ลายมือชื่อ:</span>
-                                                    <span className="inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1 px-2 text-black whitespace-nowrap">
-                                                        {selectedLeave?.gmApprovedAt
-                                                            ? selectedLeave?.gmComment?.replace("อนุมัติ ", "") || "ไม่ระบุชื่อ"
-                                                            : "รอดำเนินการ"}
-                                                    </span>
-                                                </div>
                                                 <div className="mb-2 flex items-center gap-2 whitespace-nowrap">
-                                                    <span className="text-gray-600 mr-2 whitespace-nowrap">วันที่:</span>
-                                                    <input
-                                                        type="date"
-                                                        disabled
-                                                        value={
-                                                            selectedLeave?.gmApprovedAt
-                                                                ? new Date(selectedLeave.gmApprovedAt).toISOString().split("T")[0]
-                                                                : ""
-                                                        }
-                                                        className="border border-gray-300 text-gray-600 bg-gray-100 rounded px-2 py-1 cursor-default w-full"
-                                                        style={{ minWidth: '100px' }}
-                                                    />
+                                                    <span className="text-gray-600 mr-2">วันที่:</span>
+                                                    <div className="border border-gray-300 text-gray-600 bg-gray-100 rounded px-2 py-1 w-full min-w-[100px]">
+                                                        {selectedLeave?.createdAt
+                                                            ? formatDateThai(selectedLeave.createdAt)
+                                                            : "-"}
+                                                    </div>
                                                 </div>
 
-                                                <div className="flex gap-4 mt-2">
-                                                    {selectedLeave?.gmApprovedAt || selectedLeave?.status?.startsWith("Rejected") ? (
-                                                        selectedLeave.status?.startsWith("Rejected") ? (
-                                                            <label className="flex items-center gap-2 text-red-600 font-semibold">
-                                                                <span className="w-4 h-4 rounded-full border-2 border-red-500 bg-red-500 inline-block shadow-inner"></span>
-                                                                ไม่อนุมัติ
-                                                            </label>
-                                                        ) : (
-                                                            <label className="flex items-center gap-2 text-green-600 font-semibold">
-                                                                <span className="w-4 h-4 rounded-full border-2 border-green-500 bg-green-500 inline-block shadow-inner"></span>
-                                                                อนุมัติ
-                                                            </label>
-                                                        )
-                                                    ) : (
-                                                        <>
-                                                            <label className="flex items-center gap-2 text-green-600 font-semibold">
-                                                                <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
-                                                                อนุมัติ
-                                                            </label>
-                                                            <label className="flex items-center gap-2 text-red-600 font-semibold">
-                                                                <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
-                                                                ไม่อนุมัติ
-                                                            </label>
-                                                        </>
-                                                    )}
-                                                </div>
                                             </div>
-                                            <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
-                                                <p className="font-bold text-center mb-2">หัวหน้าฝ่ายนักวิเคราะห์ธุรกิจ</p>
-                                                <div className="mb-2 flex items-center">
-                                                    <span className="text-gray-600 mr-2 whitespace-nowrap">ลายมือชื่อ:</span>
-                                                    <span className="inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1 px-2 text-black whitespace-nowrap">
-                                                        {selectedLeave?.headBAApprovedAt
-                                                            ? selectedLeave?.headBAComment?.replace("อนุมัติ ", "") || "ไม่ระบุชื่อ"
-                                                            : "รอดำเนินการ"}
-                                                    </span>
+                                            {userRole !== "Hr" && (
+                                                <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
+                                                    <p className="font-bold text-center mb-2">ผู้จัดการทั่วไป</p>
+                                                    <div className="mb-2 flex items-center whitespace-nowrap">
+                                                        <span className="text-gray-600 mr-2">ลายมือชื่อ:</span>
+                                                        <span className="inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1 px-2 text-black whitespace-nowrap">
+                                                            {selectedLeave?.gmApprovedAt
+                                                                ? selectedLeave?.gmComment?.replace("อนุมัติ ", "") || "ไม่ระบุชื่อ"
+                                                                : "รอดำเนินการ"}
+                                                        </span>
+                                                    </div>
+                                                    <div className="mb-2 flex items-center gap-2 whitespace-nowrap">
+                                                        <span className="text-gray-600 mr-2 whitespace-nowrap">วันที่:</span>
+                                                        <div className="border border-gray-300 text-gray-600 bg-gray-100 rounded px-2 py-1 w-full min-w-[100px]">
+                                                            {selectedLeave?.gmApprovedAt
+                                                                ? formatDateThai(selectedLeave.gmApprovedAt)
+                                                                : "-"}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-4 mt-2">
+                                                        {selectedLeave?.gmApprovedAt || selectedLeave?.status?.startsWith("Rejected") ? (
+                                                            selectedLeave.status?.startsWith("Rejected") ? (
+                                                                <label className="flex items-center gap-2 text-red-600 font-semibold">
+                                                                    <span className="w-4 h-4 rounded-full border-2 border-red-500 bg-red-500 inline-block shadow-inner"></span>
+                                                                    ไม่อนุมัติ
+                                                                </label>
+                                                            ) : (
+                                                                <label className="flex items-center gap-2 text-green-600 font-semibold">
+                                                                    <span className="w-4 h-4 rounded-full border-2 border-green-500 bg-green-500 inline-block shadow-inner"></span>
+                                                                    อนุมัติ
+                                                                </label>
+                                                            )
+                                                        ) : (
+                                                            <>
+                                                                <label className="flex items-center gap-2 text-green-600 font-semibold">
+                                                                    <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
+                                                                    อนุมัติ
+                                                                </label>
+                                                                <label className="flex items-center gap-2 text-red-600 font-semibold">
+                                                                    <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
+                                                                    ไม่อนุมัติ
+                                                                </label>
+                                                            </>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div className="mb-2 flex items-center gap-2">
-                                                    <span className="text-gray-600 mr-2 whitespace-nowrap">วันที่:</span>
-                                                    <input
-                                                        type="date"
-                                                        disabled
-                                                        value={
-                                                            selectedLeave?.headBAApprovedAt
-                                                                ? new Date(selectedLeave.headBAApprovedAt).toISOString().split("T")[0]
-                                                                : ""
-                                                        }
-                                                        className="border border-gray-300 text-gray-600 bg-gray-100 rounded px-2 py-1 cursor-default w-full"
-                                                        style={{ minWidth: '100px' }}
-                                                    />
-                                                </div>
+                                            )}
+                                            {userRole !== "Hr" && ["GM", "HEAD_BA", "BA"].includes(userRole) && (
+                                                <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
+                                                    <p className="font-bold text-center mb-2">หัวหน้าฝ่ายนักวิเคราะห์ธุรกิจ</p>
+                                                    <div className="mb-2 flex items-center">
+                                                        <span className="text-gray-600 mr-2 whitespace-nowrap">ลายมือชื่อ:</span>
+                                                        <span className="inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1 px-2 text-black whitespace-nowrap">
+                                                            {selectedLeave?.headBAApprovedAt
+                                                                ? selectedLeave?.headBAComment?.replace("อนุมัติ ", "") || "ไม่ระบุชื่อ"
+                                                                : "รอดำเนินการ"}
+                                                        </span>
+                                                    </div>
+                                                    <div className="mb-2 flex items-center gap-2">
+                                                        <span className="text-gray-600 mr-2 whitespace-nowrap">วันที่:</span>
+                                                        <div className="border border-gray-300 text-gray-600 bg-gray-100 rounded px-2 py-1 w-full min-w-[100px]">
+                                                            {selectedLeave?.headBAApprovedAt
+                                                                ? formatDateThai(selectedLeave.headBAApprovedAt)
+                                                                : "-"}
+                                                        </div>
+                                                    </div>
 
-                                                <div className="flex gap-4 mt-2">
-                                                    {selectedLeave?.headBAApprovedAt || selectedLeave?.status?.startsWith("Rejected") ? (
-                                                        selectedLeave.status?.startsWith("Rejected") ? (
-                                                            <label className="flex items-center gap-2 text-red-600 font-semibold">
-                                                                <span className="w-4 h-4 rounded-full border-2 border-red-500 bg-red-500 inline-block shadow-inner"></span>
-                                                                ไม่อนุมัติ
-                                                            </label>
+
+                                                    <div className="flex gap-4 mt-2">
+                                                        {selectedLeave?.headBAApprovedAt || selectedLeave?.status?.startsWith("Rejected") ? (
+                                                            selectedLeave.status?.startsWith("Rejected") ? (
+                                                                <label className="flex items-center gap-2 text-red-600 font-semibold">
+                                                                    <span className="w-4 h-4 rounded-full border-2 border-red-500 bg-red-500 inline-block shadow-inner"></span>
+                                                                    ไม่อนุมัติ
+                                                                </label>
+                                                            ) : (
+                                                                <label className="flex items-center gap-2 text-green-600 font-semibold">
+                                                                    <span className="w-4 h-4 rounded-full border-2 border-green-500 bg-green-500 inline-block shadow-inner"></span>
+                                                                    อนุมัติ
+                                                                </label>
+                                                            )
                                                         ) : (
-                                                            <label className="flex items-center gap-2 text-green-600 font-semibold">
-                                                                <span className="w-4 h-4 rounded-full border-2 border-green-500 bg-green-500 inline-block shadow-inner"></span>
-                                                                อนุมัติ
-                                                            </label>
-                                                        )
-                                                    ) : (
-                                                        <>
-                                                            <label className="flex items-center gap-2 text-green-600 font-semibold">
-                                                                <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
-                                                                อนุมัติ
-                                                            </label>
-                                                            <label className="flex items-center gap-2 text-red-600 font-semibold">
-                                                                <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
-                                                                ไม่อนุมัติ
-                                                            </label>
-                                                        </>
-                                                    )}
+                                                            <>
+                                                                <label className="flex items-center gap-2 text-green-600 font-semibold">
+                                                                    <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
+                                                                    อนุมัติ
+                                                                </label>
+                                                                <label className="flex items-center gap-2 text-red-600 font-semibold">
+                                                                    <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
+                                                                    ไม่อนุมัติ
+                                                                </label>
+                                                            </>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
 
                                             <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
                                                 <p className="font-bold text-center mb-2">ฝ่ายทรัพยากรบุคคล</p>
@@ -1163,18 +1226,13 @@ const LeaveRequestForm = () => {
 
                                                 <div className="mb-2 flex items-center gap-2">
                                                     <span className="text-gray-600 mr-2 whitespace-nowrap">วันที่:</span>
-                                                    <input
-                                                        type="date"
-                                                        disabled
-                                                        value={
-                                                            selectedLeave?.hrApprovedAt
-                                                                ? new Date(selectedLeave.hrApprovedAt).toISOString().split("T")[0]
-                                                                : ""
-                                                        }
-                                                        className="border border-gray-300 text-gray-600 bg-gray-100 rounded px-2 py-1 cursor-default w-full"
-                                                        style={{ minWidth: '100px' }}
-                                                    />
+                                                    <div className="border border-gray-300 text-gray-600 bg-gray-100 rounded px-2 py-1 w-full min-w-[100px]">
+                                                        {selectedLeave?.hrApprovedAt
+                                                            ? formatDateThai(selectedLeave.hrApprovedAt)
+                                                            : "-"}
+                                                    </div>
                                                 </div>
+
                                                 <div className="flex gap-4 mt-2">
                                                     {selectedLeave?.hrApprovedAt || selectedLeave?.status?.startsWith("Rejected") ? (
                                                         selectedLeave.status?.startsWith("Rejected") ? (
@@ -1307,41 +1365,74 @@ const LeaveRequestForm = () => {
                             className="w-full font-FontNoto px-3 py-2 border border-gray-300 rounded-md bg-white text-black"
                         />
                     </div>
-                    <div className="flex flex-wrap gap-4 w-full mt-2">
-                        <div className="flex flex-col flex-1 min-w-0">
-                            <label className="font-FontNoto min-w-fit">ตั้งแต่วันที่</label>
-                            <input
-                                type="date"
-                                name="startDate"
-                                value={form.startDate}
-                                onChange={handleChange}
-                                className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto"
-                                style={{ colorScheme: "light" }}
-                            />
-                        </div>
-                        <div className="flex flex-col flex-1 min-w-0">
-                            <label className="font-FontNoto min-w-fit">ถึงวันที่</label>
-                            <input
-                                type="date"
-                                name="endDate"
-                                value={form.endDate}
-                                onChange={handleChange}
-                                className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto"
-                                style={{ colorScheme: "light" }}
-                            />
-                        </div>
-                        <div className="flex flex-col flex-1 min-w-0">
-                            <label className="font-FontNoto min-w-fit mb-1">จำนวนวันลา</label>
-                            <input
-                                type="text"
-                                name="totalDaysDisplay"
-                                value={`${form.totalDays} วัน`}
-                                readOnly
-                                className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto"
-                            />
+                    <div className="flex flex-col w-full gap-4 mt-2">
+                        <div className="flex flex-col sm:flex-row gap-4 w-full">
+                            <div className="flex flex-col flex-1 min-w-0 relative">
+                                <label className="font-FontNoto min-w-fit mb-1">ตั้งแต่วันที่</label>
+                                <input
+                                    type="text"
+                                    name="startDateDisplay"
+                                    value={formatDateThaiText(form.startDate)}
+                                    readOnly
+                                    className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto pr-10"
+                                    onClick={() => document.getElementById("startDatePicker").showPicker()}
+                                    style={{ colorScheme: "light", cursor: "pointer" }}
+                                />
+                                <div
+                                    className="absolute right-3 top-9 text-gray-500 cursor-pointer"
+                                    onClick={() => document.getElementById("startDatePicker").showPicker()}
+                                >
+                                    <i className="fas fa-calendar-alt"></i>
+                                </div>
+                                <input
+                                    type="date"
+                                    id="startDatePicker"
+                                    name="startDate"
+                                    value={form.startDate}
+                                    onChange={handleChange}
+                                    className="absolute opacity-0 pointer-events-none"
+                                    style={{ colorScheme: "light" }}
+                                />
+                            </div>
+                            <div className="flex flex-col flex-1 min-w-0 relative">
+                                <label className="font-FontNoto min-w-fit mb-1">ถึงวันที่</label>
+                                <input
+                                    type="text"
+                                    name="endDateDisplay"
+                                    value={formatDateThaiText(form.endDate)}
+                                    readOnly
+                                    className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto pr-10"
+                                    onClick={() => document.getElementById("endDatePicker").showPicker()}
+                                    style={{ colorScheme: "light", cursor: "pointer" }}
+                                />
+                                <div
+                                    className="absolute right-3 top-9 text-gray-500 cursor-pointer"
+                                    onClick={() => document.getElementById("endDatePicker").showPicker()}
+                                >
+                                    <i className="fas fa-calendar-alt"></i>
+                                </div>
+                                <input
+                                    type="date"
+                                    id="endDatePicker"
+                                    name="endDate"
+                                    value={form.endDate}
+                                    onChange={handleChange}
+                                    className="absolute opacity-0 pointer-events-none"
+                                    style={{ colorScheme: "light" }}
+                                />
+                            </div>
+                            <div className="flex flex-col flex-1 min-w-0">
+                                <label className="font-FontNoto min-w-fit mb-1">จำนวนวันลา</label>
+                                <input
+                                    type="text"
+                                    name="totalDaysDisplay"
+                                    value={`${form.totalDays} วัน`}
+                                    readOnly
+                                    className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto"
+                                />
+                            </div>
                         </div>
                     </div>
-
                     <div className="flex flex-col sm:flex-row sm:items-end sm:gap-4 w-full mt-2">
                         <div className="flex-1 sm:mr-2">
                             <label className="font-FontNoto min-w-fit ">ช่องทางการติดต่อระหว่างลา</label>
@@ -1421,63 +1512,71 @@ const LeaveRequestForm = () => {
                     <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 font-FontNoto text-sm text-black">
                         <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white whitespace-nowrap text-gray-700 font-FontNoto text-sm max-w-sm">
                             <p className="font-bold text-center mb-2">ผู้ขอลา</p>
-                            <div className="mb-1">ลายมือชื่อ: <span className="inline-block border-b border-gray-400 w-40 h-6 align-bottom ml-1">{form.fullName}</span></div>
-                            <div>วันที่: {form.writtenDate ? formatDateThai(form.writtenDate) : ".............."}</div>
+                            <div className="mb-1">
+                                ลายมือชื่อ:
+                                <span className="inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1">
+                                    {form.fullName}
+                                </span>
+                            </div>
+                            <div className="mb-2 flex items-center gap-2 whitespace-nowrap">
+                                <span className="text-gray-600 mr-2">วันที่:</span>
+                                <div className="border border-gray-300 text-gray-600 bg-gray-100 rounded px-2 py-1 w-full min-w-[100px]">
+                                    {form.writtenDate ? formatDateThai(form.writtenDate) : ".............."}
+                                </div>
+                            </div>
                         </div>
-                        <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
-                            <p className="font-bold text-center mb-2">ผู้จัดการทั่วไป</p>
 
-                            <div className="mb-2 flex items-center">
-                                <span className="text-gray-600 mr-2">ลายมือชื่อ:</span>
-                                <span className="inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1"></span>
+                        {userRole !== "Hr" && (
+                            <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
+                                <p className="font-bold text-center mb-2">ผู้จัดการทั่วไป</p>
+                                <div className="mb-2 flex items-center">
+                                    <span className="text-gray-600 mr-2">ลายมือชื่อ:</span>
+                                    <span className="inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1"></span>
+                                </div>
+                                <div className="mb-2 flex items-center gap-2">
+                                    <span className="text-gray-600 mr-2 whitespace-nowrap">วันที่:</span>
+                                    <div className="border border-gray-300 text-gray-600 bg-gray-100 rounded px-2 py-1 w-full min-w-[150px]">
+                                        วว/ดด/ปปปป
+                                    </div>
+                                </div>
+                                <div className="flex gap-4 mt-2">
+                                    <label className="flex items-center gap-2 text-green-600 font-semibold">
+                                        <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
+                                        อนุมัติ
+                                    </label>
+                                    <label className="flex items-center gap-2 text-red-600 font-semibold">
+                                        <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
+                                        ไม่อนุมัติ
+                                    </label>
+                                </div>
                             </div>
-                            <div className="mb-2 flex items-center gap-2">
-                                <span className="text-gray-600 mr-2 whitespace-nowrap">วันที่:</span>
-                                <input
-                                    type="date"
-                                    disabled
-                                    className="border border-gray-300 text-gray-600 bg-gray-100 rounded px-2 py-1 cursor-default w-full"
-                                    style={{ minWidth: '150px' }}
-                                />
-                            </div>
-                            <div className="flex gap-4 mt-2">
-                                <label className="flex items-center gap-2 text-green-600 font-semibold">
-                                    <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
-                                    อนุมัติ
-                                </label>
-                                <label className="flex items-center gap-2 text-red-600 font-semibold">
-                                    <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
-                                    ไม่อนุมัติ
-                                </label>
-                            </div>
-                        </div>
-                        <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
-                            <p className="font-bold text-center mb-2">หัวหน้าฝ่ายนักวิเคราะห์ธุรกิจ</p>
-                            <div className="mb-2 flex items-center">
-                                <span className="text-gray-600 mr-2">ลายมือชื่อ:</span>
-                                <span className="inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1"></span>
-                            </div>
+                        )}
+                        {userRole !== "Hr" && ["GM", "HEAD_BA", "BA"].includes(userRole) && (
+                            <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
+                                <p className="font-bold text-center mb-2">หัวหน้าฝ่ายนักวิเคราะห์ธุรกิจ</p>
+                                <div className="mb-2 flex items-center">
+                                    <span className="text-gray-600 mr-2">ลายมือชื่อ:</span>
+                                    <span className="inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1"></span>
+                                </div>
 
-                            <div className="mb-2 flex items-center gap-2">
-                                <span className="text-gray-600 mr-2 whitespace-nowrap">วันที่:</span>
-                                <input
-                                    type="date"
-                                    disabled
-                                    className="border border-gray-300 text-gray-600 bg-gray-100 rounded px-2 py-1 cursor-default w-full"
-                                    style={{ minWidth: '150px' }}
-                                />
+                                <div className="mb-2 flex items-center gap-2">
+                                    <span className="text-gray-600 mr-2 whitespace-nowrap">วันที่:</span>
+                                    <div className="border border-gray-300 text-gray-600 bg-gray-100 rounded px-2 py-1 w-full min-w-[150px]">
+                                        วว/ดด/ปปปป
+                                    </div>
+                                </div>
+                                <div className="flex gap-4 mt-2">
+                                    <label className="flex items-center gap-2 text-green-600 font-semibold">
+                                        <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
+                                        อนุมัติ
+                                    </label>
+                                    <label className="flex items-center gap-2 text-red-600 font-semibold">
+                                        <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
+                                        ไม่อนุมัติ
+                                    </label>
+                                </div>
                             </div>
-                            <div className="flex gap-4 mt-2">
-                                <label className="flex items-center gap-2 text-green-600 font-semibold">
-                                    <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
-                                    อนุมัติ
-                                </label>
-                                <label className="flex items-center gap-2 text-red-600 font-semibold">
-                                    <span className="w-4 h-4 rounded-full border-2 border-gray-200 bg-white inline-block shadow-inner"></span>
-                                    ไม่อนุมัติ
-                                </label>
-                            </div>
-                        </div>
+                        )}
                         <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
                             <p className="font-bold text-center mb-2">ฝ่ายทรัพยากรบุคคล</p>
                             <div className="mb-2 flex items-center">
@@ -1487,12 +1586,9 @@ const LeaveRequestForm = () => {
 
                             <div className="mb-2 flex items-center gap-2">
                                 <span className="text-gray-600 mr-2 whitespace-nowrap">วันที่:</span>
-                                <input
-                                    type="date"
-                                    disabled
-                                    className="border border-gray-300 text-gray-600 bg-gray-100 rounded px-2 py-1 cursor-default w-full"
-                                    style={{ minWidth: '150px' }}
-                                />
+                                <div className="border border-gray-300 text-gray-600 bg-gray-100 rounded px-2 py-1 w-full min-w-[150px]">
+                                    วว/ดด/ปปปป
+                                </div>
                             </div>
                             <div className="flex gap-4 mt-2">
                                 <label className="flex items-center gap-2 text-green-600 font-semibold">

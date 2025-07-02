@@ -807,15 +807,14 @@ const Worktime = () => {
                                             </option>
                                         ))}
                                     </select>
-
                                     <select
                                         className="select select-bordered w-36 md:w-40 text-black font-FontNoto !bg-white"
                                         value={yearFilter}
                                         onChange={(e) => setYearFilter(e.target.value)}
                                     >
-                                        {Array.from({ length: 11 }, (_, i) => (
-                                            <option className="font-FontNoto" key={i} value={2024 + i}>
-                                                {2024 + i}
+                                        {Array.from({ length: 11 }, (_, i) => 2024 + i).map((year) => (
+                                            <option className="font-FontNoto" key={year} value={year}>
+                                                {year + 543}
                                             </option>
                                         ))}
                                     </select>

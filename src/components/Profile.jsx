@@ -171,10 +171,15 @@ function Profile() {
     if (!dateStr) return "-";
     const date = new Date(dateStr);
     const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const monthNames = [
+      "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+      "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+    ];
+    const month = monthNames[date.getMonth()];
     const year = date.getFullYear() + 543;
-    return `${day}/${month}/${year}`;
+    return `${day} ${month} ${year}`;
   };
+
   const handleSubmitChangePassword = async (e) => {
     e.preventDefault();
 
@@ -925,24 +930,40 @@ function Profile() {
                           )}
                         </div>
 
-                        <div className="flex items-center gap-4">
-                          <label className="w-32 text-sm font-medium">วันเกิด :</label>
+                        <div className="flex items-center gap-4 relative">
+                          <label className="w-32 text-sm font-medium whitespace-nowrap">วันเกิด :</label>
                           {!isEditMode ? (
                             <p className="text-sm">
-                              {employee.birthday
-                                ? new Date(employee.birthday).toLocaleDateString("th-TH")
-                                : "-"}
+                              {employee.birthday ? formatThaiDate(employee.birthday) : "-"}
                             </p>
                           ) : (
-                            <input
-                              type="date"
-                              name="birthday"
-                              value={employee.birthday || ""}
-                              onChange={handleChange}
-                              className="input input-sm input-bordered w-full font-FontNoto bg-white text-black"
-                              style={{ colorScheme: "light" }}
-                              max={new Date().toISOString().split("T")[0]}
-                            />
+                            <div className="relative w-full">
+                              <input
+                                type="text"
+                                name="birthdayDisplay"
+                                value={employee.birthday ? formatThaiDate(employee.birthday) : ""}
+                                readOnly
+                                className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto pr-10 w-full"
+                                onClick={() => document.getElementById("birthdayPicker").showPicker()}
+                                style={{ colorScheme: "light", cursor: "pointer" }}
+                              />
+                              <div
+                                className="absolute right-3 top-2.5 text-gray-500 cursor-pointer"
+                                onClick={() => document.getElementById("birthdayPicker").showPicker()}
+                              >
+                                <i className="fas fa-calendar-alt"></i>
+                              </div>
+                              <input
+                                type="date"
+                                id="birthdayPicker"
+                                name="birthday"
+                                value={employee.birthday || ""}
+                                onChange={handleChange}
+                                max={new Date().toISOString().split("T")[0]}
+                                className="absolute opacity-0 pointer-events-none"
+                                style={{ colorScheme: "light" }}
+                              />
+                            </div>
                           )}
                         </div>
                         <div className="flex items-center gap-4">
@@ -1146,17 +1167,43 @@ function Profile() {
                                 )}
                               </div>
                             )}
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 relative">
                               <label className="w-32 text-sm font-medium whitespace-nowrap">วันที่เริ่มงาน :</label>
-                              <input
-                                type="date"
-                                name="JDate"
-                                value={employee.JDate || ""}
-                                onChange={handleChange}
-                                className="input input-sm input-bordered w-full text-sm font-FontNoto bg-white text-black"
-                                style={{ colorScheme: "light" }}
-                              />
+                              {!isEditMode ? (
+                                <p className="text-sm">
+                                  {employee.JDate ? formatThaiDate(employee.JDate) : "-"}
+                                </p>
+                              ) : (
+                                <div className="relative w-full">
+                                  <input
+                                    type="text"
+                                    name="JDateDisplay"
+                                    value={employee.JDate ? formatThaiDate(employee.JDate) : ""}
+                                    readOnly
+                                    className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto pr-10 w-full"
+                                    onClick={() => document.getElementById("JDatePicker").showPicker()}
+                                    style={{ colorScheme: "light", cursor: "pointer" }}
+                                  />
+                                  <div
+                                    className="absolute right-3 top-2.5 text-gray-500 cursor-pointer"
+                                    onClick={() => document.getElementById("JDatePicker").showPicker()}
+                                  >
+                                    <i className="fas fa-calendar-alt"></i>
+                                  </div>
+                                  <input
+                                    type="date"
+                                    id="JDatePicker"
+                                    name="JDate"
+                                    value={employee.JDate || ""}
+                                    onChange={handleChange}
+                                    max={new Date().toISOString().split("T")[0]}
+                                    className="absolute opacity-0 pointer-events-none"
+                                    style={{ colorScheme: "light" }}
+                                  />
+                                </div>
+                              )}
                             </div>
+
                           </>
                         ) : (
                           <>

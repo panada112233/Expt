@@ -41,10 +41,12 @@ const LeaveRequestAdmin = () => {
     const [hasSignedHR, setHasSignedHR] = useState(false);
     const [currentUserName, setCurrentUserName] = useState("ไม่ทราบชื่อ");
     const [activeLeaveTab, setActiveLeaveTab] = useState("pending");
-
+    const [headApprovalDate, setHeadApprovalDate] = useState(new Date().toISOString().split("T")[0]);
+    const [hrApprovalDate, setHrApprovalDate] = useState(new Date().toISOString().split("T")[0]);
+    const [gmApprovalDate, setGmApprovalDate] = useState(new Date().toISOString().split("T")[0]);
 
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const years = Array.from({ length: 7 }, (_, i) => 2024 + i);
+    const years = Array.from({ length: 11 }, (_, i) => 2024 + i);
     const currentUserRole = sessionStorage.getItem("role"); // GM, Hr, HEAD_BA
 
     const handleConfirmApproval = async () => {
@@ -53,6 +55,18 @@ const LeaveRequestAdmin = () => {
         await handleApprovalChange(confirmAction);
         setConfirmAction(null);
         setShowConfirmModal(false);
+    };
+    const formatThaiDate = (dateStr) => {
+        if (!dateStr) return "-";
+        const date = new Date(dateStr);
+        const day = date.getDate().toString().padStart(2, "0");
+        const monthNames = [
+            "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+            "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+        ];
+        const month = monthNames[date.getMonth()];
+        const year = date.getFullYear() + 543;
+        return `${day} ${month} ${year}`;
     };
 
     const calculateLeaveDays = (startDate, endDate) => {
@@ -78,14 +92,28 @@ const LeaveRequestAdmin = () => {
         if (currentUserRole === "GM") {
             apiEndpoint = `https://192.168.1.188/hrwebapi/api/LeaveRequest/gm/${decision === "approve" ? "approve" : "reject"}/${selectedLeave.id}`;
         } else if (currentUserRole === "HEAD_BA") {
-            apiEndpoint = `https://192.168.1.188/hrwebapi/api/User/headba/${decision === "approve" ? "approve" : "reject"}/${selectedLeave.id}`;
+            const targetRole = selectedLeave.user?.role;
+            const targetUserId = selectedLeave.user?.userID;
+            const myUserId = parseInt(sessionStorage.getItem("userId"));
+
+            const canApprove =
+                targetRole === "BA" ||
+                targetRole === "GM" ||
+                targetRole === "Hr" ||
+                targetUserId === myUserId;
+
+            if (canApprove) {
+                apiEndpoint = `https://192.168.1.188/hrwebapi/api/User/headba/${decision === "approve" ? "approve" : "reject"}/${selectedLeave.id}`;
+            } else {
+                alert("คุณสามารถอนุมัติได้เฉพาะใบลาของนักวิเคราะห์ธุรกิจ (BA), GM, Hr หรือของตนเองเท่านั้น");
+                return;
+            }
         } else if (currentUserRole === "Hr") {
             apiEndpoint = `https://192.168.1.188/hrwebapi/api/LeaveRequest/hr/${decision === "approve" ? "approve" : "reject"}/${selectedLeave.id}`;
         } else {
             alert("สิทธิ์ของคุณไม่สามารถอนุมัติได้");
             return;
         }
-
         try {
             await axios.post(apiEndpoint, {
                 comment: `${decision === "approve" ? "อนุมัติ" : "ไม่อนุมัติ"} ${currentUserName}`,
@@ -371,36 +399,39 @@ const LeaveRequestAdmin = () => {
                     </ResponsiveContainer>
                 </div>
             </div>
-            <div className="flex justify-end mt-2 font-FontNoto">
+            <div className="flex justify-between items-center gap-4 mt-2 font-FontNoto border-b border-gray-300 mb-4">
+                {/* ปุ่มแท็บ อยู่ซ้าย */}
+                <div className="flex gap-4">
+                    <button
+                        onClick={() => setActiveLeaveTab("pending")}
+                        className={`py-2 px-4 font-bold ${activeLeaveTab === "pending"
+                            ? "border-b-4 border-green-500 text-green-700"
+                            : "text-gray-500"
+                            }`}
+                    >
+                        ใบลารออนุมัติ
+                    </button>
+                    <button
+                        onClick={() => setActiveLeaveTab("history")}
+                        className={`py-2 px-4 font-bold ${activeLeaveTab === "history"
+                            ? "border-b-4 border-blue-500 text-blue-700"
+                            : "text-gray-500"
+                            }`}
+                    >
+                        ประวัติใบลาทั้งหมด
+                    </button>
+                </div>
                 <select
                     className="select select-bordered w-40 font-FontNoto bg-white text-black"
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                 >
                     {years.map(year => (
-                        <option key={year} value={year}>{year}</option>
+                        <option key={year} value={year}>
+                            {year + 543}
+                        </option>
                     ))}
                 </select>
-            </div>
-            <div className="flex gap-4 border-b border-gray-300 mb-4 font-FontNoto">
-                <button
-                    onClick={() => setActiveLeaveTab("pending")}
-                    className={`py-2 px-4 font-bold ${activeLeaveTab === "pending"
-                        ? "border-b-4 border-green-500 text-green-700"
-                        : "text-gray-500"
-                        }`}
-                >
-                    ใบลารออนุมัติ
-                </button>
-                <button
-                    onClick={() => setActiveLeaveTab("history")}
-                    className={`py-2 px-4 font-bold ${activeLeaveTab === "history"
-                        ? "border-b-4 border-blue-500 text-blue-700"
-                        : "text-gray-500"
-                        }`}
-                >
-                    ประวัติใบลาทั้งหมด
-                </button>
             </div>
 
             {activeLeaveTab === "pending" && (
@@ -497,7 +528,8 @@ const LeaveRequestAdmin = () => {
 
             {showModal && selectedLeave && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 overflow-y-auto font-FontNoto px-2 py-4">
-                    <div className="relative bg-white rounded-2xl border border-gray-300 w-full max-w-2xl sm:max-w-3xl md:max-w-5xl mx-auto p-4 sm:p-6 shadow-md max-h-[90vh] overflow-y-auto">
+                    <div className="relative bg-white rounded-2xl border border-gray-300 w-full max-w-2xl sm:max-w-3xl md:max-w-6xl mx-auto p-4 sm:p-6 shadow-md max-h-[90vh] overflow-y-auto overflow-x-hidden">
+
                         <div className="absolute top-0 left-0 w-full h-1 rounded-t-lg" />
                         <button
                             onClick={() => setShowModal(false)}
@@ -567,13 +599,13 @@ const LeaveRequestAdmin = () => {
                                 <div className="flex items-center w-full sm:w-1/3">
                                     <label className="mr-2 font-bold">ตั้งแต่วันที่ :</label>
                                     <div className="flex-1 text-black bg-white border border-gray-200 rounded px-3 py-1.5 whitespace-nowrap">
-                                        {new Date(selectedLeave.startDate).toLocaleDateString("th-TH")}
+                                        {formatDateThai(selectedLeave.startDate)}
                                     </div>
                                 </div>
                                 <div className="flex items-center w-full sm:w-1/3">
                                     <label className="mr-2 font-bold">ถึงวันที่ :</label>
                                     <div className="flex-1 text-black bg-white border border-gray-200 rounded px-3 py-1.5 whitespace-nowrap">
-                                        {new Date(selectedLeave.endDate).toLocaleDateString("th-TH")}
+                                        {formatDateThai(selectedLeave.endDate)}
                                     </div>
                                 </div>
                                 <div className="flex items-center w-full sm:w-1/3">
@@ -585,6 +617,7 @@ const LeaveRequestAdmin = () => {
                                     </div>
                                 </div>
                             </div>
+
                             {(() => {
                                 const [address, phone] = (selectedLeave.contact || "").split(" / ");
                                 return (
@@ -651,20 +684,41 @@ const LeaveRequestAdmin = () => {
                         </div>
                         {selectedLeave.status === "ApprovedByHR" && (
                             <div className="mt-2 space-y-2 font-FontNoto text-sm text-black">
-                                {[
-                                    { label: "ผู้จัดการทั่วไป :", value: selectedLeave.gmComment?.replace("อนุมัติ ", "") || "ไม่ระบุชื่อ" },
-                                    { label: "หัวหน้าฝ่ายนักวิเคราะห์ :", value: selectedLeave.headBAComment?.replace("อนุมัติ ", "") || "ไม่ระบุชื่อ" },
-                                    { label: "ฝ่ายทรัพยากรบุคคล :", value: selectedLeave.hrComment?.replace("อนุมัติ ", "") || "ไม่ระบุชื่อ" }
-                                ].map(({ label, value }) => (
-                                    <div key={label} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                                        <label style={{ width: '17%' }} className="w-full sm:inline-block font-bold text-gray-700 whitespace-nowrap">{label}</label>
+                                {selectedLeave.gmComment && (
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                        <label style={{ width: '17%' }} className="w-full sm:inline-block font-bold text-gray-700 whitespace-nowrap">
+                                            ผู้จัดการทั่วไป :
+                                        </label>
                                         <div className="w-full sm:flex-1 px-3 py-1.5 bg-white border border-gray-200 rounded whitespace-nowrap text-left">
-                                            {value}
+                                            {selectedLeave.gmComment?.replace("อนุมัติ ", "") || "ไม่ระบุชื่อ"}
                                         </div>
                                     </div>
-                                ))}
+                                )}
+
+                                {["GM", "Hr", "HEAD_BA", "BA"].includes(selectedLeave.user?.role) && selectedLeave.headBAComment && (
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                        <label style={{ width: '17%' }} className="w-full sm:inline-block font-bold text-gray-700 whitespace-nowrap">
+                                            หัวหน้าฝ่ายนักวิเคราะห์ :
+                                        </label>
+                                        <div className="w-full sm:flex-1 px-3 py-1.5 bg-white border border-gray-200 rounded whitespace-nowrap text-left">
+                                            {selectedLeave.headBAComment?.replace("อนุมัติ ", "") || "ไม่ระบุชื่อ"}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {selectedLeave.hrComment && (
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                        <label style={{ width: '17%' }} className="w-full sm:inline-block font-bold text-gray-700 whitespace-nowrap">
+                                            ฝ่ายทรัพยากรบุคคล :
+                                        </label>
+                                        <div className="w-full sm:flex-1 px-3 py-1.5 bg-white border border-gray-200 rounded whitespace-nowrap text-left">
+                                            {selectedLeave.hrComment?.replace("อนุมัติ ", "") || "ไม่ระบุชื่อ"}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
+
 
                         {fromPendingList && (
                             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 font-FontNoto text-sm text-black">
@@ -672,206 +726,265 @@ const LeaveRequestAdmin = () => {
                                     <p className="font-bold text-center mb-2">ผู้ขอลา</p>
                                     <div className="mb-1">
                                         ลายมือชื่อ:
-                                        <span className="inline-block border-b border-gray-400 w-28 h-6 align-bottom ml-1">
+                                        <span className="inline-block border-b border-gray-400 w-40 h-6 align-bottom ml-1">
                                             {selectedLeave?.user?.firstName} {selectedLeave?.user?.lastName}
                                         </span>
                                     </div>
-                                    <div>วันที่ : {formatDateThai(selectedLeave.createdAt)}</div>
+                                    <div className="mb-2 flex items-center gap-2 whitespace-nowrap">
+                                        <span className="text-gray-600 mr-2">วันที่:</span>
+                                        <div className="border border-gray-300 text-black bg-white rounded px-2 py-1 w-full min-w-[100px]">
+                                            {selectedLeave.createdAt ? formatDateThai(selectedLeave.createdAt) : ".............."}
+                                        </div>
+                                    </div>
+
                                 </div>
-                                <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
-                                    <p className="font-bold text-center mb-2">ผู้จัดการทั่วไป</p>
-                                    <div className="mb-2 flex items-center whitespace-nowrap">
-                                        <span className="text-gray-600 mr-2">ลายมือชื่อ:</span>
-                                        <span
-                                            className={`inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1 px-2
+                                {!(currentUserRole === "Hr" && selectedLeave?.user?.role === "Hr") && (
+                                    <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
+                                        <p className="font-bold text-center mb-2">ผู้จัดการทั่วไป</p>
+                                        <div className="mb-2 flex items-center whitespace-nowrap">
+                                            <span className="text-gray-600 mr-2">ลายมือชื่อ:</span>
+                                            <span
+                                                className={`inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1 px-2
         ${hasSignedGM || selectedLeave.gmApprovedAt ? "text-black" : "text-gray-400 cursor-pointer hover:bg-yellow-100"}`}
-                                            onClick={() => {
-                                                if (
-                                                    currentUserRole === "GM" &&
-                                                    !hasSignedGM &&
-                                                    !selectedLeave?.gmApprovedAt
-                                                ) {
-                                                    setHasSignedGM(true);
-                                                }
-                                            }}
-                                        >
-                                            {selectedLeave.gmApprovedAt
-                                                ? selectedLeave.gmComment?.replace("อนุมัติ ", "") || currentUserName
-                                                : hasSignedGM
-                                                    ? currentUserName
-                                                    : currentUserRole === "GM"
-                                                        ? "คลิกเพื่อลงชื่อ"
-                                                        : ""}
-                                        </span>
-                                    </div>
+                                                onClick={() => {
+                                                    if (
+                                                        currentUserRole === "GM" &&
+                                                        !hasSignedGM &&
+                                                        !selectedLeave?.gmApprovedAt
+                                                    ) {
+                                                        setHasSignedGM(true);
+                                                    }
+                                                }}
+                                            >
+                                                {selectedLeave.gmApprovedAt
+                                                    ? selectedLeave.gmComment?.replace("อนุมัติ ", "") || currentUserName
+                                                    : hasSignedGM
+                                                        ? currentUserName
+                                                        : currentUserRole === "GM"
+                                                            ? "คลิกเพื่อลงชื่อ"
+                                                            : ""}
+                                            </span>
+                                        </div>
 
-                                    <div className="mb-2 flex items-center gap-2 whitespace-nowrap">
-                                        <span className="text-gray-600 mr-2">วันที่:</span>
-                                        <input
-                                            type="date"
-                                            disabled={currentUserRole !== "GM"}
-                                            value={new Date().toISOString().split("T")[0]}
-                                            className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto w-full cursor-pointer"
-                                            style={{
-                                                colorScheme: "light",
-                                                minWidth: "100px",
-                                            }}
-                                        />
-                                    </div>
-
-                                    <div className="flex gap-4 mt-2">
-                                        {selectedLeave.gmApprovedAt || selectedLeave.status === "Rejected" ? (
-                                            selectedLeave.status === "Rejected" ? (
-                                                <div className="flex items-center gap-2 text-red-600 font-semibold">
+                                        <div className="mb-2">
+                                            <div className="flex items-center gap-2 whitespace-nowrap">
+                                                <span className="text-gray-600 mr-2">วันที่:</span>
+                                                <div className="relative w-full">
                                                     <input
-                                                        type="radio"
-                                                        checked
-                                                        disabled
-                                                        className="h-4 w-4 appearance-none rounded-full border-2 border-red-500 bg-red-500"
+                                                        type="text"
+                                                        readOnly
+                                                        value={gmApprovalDate ? formatThaiDate(gmApprovalDate) : ""}
+                                                        onClick={() => document.getElementById("gmApprovalDatePicker").showPicker()}
+                                                        className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto pr-10 w-full cursor-pointer"
+                                                        style={{ colorScheme: "light" }}
                                                     />
-                                                    ไม่อนุมัติแล้ว
+                                                    <div
+                                                        className="absolute right-3 top-2.5 text-gray-500 cursor-pointer"
+                                                        onClick={() => document.getElementById("gmApprovalDatePicker").showPicker()}
+                                                    >
+                                                        <i className="fas fa-calendar-alt"></i>
+                                                    </div>
+                                                    <input
+                                                        type="date"
+                                                        id="gmApprovalDatePicker"
+                                                        value={gmApprovalDate}
+                                                        onChange={(e) => setGmApprovalDate(e.target.value)}
+                                                        disabled={currentUserRole !== "GM"}
+                                                        className="absolute opacity-0 pointer-events-none"
+                                                    />
                                                 </div>
+                                            </div>
+                                        </div>
+
+
+                                        <div className="flex gap-4 mt-2">
+                                            {selectedLeave.gmApprovedAt || selectedLeave.status === "Rejected" ? (
+                                                selectedLeave.status === "Rejected" ? (
+                                                    <div className="flex items-center gap-2 text-red-600 font-semibold">
+                                                        <input
+                                                            type="radio"
+                                                            checked
+                                                            disabled
+                                                            className="h-4 w-4 appearance-none rounded-full border-2 border-red-500 bg-red-500"
+                                                        />
+                                                        ไม่อนุมัติแล้ว
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2 text-green-600 font-semibold">
+                                                        <input
+                                                            type="radio"
+                                                            checked
+                                                            disabled
+                                                            className="h-4 w-4 appearance-none rounded-full border-2 border-green-500 bg-green-500"
+                                                        />
+                                                        อนุมัติแล้ว
+                                                    </div>
+                                                )
                                             ) : (
-                                                <div className="flex items-center gap-2 text-green-600 font-semibold">
-                                                    <input
-                                                        type="radio"
-                                                        checked
-                                                        disabled
-                                                        className="h-4 w-4 appearance-none rounded-full border-2 border-green-500 bg-green-500"
-                                                    />
-                                                    อนุมัติแล้ว
-                                                </div>
-                                            )
-                                        ) : (
-                                            <>
-                                                <label className="flex items-center gap-2 text-green-600 font-semibold cursor-pointer">
-                                                    <input
-                                                        type="radio"
-                                                        name="approval_gm"
-                                                        disabled={currentUserRole !== "GM"}
-                                                        onChange={() => {
-                                                            setConfirmAction("approve");
-                                                            setShowConfirmModal(true);
-                                                        }}
-                                                        className="h-4 w-4 appearance-none rounded-full border-2 border-gray-300 checked:bg-green-500 checked:border-green-500 transition duration-150"
-                                                    />
-                                                    อนุมัติ
-                                                </label>
-                                                <label className="flex items-center gap-2 text-red-600 font-semibold cursor-pointer">
-                                                    <input
-                                                        type="radio"
-                                                        name="approval_gm"
-                                                        disabled={currentUserRole !== "GM"}
-                                                        onChange={() => {
-                                                            setConfirmAction("reject");
-                                                            setShowConfirmModal(true);
-                                                        }}
-                                                        className="h-4 w-4 appearance-none rounded-full border-2 border-gray-300 checked:bg-red-500 checked:border-red-500 transition duration-150"
-                                                    />
-                                                    ไม่อนุมัติ
-                                                </label>
-                                            </>
-                                        )}
+                                                <>
+                                                    <label className="flex items-center gap-2 text-green-600 font-semibold cursor-pointer">
+                                                        <input
+                                                            type="radio"
+                                                            name="approval_gm"
+                                                            disabled={currentUserRole !== "GM"}
+                                                            onChange={() => {
+                                                                setConfirmAction("approve");
+                                                                setShowConfirmModal(true);
+                                                            }}
+                                                            className="h-4 w-4 appearance-none rounded-full border-2 border-gray-300 checked:bg-green-500 checked:border-green-500 transition duration-150"
+                                                        />
+                                                        อนุมัติ
+                                                    </label>
+                                                    <label className="flex items-center gap-2 text-red-600 font-semibold cursor-pointer">
+                                                        <input
+                                                            type="radio"
+                                                            name="approval_gm"
+                                                            disabled={currentUserRole !== "GM"}
+                                                            onChange={() => {
+                                                                setConfirmAction("reject");
+                                                                setShowConfirmModal(true);
+                                                            }}
+                                                            className="h-4 w-4 appearance-none rounded-full border-2 border-gray-300 checked:bg-red-500 checked:border-red-500 transition duration-150"
+                                                        />
+                                                        ไม่อนุมัติ
+                                                    </label>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
-                                    <p className="font-bold text-center mb-2">หัวหน้าฝ่ายนักวิเคราะห์ธุรกิจ</p>
+                                )}
+                                {(() => {
+                                    const targetRole = selectedLeave.user?.role;
+                                    const targetUserId = selectedLeave.user?.userID;
+                                    const myUserId = parseInt(sessionStorage.getItem("userId"));
 
-                                    <div className="mb-2 flex items-center whitespace-nowrap">
-                                        <span className="text-gray-600 mr-2">ลายมือชื่อ:</span>
-                                        <span
-                                            className={`inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1 px-2 
+                                    const canView =
+                                        targetRole === "BA" ||
+                                        targetRole === "GM" ||
+                                        targetRole === "Hr" ||
+                                        targetUserId === myUserId;
+                                    const isOwnLeave = targetUserId === myUserId;
+                                    const isHR = currentUserRole === "Hr";
+
+                                    if (isHR && isOwnLeave) return false;
+                                    const isHeadBA = currentUserRole === "HEAD_BA";
+                                    const isGMOrHr = currentUserRole === "GM" || currentUserRole === "Hr";
+                                    return (isHeadBA && canView) || (isGMOrHr && canView);
+                                })() && (
+                                        <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
+                                            <p className="font-bold text-center mb-2">หัวหน้าฝ่ายนักวิเคราะห์ธุรกิจ</p>
+
+                                            <div className="mb-2 flex items-center whitespace-nowrap">
+                                                <span className="text-gray-600 mr-2">ลายมือชื่อ:</span>
+                                                <span
+                                                    className={`inline-block border-b border-gray-400 w-48 h-6 align-bottom ml-1 px-2 
         ${hasSignedHead || selectedLeave.headBAApprovedAt ? "text-black" : "text-gray-400 cursor-pointer hover:bg-yellow-100"}`}
-                                            onClick={() => {
-                                                if (
-                                                    currentUserRole === "HEAD_BA" &&
-                                                    !hasSignedHead &&
-                                                    !selectedLeave?.headBAApprovedAt
-                                                ) {
-                                                    setHasSignedHead(true);
-                                                }
-                                            }}
-                                        >
-                                            {selectedLeave.headBAApprovedAt
-                                                ? selectedLeave.headBAComment?.replace("อนุมัติ ", "") || currentUserName
-                                                : hasSignedHead
-                                                    ? currentUserName
-                                                    : currentUserRole === "HEAD_BA"
-                                                        ? "คลิกเพื่อลงชื่อ"
-                                                        : ""}
-                                        </span>
-                                    </div>
+                                                    onClick={() => {
+                                                        if (
+                                                            currentUserRole === "HEAD_BA" &&
+                                                            !hasSignedHead &&
+                                                            !selectedLeave?.headBAApprovedAt
+                                                        ) {
+                                                            setHasSignedHead(true);
+                                                        }
+                                                    }}
+                                                >
+                                                    {selectedLeave.headBAApprovedAt
+                                                        ? selectedLeave.headBAComment?.replace("อนุมัติ ", "") || currentUserName
+                                                        : hasSignedHead
+                                                            ? currentUserName
+                                                            : currentUserRole === "HEAD_BA"
+                                                                ? "คลิกเพื่อลงชื่อ"
+                                                                : ""}
+                                                </span>
+                                            </div>
 
-                                    <div className="mb-2 flex items-center gap-2 whitespace-nowrap">
-                                        <span className="text-gray-600 mr-2">วันที่:</span>
-                                        <input
-                                            type="date"
-                                            disabled={currentUserRole !== "HEAD_BA"}
-                                            value={new Date().toISOString().split("T")[0]}
-                                            className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto w-full cursor-pointer"
-                                            style={{
-                                                colorScheme: "light",
-                                                minWidth: "100px",
-                                            }}
-                                        />
-                                    </div>
-
-                                    <div className="flex gap-4 mt-2">
-                                        {selectedLeave.headBAApprovedAt || selectedLeave.status === "Rejected" ? (
-                                            selectedLeave.status === "Rejected" ? (
-                                                <div className="flex items-center gap-2 text-red-600 font-semibold">
-                                                    <input
-                                                        type="radio"
-                                                        checked
-                                                        disabled
-                                                        className="h-4 w-4 appearance-none rounded-full border-2 border-red-500 bg-red-500"
-                                                    />
-                                                    ไม่อนุมัติแล้ว
+                                            <div className="mb-2">
+                                                <div className="flex items-center gap-2 whitespace-nowrap">
+                                                    <span className="text-gray-600 mr-2">วันที่:</span>
+                                                    <div className="relative w-full">
+                                                        <input
+                                                            type="text"
+                                                            readOnly
+                                                            value={headApprovalDate ? formatThaiDate(headApprovalDate) : ""}
+                                                            onClick={() => document.getElementById("headApprovalDatePicker").showPicker()}
+                                                            className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto pr-10 w-full cursor-pointer"
+                                                            style={{ colorScheme: "light" }}
+                                                        />
+                                                        <div
+                                                            className="absolute right-3 top-2.5 text-gray-500 cursor-pointer"
+                                                            onClick={() => document.getElementById("headApprovalDatePicker").showPicker()}
+                                                        >
+                                                            <i className="fas fa-calendar-alt"></i>
+                                                        </div>
+                                                        <input
+                                                            type="date"
+                                                            id="headApprovalDatePicker"
+                                                            value={headApprovalDate}
+                                                            onChange={(e) => setHeadApprovalDate(e.target.value)}
+                                                            disabled={currentUserRole !== "HEAD_BA"}
+                                                            className="absolute opacity-0 pointer-events-none"
+                                                        />
+                                                    </div>
                                                 </div>
-                                            ) : (
-                                                <div className="flex items-center gap-2 text-green-600 font-semibold">
-                                                    <input
-                                                        type="radio"
-                                                        checked
-                                                        disabled
-                                                        className="h-4 w-4 appearance-none rounded-full border-2 border-green-500 bg-green-500"
-                                                    />
-                                                    อนุมัติแล้ว
-                                                </div>
-                                            )
-                                        ) : (
-                                            <>
-                                                <label className="flex items-center gap-2 text-green-600 font-semibold cursor-pointer">
-                                                    <input
-                                                        type="radio"
-                                                        name="approval_head"
-                                                        disabled={currentUserRole !== "HEAD_BA"}
-                                                        onChange={() => {
-                                                            setConfirmAction("approve");
-                                                            setShowConfirmModal(true);
-                                                        }}
-                                                        className="h-4 w-4 appearance-none rounded-full border-2 border-gray-300 checked:bg-green-500 checked:border-green-500 transition duration-150"
-                                                    />
-                                                    อนุมัติ
-                                                </label>
-                                                <label className="flex items-center gap-2 text-red-600 font-semibold cursor-pointer">
-                                                    <input
-                                                        type="radio"
-                                                        name="approval_head"
-                                                        disabled={currentUserRole !== "HEAD_BA"}
-                                                        onChange={() => {
-                                                            setConfirmAction("reject");
-                                                            setShowConfirmModal(true);
-                                                        }}
-                                                        className="h-4 w-4 appearance-none rounded-full border-2 border-gray-300 checked:bg-red-500 checked:border-red-500 transition duration-150"
-                                                    />
-                                                    ไม่อนุมัติ
-                                                </label>
-                                            </>
-                                        )}
-                                    </div>
+                                            </div>
 
-                                </div>
+                                            <div className="flex gap-4 mt-2">
+                                                {selectedLeave.headBAApprovedAt || selectedLeave.status === "Rejected" ? (
+                                                    selectedLeave.status === "Rejected" ? (
+                                                        <div className="flex items-center gap-2 text-red-600 font-semibold">
+                                                            <input
+                                                                type="radio"
+                                                                checked
+                                                                disabled
+                                                                className="h-4 w-4 appearance-none rounded-full border-2 border-red-500 bg-red-500"
+                                                            />
+                                                            ไม่อนุมัติแล้ว
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-2 text-green-600 font-semibold">
+                                                            <input
+                                                                type="radio"
+                                                                checked
+                                                                disabled
+                                                                className="h-4 w-4 appearance-none rounded-full border-2 border-green-500 bg-green-500"
+                                                            />
+                                                            อนุมัติแล้ว
+                                                        </div>
+                                                    )
+                                                ) : (
+                                                    <>
+                                                        <label className="flex items-center gap-2 text-green-600 font-semibold cursor-pointer">
+                                                            <input
+                                                                type="radio"
+                                                                name="approval_head"
+                                                                disabled={currentUserRole !== "HEAD_BA"}
+                                                                onChange={() => {
+                                                                    setConfirmAction("approve");
+                                                                    setShowConfirmModal(true);
+                                                                }}
+                                                                className="h-4 w-4 appearance-none rounded-full border-2 border-gray-300 checked:bg-green-500 checked:border-green-500 transition duration-150"
+                                                            />
+                                                            อนุมัติ
+                                                        </label>
+                                                        <label className="flex items-center gap-2 text-red-600 font-semibold cursor-pointer">
+                                                            <input
+                                                                type="radio"
+                                                                name="approval_head"
+                                                                disabled={currentUserRole !== "HEAD_BA"}
+                                                                onChange={() => {
+                                                                    setConfirmAction("reject");
+                                                                    setShowConfirmModal(true);
+                                                                }}
+                                                                className="h-4 w-4 appearance-none rounded-full border-2 border-gray-300 checked:bg-red-500 checked:border-red-500 transition duration-150"
+                                                            />
+                                                            ไม่อนุมัติ
+                                                        </label>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
 
                                 <div className="border border-gray-300 rounded-lg p-4 shadow-sm bg-white text-gray-700 font-FontNoto text-sm max-w-sm">
                                     <p className="font-bold text-center mb-2">ฝ่ายทรัพยากรบุคคล</p>
@@ -900,19 +1013,37 @@ const LeaveRequestAdmin = () => {
                                         </span>
                                     </div>
 
-                                    <div className="mb-2 flex items-center gap-2 whitespace-nowrap">
-                                        <span className="text-gray-600 mr-2">วันที่:</span>
-                                        <input
-                                            type="date"
-                                            disabled={currentUserRole !== "Hr"}
-                                            value={new Date().toISOString().split("T")[0]}
-                                            className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto w-full cursor-pointer"
-                                            style={{
-                                                colorScheme: "light",
-                                                minWidth: "100px",
-                                            }}
-                                        />
+                                    <div className="mb-2">
+                                        <div className="flex items-center gap-2 whitespace-nowrap">
+                                            <span className="text-gray-600 mr-2">วันที่:</span>
+                                            <div className="relative w-full">
+                                                <input
+                                                    type="text"
+                                                    readOnly
+                                                    value={hrApprovalDate ? formatThaiDate(hrApprovalDate) : ""}
+                                                    onClick={() => document.getElementById("hrApprovalDatePicker").showPicker()}
+                                                    className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto pr-10 w-full cursor-pointer"
+                                                    style={{ colorScheme: "light" }}
+                                                />
+                                                <div
+                                                    className="absolute right-3 top-2.5 text-gray-500 cursor-pointer"
+                                                    onClick={() => document.getElementById("hrApprovalDatePicker").showPicker()}
+                                                >
+                                                    <i className="fas fa-calendar-alt"></i>
+                                                </div>
+                                                <input
+                                                    type="date"
+                                                    id="hrApprovalDatePicker"
+                                                    value={hrApprovalDate}
+                                                    onChange={(e) => setHrApprovalDate(e.target.value)}
+                                                    disabled={currentUserRole !== "Hr"}
+                                                    className="absolute opacity-0 pointer-events-none"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
+
+
                                     <div className="flex gap-4 mt-2">
                                         <label className="flex items-center gap-2 text-green-600 font-semibold cursor-pointer">
                                             <input
@@ -921,13 +1052,26 @@ const LeaveRequestAdmin = () => {
                                                 disabled={
                                                     currentUserRole !== "Hr" ||
                                                     !!selectedLeave.hrApprovedAt ||
-                                                    !(selectedLeave.gmApprovedAt && selectedLeave.headBAApprovedAt)
+                                                    (
+                                                        selectedLeave.user?.userID !== parseInt(sessionStorage.getItem("userId")) &&
+                                                        !selectedLeave.gmApprovedAt
+                                                    ) ||
+                                                    (
+                                                        ["GM", "Hr", "HEAD_BA", "BA"].includes(selectedLeave.user?.role) &&
+                                                        selectedLeave.user?.userID !== parseInt(sessionStorage.getItem("userId")) &&
+                                                        !selectedLeave.headBAApprovedAt
+                                                    )
                                                 }
                                                 onChange={() => {
-                                                    if (!(selectedLeave.gmApprovedAt && selectedLeave.headBAApprovedAt)) {
-                                                        alert("กรุณารอให้ หัวหน้า อนุมัติให้เรียบร้อยก่อน");
+                                                    const needsHeadBA = ["GM", "Hr", "HEAD_BA", "BA"].includes(selectedLeave.user?.role);
+                                                    const isOwnLeave = selectedLeave.user?.userID === parseInt(sessionStorage.getItem("userId"));
+                                                    const isHR = currentUserRole === "Hr";
+
+                                                    if (!isOwnLeave && (!selectedLeave.gmApprovedAt || (needsHeadBA && !selectedLeave.headBAApprovedAt))) {
+                                                        alert("กรุณารอให้ผู้ที่เกี่ยวข้องอนุมัติให้เรียบร้อยก่อน");
                                                         return;
                                                     }
+
                                                     setConfirmAction("approve");
                                                     setShowConfirmModal(true);
                                                 }}
@@ -942,16 +1086,31 @@ const LeaveRequestAdmin = () => {
                                                 disabled={
                                                     currentUserRole !== "Hr" ||
                                                     !!selectedLeave.hrApprovedAt ||
-                                                    !(selectedLeave.gmApprovedAt && selectedLeave.headBAApprovedAt)
+                                                    (
+                                                        selectedLeave.user?.userID !== parseInt(sessionStorage.getItem("userId")) &&
+                                                        !selectedLeave.gmApprovedAt
+                                                    ) ||
+                                                    (
+                                                        ["GM", "Hr", "HEAD_BA", "BA"].includes(selectedLeave.user?.role) &&
+                                                        selectedLeave.user?.userID !== parseInt(sessionStorage.getItem("userId")) &&
+                                                        !selectedLeave.headBAApprovedAt
+                                                    )
                                                 }
+
                                                 onChange={() => {
-                                                    if (!(selectedLeave.gmApprovedAt && selectedLeave.headBAApprovedAt)) {
-                                                        alert("กรุณารอให้ หัวหน้า อนุมัติให้เรียบร้อยก่อน");
+                                                    const needsHeadBA = ["GM", "Hr", "HEAD_BA", "BA"].includes(selectedLeave.user?.role);
+                                                    const isOwnLeave = selectedLeave.user?.userID === parseInt(sessionStorage.getItem("userId"));
+                                                    const isHR = currentUserRole === "Hr";
+
+                                                    if (!isOwnLeave && (!selectedLeave.gmApprovedAt || (needsHeadBA && !selectedLeave.headBAApprovedAt))) {
+                                                        alert("กรุณารอให้ผู้ที่เกี่ยวข้องอนุมัติให้เรียบร้อยก่อน");
                                                         return;
                                                     }
+
                                                     setConfirmAction("reject");
                                                     setShowConfirmModal(true);
                                                 }}
+
                                                 className="h-4 w-4 appearance-none rounded-full border-2 border-gray-300 checked:bg-red-500 checked:border-red-500 transition duration-150"
                                             />
                                             ไม่อนุมัติ

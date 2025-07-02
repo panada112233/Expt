@@ -34,6 +34,7 @@ import ChangeProfile from './components/Change_profile';
 import ForgotPassword from './components/ForgotPassword';
 
 import pdfmake from 'pdfmake';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 
 const Router = import.meta.env.DEV ? BrowserRouter : HashRouter;

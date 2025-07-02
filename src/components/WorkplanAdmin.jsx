@@ -173,20 +173,43 @@ const WorkplanAdmin = () => {
                                     </h3>
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                                    <input
-                                        type="date"
-                                        value={historyDate}
-                                        onChange={(e) => setHistoryDate(e.target.value)}
-                                        className="input input-bordered font-FontNoto w-full sm:w-40 !bg-white text-black"
-                                        style={{ colorScheme: "light" }}
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="ค้นหาชื่อพนักงาน..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="input input-bordered font-FontNoto w-full sm:w-64 !bg-white text-black"
-                                    />
+                                    <div className="flex flex-col flex-1 min-w-0 relative sm:w-40">
+                                        <input
+                                            type="text"
+                                            value={new Date(historyDate).toLocaleDateString("th-TH", {
+                                                day: "2-digit",
+                                                month: "long",
+                                                year: "numeric",
+                                            })}
+                                            readOnly
+                                            className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto pr-10"
+                                            onClick={() => document.getElementById("datePicker").showPicker()}
+                                            style={{ cursor: "pointer", colorScheme: "light" }}
+                                        />
+                                        <div
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer"
+                                            onClick={() => document.getElementById("datePicker").showPicker()}
+                                        >
+                                            <i className="fas fa-calendar-alt"></i>
+                                        </div>
+                                        <input
+                                            type="date"
+                                            id="datePicker"
+                                            value={historyDate}
+                                            onChange={(e) => setHistoryDate(e.target.value)}
+                                            className="absolute opacity-0 pointer-events-none"
+                                            style={{ colorScheme: "light" }}
+                                        />
+                                    </div>
+                                    <div className="flex flex-col flex-1 min-w-0">
+                                        <input
+                                            type="text"
+                                            placeholder="ค้นหาชื่อพนักงาน..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black font-FontNoto"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 

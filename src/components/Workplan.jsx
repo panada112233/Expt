@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import AOS from 'aos';
-import { FcOvertime, FcConferenceCall, FcExpired, FcOrganization } from "react-icons/fc";
+import { FcComboChart, FcBullish, FcExpired, FcOrganization } from "react-icons/fc";
 import remove from '../assets/remove.png';
 import bin from '../assets/icons8-bin-24.png';
 import calendar from '../assets/calendar1.png';
@@ -48,7 +48,6 @@ const Workplan = () => {
         const today = new Date();
         return today.toISOString().split('T')[0]; // รูปแบบ yyyy-MM-dd
     });
-
     const thaiDayNames = {
         "sunday": "วันอาทิตย์",
         "monday": "วันจันทร์",
@@ -741,7 +740,7 @@ const Workplan = () => {
                         ) : (
                             <p className="text-blue-950 text-sm font-FontNoto">ไม่มีข้อมูลเข้า-ออก</p>
                         )}
-                        <FcExpired className="absolute right-[10%] top-[50%] translate-y-[-50%] opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-300 w-16 h-16 text-blue-700" />
+                        <FcExpired className="absolute right-4 top-4 opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-300 w-16 h-16 text-blue-700" />
                     </div>
 
                     {/* 🌸 การ์ดแผนงานวันนี้ */}
@@ -766,7 +765,7 @@ const Workplan = () => {
                             <p className="text-blue-950 text-sm font-FontNoto">ยังไม่ได้เขียนแผนงาน</p>
                         )}
 
-                        <FcConferenceCall className="absolute right-[10%] top-[50%] translate-y-[-50%] opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-300 w-16 h-16 text-blue-700" />
+                        <FcBullish className="absolute right-4 top-4 opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-300 w-12 h-12 text-blue-700" />
                     </div>
                     {(() => {
                         const today = new Date();
@@ -793,8 +792,7 @@ const Workplan = () => {
                                         </button>
                                     )}
                                 </div>
-
-                                <FcOvertime className="absolute right-[10%] top-[50%] translate-y-[-50%] opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-300 w-16 h-16 text-blue-700" />
+                                <FcComboChart className="absolute right-4 top-4 opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-300 w-12 h-12 text-blue-700" />
                             </div>
                         );
                     })()}
@@ -928,25 +926,46 @@ const Workplan = () => {
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                                            <input
-                                                type="date"
-                                                value={historyDate}
-                                                onChange={(e) => setHistoryDate(e.target.value)}
-                                                className="input input-bordered font-FontNoto w-full sm:w-40 !bg-white text-black"
-                                                style={{ colorScheme: "light" }}
-                                            />
-                                            <input
-                                                type="text"
-                                                placeholder="ค้นหาชื่อพนักงาน..."
-                                                value={searchTerm}
-                                                onChange={(e) => setSearchTerm(e.target.value)}
-                                                className="input input-bordered font-FontNoto w-full sm:w-64 !bg-white text-black"
-                                            />
+                                        <div className="flex flex-col sm:flex-row gap-4 sm:items-end font-FontNoto">
+                                            <div className="flex flex-col flex-1 min-w-0 relative sm:w-48">
+                                                <input
+                                                    type="text"
+                                                    readOnly
+                                                    value={new Date(historyDate).toLocaleDateString("th-TH", {
+                                                        day: "2-digit",
+                                                        month: "long",
+                                                        year: "numeric",
+                                                    })}
+                                                    onClick={() => document.getElementById("datePicker").showPicker()}
+                                                    className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black pr-10 cursor-pointer"
+                                                    style={{ colorScheme: "light" }}
+                                                />
+                                                <div
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer"
+                                                    onClick={() => document.getElementById("datePicker").showPicker()}
+                                                >
+                                                    <i className="fas fa-calendar-alt"></i>
+                                                </div>
+                                                <input
+                                                    type="date"
+                                                    id="datePicker"
+                                                    value={historyDate}
+                                                    onChange={(e) => setHistoryDate(e.target.value)}
+                                                    className="absolute opacity-0 pointer-events-none"
+                                                    style={{ colorScheme: "light" }}
+                                                />
+                                            </div>
+                                            <div className="flex flex-col flex-1 min-w-0 sm:w-64">
+                                                <input
+                                                    type="text"
+                                                    placeholder="ค้นหาชื่อพนักงาน..."
+                                                    value={searchTerm}
+                                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                                    className="px-3 py-2 border border-gray-300 rounded-md bg-white text-black"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
-
-
                                     <div className="overflow-x-auto">
                                         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                                             {usersWithPlans.map((rec, idx) => {
@@ -1287,9 +1306,8 @@ const Workplan = () => {
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-bold text-cyan-950 font-FontNoto flex items-center gap-1">
                                 <img src={calenda} alt="calendar" className="w-6 h-6" />
-                                {selectedDate}/{month + 1}/{year + 543}
+                                {selectedDate} {thaiMonths[month]} {year + 543}
                             </h3>
-
                             <button
                                 onClick={() => {
                                     setShowModal(false);
@@ -1300,7 +1318,6 @@ const Workplan = () => {
                                 <img src={remove} alt="remove" className="w-5 h-5" />
                             </button>
                         </div>
-
                         {/* Step 1: เลือกประเภท */}
                         {!taskData.noteType && (
                             <div className="mb-4 flex flex-col gap-3 items-center">

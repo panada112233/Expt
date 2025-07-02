@@ -27,6 +27,8 @@ function EmpHome() {
   const [activeTab, setActiveTab] = useState('approvedLeave');
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [allLeaveDocuments, setAllLeaveDocuments] = useState([]);
+  const [errorPassword, setErrorPassword] = useState('');
+  const [inputPassword, setInputPassword] = useState('');
 
   const categoryMapping = {
     sick: "ใบลาป่วย",
@@ -175,7 +177,7 @@ function EmpHome() {
           if (fileExt === "json") {
             await loadLeaveJsonAndCreatePDF(selectedDocument.filePath);
           } else {
-            window.open('https://192.168.1.188/hrwebapi/api/Files' + selectedDocument.filePath, '_blank');
+            window.open('https://192.168.1.188/hrwebapi' + selectedDocument.filePath, '_blank');
           }
         } else if (selectedDocument) {
           createPDF(selectedDocument);
@@ -540,7 +542,13 @@ function EmpHome() {
               .sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate))
               .map((doc) => {
                 const fileExtension = doc.filePath ? doc.filePath.split('.').pop().toLowerCase() : "ไม่พบข้อมูล";
-                const uploadDate = doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString('th-TH') : "จาก HR";
+                const uploadDate = doc.uploadDate
+                  ? new Date(doc.uploadDate).toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                  : "จาก HR";
                 const fileCategory = doc.category || "ไม่ระบุหมวดหมู่";
 
                 return (

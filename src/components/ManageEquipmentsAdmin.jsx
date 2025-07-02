@@ -58,6 +58,18 @@ const ManageEquipmentsAdmin = () => {
     document.getElementById("update_modal").showModal();
   };
 
+  const formatThaiDate = (dateStr) => {
+    const date = new Date(dateStr);
+    const day = date.getDate();
+    const monthNames = [
+      "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+      "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+    ];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear() + 543;
+    return `${day} ${month} ${year}`;
+  };
+
   const openDeleteModal = (equipmentId) => {
     setDeleteTargetId(equipmentId);
     document.getElementById("delete_confirm_modal").checked = true;
@@ -149,7 +161,6 @@ const ManageEquipmentsAdmin = () => {
         </div>
       );
     }
-
 
     if (
       lowerName.includes("ฮาร์ดดิสก์") ||
@@ -782,7 +793,9 @@ const ManageEquipmentsAdmin = () => {
                         </td>
 
                         <td className="px-4 py-2">{br.usageLocation || '-'}</td>
-                        <td className="px-4 py-2">{new Date(br.borrowDate).toLocaleDateString('th-TH')}</td>
+                        <td className="px-4 py-2">
+                          {br.borrowDate ? formatThaiDate(br.borrowDate) : "-"}
+                        </td>
                         <td className="px-4 py-2 text-center">
                           {br.filePath ? (
                             <a
@@ -899,7 +912,7 @@ const ManageEquipmentsAdmin = () => {
                 <p>วันที่ยืม</p>
                 <p className="mt-1">
                   {selectedBorrowDetail?.borrowDate
-                    ? new Date(selectedBorrowDetail.borrowDate).toLocaleDateString("th-TH")
+                    ? formatThaiDate(selectedBorrowDetail.borrowDate)
                     : "-"}
                 </p>
               </div>
@@ -1017,12 +1030,11 @@ const ManageEquipmentsAdmin = () => {
                   >
                     {Array.from({ length: 11 }, (_, i) => 2024 + i).map((year) => (
                       <option key={year} value={year}>
-                        {year}
+                        {year + 543}
                       </option>
                     ))}
                   </select>
                 </div>
-
                 <div className="flex items-center gap-2 whitespace-nowrap">
                   <label className="text-sm text-gray-600">สถานะ:</label>
                   <select
@@ -1068,13 +1080,12 @@ const ManageEquipmentsAdmin = () => {
                         <td className="px-4 py-2">{br.user?.firstName} {br.user?.lastName}</td>
                         <td className="px-4 py-2">{br.equipment?.name}</td>
                         <td className="px-4 py-2">
-                          {new Date(br.borrowDate).toLocaleDateString('th-TH')}
+                          {br.borrowDate ? formatThaiDate(br.borrowDate) : '-'}
                         </td>
                         <td className="px-4 py-2">
-                          {br.returnDate
-                            ? new Date(br.returnDate).toLocaleDateString('th-TH')
-                            : '-'}
+                          {br.returnDate ? formatThaiDate(br.returnDate) : '-'}
                         </td>
+
                         <td className="px-4 py-2">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-semibold ${br.status.trim() === "คืนแล้ว"
